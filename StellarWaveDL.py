@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 13 14:20:29 2018
 
-@author: Samwi
+@author: Jin Dou
 """
 import os
 import keras
