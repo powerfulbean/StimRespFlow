@@ -1,0 +1,5 @@
+README.md
+StellarWave.egg-info/PKG-INFO
+StellarWave.egg-info/SOURCES.txt
+StellarWave.egg-info/dependency_links.txt
+StellarWave.egg-info/top_level.txt
