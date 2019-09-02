@@ -101,7 +101,7 @@ class BlinksCaliLabels(CLabels):
         i = 0
         self.startTime = self.parseTimeString(buffer[i][1] + ' ' + buffer[i][2])
         while( i < len(buffer)): #buffer is the whole document
-            tempRecord = markerRecord('','','','') #store crossing time
+            tempRecord = CLabelInfo('','','','') #store crossing time
             #the first line, save the start date
             Type = buffer[i][0]
             if(Type == 'blink' or Type == 'lookLeft' or Type == 'lookRight'):
@@ -127,8 +127,14 @@ class BlinksCaliLabels(CLabels):
         dateTime = outLib._OutsideLibTime()._importDatetime() 
         return dateTime.datetime.strptime(string , '%Y-%m-%d %H:%M:%S.%f')
 
-class markerRecord:
-    
+class CLabelRecord:
+    ''' class to store information for a label marker, including:
+        1. label name
+        2. other useful label names
+        3. start and end time
+        4. label type
+        5. label value
+    '''
     def __init__(self,name,index,startTime,endTime):
         self.name = name
         self.otherNames = list() # background stimuli name
@@ -138,7 +144,7 @@ class markerRecord:
         self.type = ''
         self._promoteFlag = False
         self._promoteTimeFlag = False
-        self.data = '' #label info (such as auditoryStimuli object)
+        self.value = '' #label info (such as auditoryStimuli object)
         
     def getLabelDict(self,):
         if (self.type == 'attention') :
@@ -171,7 +177,7 @@ class markerRecord:
             print("marker has been promoted")
         else:
             self.promoteTime(datetimeModule,dateObject)    
-            self.data = data
+            self.value = data
             self._promoteFlag = True
     
     def promoteTime(self,datetimeModule,dateObject):
