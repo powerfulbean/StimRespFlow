@@ -162,6 +162,9 @@ class CLog:
         self.record(log,newline)
         self.save()
     
+	def safeRecord(self,log,newline:bool = True):
+        self.openRecordSave(log ,newline)
+		
     def safeRecordTime(self,log,newline:bool = True):
         datetime = _OutsideLibTime()._importDatetime()
         self.openRecordSave(log + ', time: ' + str(datetime.datetime.now()),newline)
