@@ -14,7 +14,7 @@ class CRawData(ABC):
         self.rawdata = list()
         self.timestamps = list() 
         self.startTime = '' # store the datatime.datetime object
-        self.description = dict()
+        self.description = ''
         self.sampleRate = 0
         self.numChannels = 0
         

@@ -26,7 +26,7 @@ class CLabels(CRawData): # for labels created by psychopy, the last number is mi
         app_json = json.dumps(ans)
         #print(app_json)
         checkFolder(folder)
-        fileAddress = folder + self.description+"_labels_" + str(self.startTime).replace(":","-") + ".jin" 
+        fileAddress = str(folder) + self.description+"_labels_" + str(self.startTime).replace(":","-") + ".jin" 
         f = open(fileAddress,'w+')
         f.write(app_json)
         f.close
@@ -127,7 +127,7 @@ class BlinksCaliLabels(CLabels):
         dateTime = outLib._OutsideLibTime()._importDatetime() 
         return dateTime.datetime.strptime(string , '%Y-%m-%d %H:%M:%S.%f')
 
-class CLabelRecord:
+class CLabelInfo:
     ''' class to store information for a label marker, including:
         1. label name
         2. other useful label names
@@ -195,4 +195,4 @@ class CLabelRecord:
     
 if __name__ == '__main__':
     test2 = BlinksCaliLabels()
-    test2.writeInfoForMatlab('.')
+    test2.writeInfoForMatlab(r'.')

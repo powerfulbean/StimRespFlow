@@ -162,7 +162,7 @@ class CLog:
         self.record(log,newline)
         self.save()
     
-	def safeRecord(self,log,newline:bool = True):
+    def safeRecord(self,log,newline:bool = True):
         self.openRecordSave(log ,newline)
 		
     def safeRecordTime(self,log,newline:bool = True):
