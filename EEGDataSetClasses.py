@@ -906,6 +906,7 @@ class DataOrganizor:
         return dataSetObject
                 
     def assignTargetData(self,targetList,frontLag_s = 1, postLag_s = 1): #need to be improved
+        ''' only for auditory stimuli evoked data '''
         index = 0
         remove_list = list()
         breakFlag = False

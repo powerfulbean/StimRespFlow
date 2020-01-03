@@ -5,11 +5,15 @@ Created on Sat Aug 31 01:26:24 2019
 @author: Jin Dou
 """
 import outsideLibInterfaces as outLib
-from RawData import CRawData
+from .RawData import CRawData
 from abc import ABC, abstractmethod, ABCMeta
 from DataIO import checkFolder, getFileName
+import os
 
 class CLabels(CRawData): # for labels created by psychopy, the last number is microsecond but not millisecond              
+    def calTimeStamp(self):
+        return self.timestamps
+    
     def writeInfoForMatlab(self,folder):
         import json
         ans = dict()
@@ -65,7 +69,7 @@ class CLabels(CRawData): # for labels created by psychopy, the last number is mi
         for i in self.timestamps:
             i.type = typeName
             
-    def promoteMarker(self):
+    def promoteTimeStamps(self):
         '''
         change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
         '''
@@ -83,8 +87,85 @@ class CLabels(CRawData): # for labels created by psychopy, the last number is mi
         ''' not useful for labels, because label's data can be loaded later'''
         return
 
+class CVisualLabels(CLabels):
+    
+    def readFile(self,fileName, readStimuli = False, stimuliDir = None):
+        ''' 
+        read all the necessary information from the label files
         
-class BlinksCaliLabels(CLabels):
+        '''
+        #include the OutsideLib module for Input/Output
+        self.outLibIO = outLib._OutsideLibIO()
+        self.description = 'Visual'
+        buffer = []
+        datetime = outLib._OutsideLibTime()._importDatetime()    
+        
+        with open(fileName, 'r') as the_file: #opoen the labels file
+            lines = the_file.readlines()
+        
+        for line in lines: # read the label file
+            temp = line.split()
+            buffer.append(temp)
+            
+        i = 0
+        while( i < len(buffer)): #buffer is the whole document
+            #the first line, save the start date
+            if(i == 0):
+                [a,b,c,d,e,f] = [int(j) for j in buffer[i] if (j != '-' and j != ':') ]
+                self.startTime = datetime.datetime(a,b,c,d,e,f) # Lib: datetime
+                i+=1
+                
+            if(buffer[i][0] == 'First' or buffer[i][0] == 'Second' or buffer[i][0] == 'Cat' ):
+                stimuliIdx = 0
+                if(buffer[i][0] == 'First'):
+                    stimuliIdx = 1
+                elif( buffer[i][0] == 'Second'):
+                    stimuliIdx = 2
+                elif(buffer[i][0] == 'Cat'):
+                    stimuliIdx = 0
+                else:
+                    stimuliIdx = -1
+                i+=1
+                                 
+                while(buffer[i][0] == 'sub'):
+                    tempRecord = CLabelInfo('','','','') #store crossing time
+                    tempRecord2 = CLabelInfo('','','','') #store stimuli time
+                    tempRecord3 = CLabelInfo('','','','') #store rest time
+                    i+=1
+                    
+                    if(buffer[i][0] == 'attendStart'):
+                        i,tempRecord = self.stimuliEventParser(buffer,'attendStart','attendEnd',i,tempRecord)
+                    elif(buffer[i][0] == 'unattendStart'):
+                        i,tempRecord = self.stimuliEventParser(buffer,'unattendStart','unattendEnd',i,tempRecord)
+                    elif(buffer[i][0] == 'crossingStart'):
+                        i,tempRecord = self.stimuliEventParser(buffer,'crossingStart','crossingEnd',i,tempRecord)
+                    else:
+                        raise Exception("don't recognize the type "+ str(buffer[i][0])+' please check the file')
+                    i,tempRecord2 = self.stimuliEventParser(buffer,'imageStart','imageEnd',i,tempRecord2)
+                    i,tempRecord3 = self.stimuliEventParser(buffer,'restStart','restEnd',i,tempRecord3)
+                    
+                    tempName,t = os.path.splitext(tempRecord2.name)
+                    tempRecord3.name = tempName + '_' + 'imagination' 
+                    tempRecord.type = 'cross'
+                    tempRecord2.type = 'image'
+                    tempRecord3.type = 'rest'
+                
+                    self.timestamps.append(tempRecord)
+                    self.rawdata.append('crossing')
+                    self.timestamps.append(tempRecord2)
+                    self.rawdata.append(str(stimuliIdx))
+                    self.timestamps.append(tempRecord3)
+                    self.rawdata.append('rest')
+                    
+            elif(buffer[i][0]=='-1'):
+                break
+            
+            else:
+                print("visuallabels, readFile error")
+                return
+
+        
+class CBlinksCaliLabels(CLabels):
     
     def readFile(self, fileName):
         self.outLibIO = outLib._OutsideLibIO()
@@ -194,5 +275,5 @@ class CLabelInfo:
         return x.startTime
     
 if __name__ == '__main__':
-    test2 = BlinksCaliLabels()
+    test2 = CBlinksCaliLabels()
     test2.writeInfoForMatlab(r'.')

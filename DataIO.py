@@ -196,9 +196,18 @@ class DirectoryConfig:
     def p(self,keyName):
         return self.dir_dict[keyName]
     
-    def checkFolders(self,foldersList):
+    def __getitem__(self,keyName): 
+        ''' overloading function for [] operator '''
+        return self.dir_dict[keyName]
+    
+    def checkFolders(self,foldersList = None):
+        if foldersList != None:
+            pass
+        else:
+            foldersList = self.dir_dict.keys()
+        
         for folder in foldersList:
-            checkFolder(self.p(folder))
+                checkFolder(self.p(folder))
             
 ''' End '''
             

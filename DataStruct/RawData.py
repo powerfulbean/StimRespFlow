@@ -8,7 +8,12 @@ Created on Fri Aug 30 21:15:52 2019
 import outsideLibInterfaces as outLib
 #import six
 from abc import ABC, abstractmethod
+import numpy as np
 class CRawData(ABC):
+    ''' 
+    rawdata: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
+    timeStamps: An abstract concept which is used to store the information about time and all the other necessary information
+    '''
 
     def __init__(self): #the length of timeStamps should be as same as the number of samples 
         self.rawdata = list()
@@ -142,6 +147,7 @@ class CBitalinoRawdata(CRawData): # EEG unit: uV; EOG unit: mv
         self.startTime = dateTime.datetime.strptime( dataDescription['date'] + ' ' + dataDescription['time'], '%Y-%m-%d %H:%M:%S.%f')
         self.sampleRate = dataDescription["sampling rate"]
         
+        print("reading bitalinofile Finished")
         return data, dataDescription
     
     def getRealSignal(self,sampleDataArray, bitNumber ,VCC = 3.3 , Geeg = 40000, unit = 'uV'):
