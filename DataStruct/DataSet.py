@@ -12,7 +12,7 @@ from .LabelData import CLabelInfo, CLabels
 class CDataOrganizor:
     
     def __init__(self,n_channels,srate, channelsList):
-        self.labels = dict() # key: markerRecord, value: data
+        self.labels = dict() # key: DataStruct.LabelData.CLabelInfo, value: data
         self.labelList = list()
         self.type = '' #was allocated value when build DataOrganizer from '.mat' files which was built by saveToMat
         self.srate = srate
@@ -22,7 +22,7 @@ class CDataOrganizor:
     
     def addLabels(self,oLabel:CLabels):
         if(oLabel.timestamps[0]._promoteTimeFlag == False):
-            oLabel.promoteTimeStamps()
+            oLabel.enhanceTimeStamps()
         inputLabels = oLabel.timestamps
         for i in inputLabels:
             self.labels[i] = ''

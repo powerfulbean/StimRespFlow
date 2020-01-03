@@ -69,16 +69,19 @@ class CLabels(CRawData): # for labels created by psychopy, the last number is mi
         for i in self.timestamps:
             i.type = typeName
             
-    def promoteTimeStamps(self):
+    def enhanceTimeStamps(self):
         '''
+        make the self.timestamps be independent from self.rawdata
         change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
+        if applicatable, allocat rawdata to CLabelInfo.value
+        
         '''
         datetime = outLib._OutsideLibTime()._importDatetime()
         if(len(self.timestamps) != len(self.rawdata)):
             print("label warning: the number of rawdata is wrong")#, length of raw data is: ", len(self.rawdata))
         for i,marker in enumerate(self.timestamps):
             if (i<len(self.rawdata)):
-                marker.promote(datetime,self.startTime.date(),self.rawdata[i])
+                marker.promote(datetime,self.startTime.date(),self.rawdata[i]) #allocate rawdata to 
             else:
                 marker.promoteTime(datetime,self.startTime.date())
     
@@ -254,6 +257,11 @@ class CLabelInfo:
         return self._promoteFlag
     
     def promote(self,datetimeModule,dateObject, data):
+        ''' 
+        promote this CLabelInfo with absolute time, 
+        and label data (such as image name for visual stimuli, and auditoryStimuli for auditory stimuli)
+        
+        '''
         if(self._promoteFlag == True):
             print("marker has been promoted")
         else:

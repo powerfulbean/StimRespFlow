@@ -5,6 +5,9 @@ Created on Sat Aug 31 11:39:53 2019
 @author: Jin Dou
 """
 
+class CStimuli:
+    pass
+
 class auditoryStimuli:
     def __init__(self):
         self.mainStream = ''

@@ -23,7 +23,7 @@ oRaw.calTimeStamp()
 
 oLabel = CVisualLabels()
 oLabel.readFile(labelFiles[0])
-oLabel.promoteTimeStamps()
+oLabel.enhanceTimeStamps()
 
 oDataOrganizor = CDataOrganizor(oRaw.numChannels,oRaw.sampleRate,oRaw.description['channelInfo'][1])
 oDataOrganizor.addLabels(oLabel)
