@@ -4,6 +4,7 @@ Created on Sat Aug 31 11:39:53 2019
 
 @author: Jin Dou
 """
+from abc import ABC, abstractmethod
 
 class CStimuli:
     pass
