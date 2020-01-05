@@ -850,6 +850,9 @@ class DataOrganizor:
                         dataSetObject.dataRecordList.append(recordTemp)
         
         elif(stimuliMode == 'DataIntvl'):
+            '''
+            only for online model it can be used when the start time and end time of the label is allocated in Adaptor.MNEEvokedToDataOrganizor function
+            '''
             dataSetObject = CDataSet(self.type + str(self.labelList[0].startTime))
             for label in self.labels:
                 data = self.labels[label]

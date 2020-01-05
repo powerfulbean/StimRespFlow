@@ -5,9 +5,10 @@ Created on Sat Aug 31 01:26:24 2019
 @author: Jin Dou
 """
 import outsideLibInterfaces as outLib
-from .RawData import CRawData
+from RawData import CRawData
 from abc import ABC, abstractmethod, ABCMeta
 from DataIO import checkFolder, getFileName
+from StimuliData import CAuditoryStimuli
 import os
 
 class CLabels(CRawData): # for labels created by psychopy, the last number is microsecond but not millisecond              
@@ -210,6 +211,108 @@ class CBlinksCaliLabels(CLabels):
     def parseTimeString(self,string):
         dateTime = outLib._OutsideLibTime()._importDatetime() 
         return dateTime.datetime.strptime(string , '%Y-%m-%d %H:%M:%S.%f')
+    
+class CAuditoryLabels(CLabels):       
+    
+    def readFile(self,fileName):
+        ''' 
+        read all the necessary information from the label files
+        '''
+        #include the OutsideLib module for Input/Output
+        self.outLibIO = outLib._OutsideLibIO()
+        self.description = 'Auditory'
+        buffer = []
+        datetime = outLib._OutsideLibTime()._importDatetime()    
+        
+        with open(fileName, 'r') as the_file: #opoen the labels file
+            lines = the_file.readlines()
+        
+        for line in lines: # read the label file
+            temp = line.split()
+            buffer.append(temp)
+#        print(len(buffer))
+        i = 0
+        while( i < len(buffer)): #buffer is the whole document
+#            print("i="+str(i))
+#            print(buffer[i][0])
+            
+            #the first line, save the start date
+            if(i == 0):
+                [a,b,c,d,e,f] = [int(j) for j in buffer[i] if (j != '-' and j != ':') ]
+                self.startTime = datetime.datetime(a,b,c,d,e,f) # Lib: datetime
+                i+=1
+            
+            #the left/right label
+            if(buffer[i][0]=='left' or buffer[i][0]=='right' or buffer[i][0] == 'Single'):
+                
+                leftflag = ''
+                singleflag = False
+                if(buffer[i][0] == 'left'):
+                    leftflag = True
+                elif(buffer[i][0] == 'Single'):
+                    singleflag = True
+                else:
+                    leftflag = False
+                
+                tempRecord = CLabelInfo('','','','')
+                
+                i += 1
+                audioStart = buffer[i]
+                
+                #the audio Start Label
+                if(audioStart[0] == 'audioStart'):
+                    # real audio name    
+                    temp = audioStart[1] 
+                    realName, extension = os.path.splitext(temp)
+                    
+                    if(singleflag == False):
+                        # stimuli name
+                        stimuliName = self.stimuliname(leftflag, realName)
+                        tempRecord.name = stimuliName
+                        #print(stimuliName)
+                        otherstimulisName = self.stimuliname(not leftflag, realName)# other stimuli name
+                        tempRecord.otherNames.append(otherstimulisName)
+                        #print(otherstimulisName)
+                    else:
+                        tempRecord.name = realName
+                        tempRecord.otherNames.append(realName)
+                    
+                    # calculate start time
+                    temp = audioStart[2:len(audioStart)] 
+                    [h,m,s,ms] = [int(t) for t in temp]
+                    startTime = datetime.time(h,m,s,ms)
+                    tempRecord.startTime = startTime
+                    i+=1
+                    
+                    #the audio End Label
+                    audioEnd = buffer[i]
+                    if(audioEnd[0] == 'audioEnd'):
+                        tempRecord.index = audioEnd[1]
+                        temp = audioEnd[2:len(audioEnd)]
+                        [h,m,s,ms] = [int(t) for t in temp]
+                        endTime = datetime.time(h,m,s,ms)
+                        tempRecord.endTime = endTime
+                
+                tempRecord.type = 'auditory'
+                self.timestamps.append(tempRecord)
+                i+=1
+            elif(buffer[i][0]=='-1'):
+                break
+            else:
+                raise TypeError("labels, loadfile error", buffer[i][0])
+        
+        self.writeType("auditory")              
+        return buffer        
+
+    
+    def stimuliname(self,isLeft, realName):
+        idx = realName.find('R')
+        if(isLeft == True):
+            realStimuli = realName[1:idx] # don't include the 'L'
+        else:
+            realStimuli = realName[idx+1:len(realName)] # don't include the 'R'
+        return realStimuli    
+
 
 class CLabelInfo:
     ''' class to store information for a label marker, including:
