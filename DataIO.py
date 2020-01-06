@@ -49,15 +49,15 @@ def loadSound(Dir,Fs=22050):
     wav,sr = librosa.load(Dir,Fs)
     return wav
 
-def readStimuli(file):
-        ''' 
-        read audio stimuli
-        '''
-        print("readStimuli:", file)
-        frameNum, channelNum, data, len_s = _OutsideLibIO().getMonoChannelData(file)
-        a = _unpackWav(frameNum,channelNum,data)
-        
-        return np.asarray(a), len_s
+def readAuditoryStimuli(file):
+    ''' 
+    read audio stimuli
+    '''
+    print("readStimuli:", file)
+    frameNum, channelNum, data, len_s = _OutsideLibIO().getMonoChannelData(file)
+    a = _unpackWav(frameNum,channelNum,data)
+    
+    return np.asarray(a), len_s
 
 def _unpackWav(frameNum, channelNum, data):
     return struct.unpack("%ih" % (frameNum* channelNum), data)

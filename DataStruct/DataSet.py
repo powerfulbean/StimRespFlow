@@ -8,6 +8,8 @@ Created on Wed Oct  9 15:15:34 2019
 import outsideLibInterfaces as outLib
 import DataIO
 from .LabelData import CLabelInfo, CLabels
+from .StimuliData import CAuditoryStimuli
+from Helper.Cache import CStimuliCache
 
 class CDataOrganizor:
     

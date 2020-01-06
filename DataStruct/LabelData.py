@@ -4,14 +4,19 @@ Created on Sat Aug 31 01:26:24 2019
 
 @author: Jin Dou
 """
-import outsideLibInterfaces as outLib
-from RawData import CRawData
-from abc import ABC, abstractmethod, ABCMeta
-from DataIO import checkFolder, getFileName
-from StimuliData import CAuditoryStimuli
 import os
+from abc import abstractmethod
 
-class CLabels(CRawData): # for labels created by psychopy, the last number is microsecond but not millisecond              
+import outsideLibInterfaces as outLib
+from DataIO import checkFolder, getFileName
+from Helper.Cache import CStimuliCache
+from .RawData import CRawData
+from .StimuliData import CStimuli,CAuditoryStimuli
+
+
+
+class CLabels(CRawData): 
+    # for labels created by psychopy, the last number is microsecond but not millisecond              
     def calTimeStamp(self):
         return self.timestamps
     
@@ -79,17 +84,25 @@ class CLabels(CRawData): # for labels created by psychopy, the last number is mi
         '''
         datetime = outLib._OutsideLibTime()._importDatetime()
         if(len(self.timestamps) != len(self.rawdata)):
-            print("label warning: the number of rawdata is wrong")#, length of raw data is: ", len(self.rawdata))
-        for i,marker in enumerate(self.timestamps):
+            print("label warning: the number of rawdata is wrong, ",len(self.timestamps),' ',len(self.rawdata))
+            #length of raw data is: ", len(self.rawdata))
+        for i,labelInfo in enumerate(self.timestamps):
             if (i<len(self.rawdata)):
-                marker.promote(datetime,self.startTime.date(),self.rawdata[i]) #allocate rawdata to 
+                labelInfo.promote(datetime,self.startTime.date(),self.rawdata[i]) #allocate rawdata to 
             else:
-                marker.promoteTime(datetime,self.startTime.date())
+                labelInfo.promoteTime(datetime,self.startTime.date())
     
     @abstractmethod
     def readFile(self,fileName):
         ''' not useful for labels, because label's data can be loaded later'''
         return
+    
+    @abstractmethod
+    def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
+        ''' 
+        load stimuli in self.timestamps(CLabelInfo).stimuli
+        '''
+        pass
 
 class CVisualLabels(CLabels):
     
@@ -135,6 +148,7 @@ class CVisualLabels(CLabels):
                     tempRecord = CLabelInfo('','','','') #store crossing time
                     tempRecord2 = CLabelInfo('','','','') #store stimuli time
                     tempRecord3 = CLabelInfo('','','','') #store rest time
+                    
                     i+=1
                     
                     if(buffer[i][0] == 'attendStart'):
@@ -167,7 +181,12 @@ class CVisualLabels(CLabels):
             else:
                 print("visuallabels, readFile error")
                 return
-
+            
+    def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
+        ''' 
+        load stimuli in self.timestamps(CLabelInfo).stimuli
+        '''
+        pass
         
 class CBlinksCaliLabels(CLabels):
     
@@ -312,6 +331,36 @@ class CAuditoryLabels(CLabels):
         else:
             realStimuli = realName[idx+1:len(realName)] # don't include the 'R'
         return realStimuli    
+    
+    def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
+        ''' 
+        load stimuli in self.timestamps(CLabelInfo).stimuli
+        '''
+        if(extension == '.wav'):
+            for i in range(len(self.timestamps)):
+                label = self.timestamps[i]
+                mainStreamName = label.name
+                otherStreamNames = label.otherNames
+                print("AuditoryLabels, readStimuli:", mainStreamName,otherStreamNames[0])
+                stimuliObject = CAuditoryStimuli()
+                mainStreamFullPath = Folder + mainStreamName + extension
+                otherStreamFullPaths = [Folder + i + extension for i in otherStreamNames]
+                stimuliObject.loadStimulus(mainStreamFullPath,otherStreamFullPaths)
+                # save this auditoryStimuli object to the data attribute of this markerRecord object
+                self.rawdata.append(stimuliObject)
+        
+        elif(extension == 'cache'):
+            for i in range(len(self.timestamps)):
+                label = self.timestamps[i]
+                mainStreamName = label.name
+                otherStreamNames = label.otherNames
+                print("AuditoryLabels, read Stimuli from cache:", mainStreamName,otherStreamNames[0])
+                stimuliObject = CAuditoryStimuli()
+                stimuliObject.loadStimulus(mainStreamName,otherStreamNames,oCache)                    
+                # save this auditoryStimuli object to the data attribute of this markerRecord object
+                self.rawdata.append(stimuliObject)
+                
+
 
 
 class CLabelInfo:
@@ -320,7 +369,7 @@ class CLabelInfo:
         2. other useful label names
         3. start and end time
         4. label type
-        5. label value
+        5. label value: actual stimuli
     '''
     def __init__(self,name,index,startTime,endTime):
         self.name = name
@@ -331,7 +380,7 @@ class CLabelInfo:
         self.type = ''
         self._promoteFlag = False
         self._promoteTimeFlag = False
-        self.value = '' #label info (such as auditoryStimuli object)
+        self.stimuli = '' #label info (such as auditoryStimuli object)
         
     def getLabelDict(self,):
         if (self.type == 'attention') :
@@ -369,7 +418,7 @@ class CLabelInfo:
             print("marker has been promoted")
         else:
             self.promoteTime(datetimeModule,dateObject)    
-            self.value = data
+            self.stimuli = data
             self._promoteFlag = True
     
     def promoteTime(self,datetimeModule,dateObject):

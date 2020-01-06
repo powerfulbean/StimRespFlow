@@ -5,16 +5,22 @@ Created on Sat Aug 31 11:39:53 2019
 @author: Jin Dou
 """
 from abc import ABC, abstractmethod
+from DataIO import checkFolder, getFileName, readAuditoryStimuli
+from Helper.Cache import CStimuliCache
 
 class CStimuli(ABC):
     def __init__(self):
         self.type = ""
         self._stimuliParams = list()
-        self.configStimuli()
+        self.configStimuliParams()
       
     @abstractmethod
-    def configStimuli(self):
+    def configStimuliParams(self):
         self._stimuliParams=[""]
+        
+    @abstractmethod
+    def loadStimulus(self):
+        pass
     
     def getStimuliParams(self,show=False):
         if(show == True):
@@ -22,9 +28,31 @@ class CStimuli(ABC):
                 print(i)
         return self._stimuliParams.copy()
 
+class CVisualStimuli(CStimuli):
+    pass
+
+
 class CAuditoryStimuli(CStimuli):
     
-    def configStimuli(self):
+    def loadStimulus(self,mainName:str,otherNames:list,oCache : CStimuliCache = None):
+        if oCache == None:
+            mainStream, len_s = readAuditoryStimuli(mainName) 
+            self.mainStream = mainStream
+            self.len_s = len_s
+            for otherStreamName in otherNames:
+                otherStream, otherLen_s = readAuditoryStimuli(otherStreamName)
+                self.otherStreams.append(otherStream)
+                self.otherLen_s.append(otherLen_s)
+        else:
+            mainStream, len_s = oCache.getStimuli(mainName)
+            self.mainStream = mainStream
+            self.len_s = len_s
+            for otherStreamName in otherNames:
+                otherStream, otherLen_s = oCache.getStimuli(otherStreamName)
+                self.otherStreams.append(otherStream)
+                self.otherLen_s.append(otherLen_s)        
+    
+    def configStimuliParams(self):
         self._stimuliParams=["mainStream","otherStreams","len_s","otherLen_s"]
         self.mainStream = ''
         self.otherStreams = list()
