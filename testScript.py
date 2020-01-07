@@ -12,6 +12,7 @@ from DataStruct.RawData import CBitalinoRawdata
 from DataStruct.LabelData import CVisualLabels,CAuditoryLabels
 from DataStruct.DataSet import CDataOrganizor,EOperation
 from outsideLibInterfaces import CMNE
+import SignalProcessing as SigProc
 
 ''' prepare label and data files'''
 dir_list = ['dirLabels','dirData','dirStimuli']
@@ -60,7 +61,8 @@ for label in oDataOrg.labelList:
     oDataOrg.logOp(label,'Eog',EOperation.BandPass,[0.1,8])
     oDataOrg.logOp(label,'all',EOperation.Resample,[64])
     oDataOrg[label] = oMNERaw.get_data()
-    
+    mainStream = label.stimuli.mainStream
+    otherStream = label.stimuli.otherStreams[0]
     
     
 

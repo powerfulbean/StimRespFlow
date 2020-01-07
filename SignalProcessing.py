@@ -42,7 +42,7 @@ class CPreprocess:
         L = len(x)
         while(L%2 != 0):
             L+=1
-        print(L)
+        print("SigProc: getEnvelope input len",L)
         trans = self._outLibTransform.hilbertTransform(x,N = L) # this funtion can be really slow when the len(x) is a prime
 #        print("Transform finish")
         ans = np.abs(trans)
@@ -75,13 +75,15 @@ def audioStimPreprocessing(stimuli,filterHigh,epochLen_s,downSample):
     outLibTrans = _OutsideLibTransform()
 #    print('resample')
 #    
-    oriSrate = len(stimuli)/epochLen_s
-    stiMainDownSample = resample_poly(stimuliMain,1,350)
+    oriSrate = round(len(stimuli)/epochLen_s)
+    stiMainDownSample = resample_poly(stimuliMain,1,int((oriSrate/4)/downSample)) 
+#    print(int((oriSrate/4)/downSample))
+    #it reauires that the down factor must be integer
     stiMainDownSample = outLibTrans.resample(stiMainDownSample,epochLen_s,downSample)#!!!! now is 60 s
     #Cal Envelope
 #    print('envelope')
     stiMain = oPre.getEnvelope(stiMainDownSample)
-    return stiMain    
+    return stiMain 
         
         
          
