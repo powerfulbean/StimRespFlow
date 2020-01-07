@@ -10,6 +10,15 @@ import DataIO
 from .LabelData import CLabelInfo, CLabels
 from .StimuliData import CAuditoryStimuli
 from Helper.Cache import CStimuliCache
+from enum import Enum, unique
+
+@unique
+class EOperation(Enum):
+    Resample = 'resample'
+    HighPass = 'highPass'
+    LowPass = 'lowPass'
+    BandPass = 'bandPass'
+    
 
 class CDataOrganizor:
     
@@ -19,19 +28,33 @@ class CDataOrganizor:
         self.type = '' #was allocated value when build DataOrganizer from '.mat' files which was built by saveToMat
         self.srate = srate
         self.n_channels = n_channels
-        self.channelsList =channelsList
+        self.channelsList = channelsList
         self.outLibIOObject = outLib._OutsideLibIO()
+        self._opLogs = dict()
+        
+    def logOp(self,oLabel:CLabels, chnnName:str, op:EOperation, params:list):
+        record = (chnnName, op.value,params)
+        self._opLogs[oLabel].append(record)
     
     def addLabels(self,oLabel:CLabels):
         if(oLabel.timestamps[0]._promoteTimeFlag == False):
             oLabel.enhanceTimeStamps()
         inputLabels = oLabel.timestamps
+        self.type = oLabel.type
         for i in inputLabels:
             self.labels[i] = ''
+            self._opLogs[i] = list()
+        self.labelList = list(self.labels.keys())
     
-    def buildLabelslist(self):
-        self.labelList = [i for i in self.labels]
-        self.labelList.sort(key=self.labelList[0].sorted_key)
+    def __getitem__(self,label:CLabelInfo):
+        return self.labels[label]
+    
+    def __setitem__(self, label:CLabelInfo , value):
+        self.labels[label] = value
+    
+#    def buildLabelslist(self):
+#        self.labelList = [i for i in self.labels]
+#        self.labelList.sort(key=self.labelList[0].sorted_key)
     
     def checkDataSet(self):
         if(len(self.data) == len (self.labels)):

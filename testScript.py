@@ -10,7 +10,8 @@ from Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
 from DataIO import getFileList,saveObject, loadObject
 from DataStruct.RawData import CBitalinoRawdata
 from DataStruct.LabelData import CVisualLabels,CAuditoryLabels
-from DataStruct.DataSet import CDataOrganizor
+from DataStruct.DataSet import CDataOrganizor,EOperation
+from outsideLibInterfaces import CMNE
 
 ''' prepare label and data files'''
 dir_list = ['dirLabels','dirData','dirStimuli']
@@ -38,10 +39,33 @@ oLabel.loadStimuli("","cache",oStimCache)
 oLabel.enhanceTimeStamps()
 
 ''' match labels and raw data'''
-oDataOrganizor = CDataOrganizor(oRaw.numChannels,oRaw.sampleRate,oRaw.description['channelInfo'][1])
-oDataOrganizor.addLabels(oLabel)
-oDataOrganizor.assignTargetData([oRaw])
+oDataOrg = CDataOrganizor(oRaw.numChannels,oRaw.sampleRate,oRaw.description['channelInfo'][1])
+oDataOrg.addLabels(oLabel)
+oDataOrg.assignTargetData([oRaw])
 
-saveObject(oDataOrganizor,r"./",'testOrganizorAuditory')
+''' Use MNE to preprocess the data'''
 
-#temp = loadObject(r"./testOrganizor.bin")
+nChannels = oDataOrg.n_channels
+channelsList = oDataOrg.channelsList
+sRate = oDataOrg.srate
+
+for label in oDataOrg.labelList:
+    data = oDataOrg[label]
+    oMNE = CMNE(data,oDataOrg.channelsList,sRate,['eeg','eog'])
+    oMNERaw = oMNE.getMNERaw()
+    oMNERaw.filter(2,8,picks = ['eeg'])
+    oMNERaw.filter(0.1,8, picks = ['eog'])
+    oMNERaw.resample(64,npad = 'auto')
+    oDataOrg.logOp(label,'earEEG',EOperation.BandPass,[2,8])
+    oDataOrg.logOp(label,'Eog',EOperation.BandPass,[0.1,8])
+    oDataOrg.logOp(label,'all',EOperation.Resample,[64])
+    oDataOrg[label] = oMNERaw.get_data()
+    
+    
+    
+
+
+
+#saveObject(oDataOrganizor,r"./",'testOrganizorAuditory')
+
+#temp = loadObject(r"./testOrganizorAuditory.bin")

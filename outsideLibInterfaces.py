@@ -155,22 +155,24 @@ class _OutsideLibIO:
         return frameNum, channelNum, data, len(sound)/1000
     
     
-class COutsideLibMNE:
+class CMNE:
     
-    def __init__(self,data,n_channels,srate):
+    def __init__(self,data,channelsInfo,srate,chTypes:list):
         self.LibMNE = self._importMNE()
-        self.oRawData = self.initiateObject(data,n_channels,srate)
+        self._oRawData = self.initiateObject(data,channelsInfo,srate,chTypes)
     
     def _importMNE(self):
         import mne as MNE
         return MNE
     
-    def initiateObject(self,data,n_channels,srate):
-        info = self.LibMNE.create_info(n_channels, srate,ch_types = 'eeg')
+    def initiateObject(self,data,channelsInfo,srate,chTypes:list):
+        info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
         return self.LibMNE.io.RawArray(data,info)
     
     def plot(self,):
-        self.oRawData.plot(block=True,scalings = 'auto')
-        
+        self._oRawData.plot(block=True,scalings = 'auto')
+    
+    def getMNERaw(self):
+        return self._oRawData
         
         

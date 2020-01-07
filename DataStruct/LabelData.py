@@ -114,6 +114,7 @@ class CVisualLabels(CLabels):
         #include the OutsideLib module for Input/Output
         self.outLibIO = outLib._OutsideLibIO()
         self.description = 'Visual'
+        self.type = "Visual"
         buffer = []
         datetime = outLib._OutsideLibTime()._importDatetime()    
         
@@ -194,6 +195,7 @@ class CBlinksCaliLabels(CLabels):
         self.outLibIO = outLib._OutsideLibIO()
         tempName= getFileName(fileName)
         self.description = 'BlinksCali_' + tempName
+        self.type = "BlinksCali"
         buffer = []
         with open(fileName, 'r') as the_file: #opoen the labels file
             lines = the_file.readlines()
@@ -240,6 +242,7 @@ class CAuditoryLabels(CLabels):
         #include the OutsideLib module for Input/Output
         self.outLibIO = outLib._OutsideLibIO()
         self.description = 'Auditory'
+        self.type = "Auditory"
         buffer = []
         datetime = outLib._OutsideLibTime()._importDatetime()    
         
