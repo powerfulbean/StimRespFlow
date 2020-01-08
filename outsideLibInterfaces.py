@@ -81,7 +81,7 @@ class _OutsideLibTransform:
     
     def resample(self,x,oriLen_s,targetF):
 #        print("start resample")
-        n = oriLen_s * targetF
+        n = round(oriLen_s * targetF)
         Lib = self._importScipySignal()
         ans = Lib.resample(x,n)
         return ans

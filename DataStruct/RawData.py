@@ -45,7 +45,7 @@ class CRawData(ABC):
     
     def findInterval(self,startTime,endTime,frontLag_s, postLag_s):
         '''
-        return the interval that satisfy the requirement most
+        return the copy of the rawdata with the interval satisfying the requirement most
         '''
         if( endTime < self.startTime or startTime > self.timestamps[-1]):
             return None,False

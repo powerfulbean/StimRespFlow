@@ -8,8 +8,7 @@ Created on Wed Oct  9 15:15:34 2019
 import outsideLibInterfaces as outLib
 import DataIO
 from .LabelData import CLabelInfo, CLabels
-from .StimuliData import CAuditoryStimuli
-from Helper.Cache import CStimuliCache
+from .StimuliData import CStimuli
 from enum import Enum, unique
 
 @unique
@@ -18,9 +17,18 @@ class EOperation(Enum):
     HighPass = 'highPass'
     LowPass = 'lowPass'
     BandPass = 'bandPass'
+    Transform = "transform"
     
 
 class CDataOrganizor:
+    '''
+    !Important: the labels (CLabel) in this class have the same memory addresses 
+    as the labels it adds by the "addLabels" function 
+    '''
+    
+    '''
+    organize data for a single CLabel object
+    '''
     
     def __init__(self,n_channels,srate, channelsList):
         self.labels = dict() # key: DataStruct.LabelData.CLabelInfo, value: data
@@ -30,11 +38,11 @@ class CDataOrganizor:
         self.n_channels = n_channels
         self.channelsList = channelsList
         self.outLibIOObject = outLib._OutsideLibIO()
-        self._opLogs = dict()
+        self._opLogs = list()
         
-    def logOp(self,oLabel:CLabels, chnnName:str, op:EOperation, params:list):
+    def logOp(self,chnnName:str, op:EOperation, params:list):
         record = (chnnName, op.value,params)
-        self._opLogs[oLabel].append(record)
+        self._opLogs.append(record)
     
     def addLabels(self,oLabel:CLabels):
         if(oLabel.timestamps[0]._promoteTimeFlag == False):
@@ -43,7 +51,6 @@ class CDataOrganizor:
         self.type = oLabel.type
         for i in inputLabels:
             self.labels[i] = ''
-            self._opLogs[i] = list()
         self.labelList = list(self.labels.keys())
     
     def __getitem__(self,label:CLabelInfo):
@@ -105,37 +112,6 @@ class CDataOrganizor:
                 label.otherNames.append(str(Dict["OtherLabelNames"][0]))
             self.labels[label] = Dict["Data"]
     
-    def getEpochDataSetForVisual(self,epochLen_s):
-        dataSetObject = CDataSet(self.type + str(self.labelList[0].startTime))
-        for label in self.labels:
-            data = self.labels[label]
-            stimuli = label # label stores a related markerRecord
-            # get segmented auditoryStimuli Object from the markerRecord's whole length auditoryStimuli Object 
-            labelDes = [stimuli.name]
-            if(epochLen_s <= 0):
-                Num = 1
-            else:
-                Num = int(data.shape[1] / (epochLen_s * self.srate))
-            for i in range(Num):
-                recordTemp = CDataRecord()
-#                print(data.shape,i*epochLen_s*self.srate,(i+1)*epochLen_s*self.srate)
-                if(epochLen_s <= 0):
-                    recordTemp.dataSeg = data
-                else:
-                    recordTemp.dataSeg = data[:,i*epochLen_s*self.srate:(i+1)*epochLen_s*self.srate]
-                if(stimuli.name.lower().find('stimuli1') != -1):
-                    recordTemp.label = 0
-                elif(stimuli.name.lower().find('stimuli2') != -1):
-                    recordTemp.label = 1
-                else:
-                    print("error, doesn't recognize this kind of stimuli.name", stimuli.name)
-                recordTemp.srate = self.srate
-                recordTemp.labelDes = labelDes
-                if(i*epochLen_s*self.srate<data.shape[1]):
-                    dataSetObject.dataRecordList.append(recordTemp)
-                
-        return dataSetObject
-    
     def assignTargetData(self,targetList,frontLag_s = 1, postLag_s = 1): #need to be improved
         ''' 
         Des:
@@ -194,6 +170,31 @@ class CDataOrganizor:
                 
         for to_remove in remove_list:
             self.labels.pop(to_remove,None)
+    
+    def getEpochDataSet(self,epochLen_s):
+#        transObject = outLib._OutsideLibTransform()
+        oDataSet = CDataSet(self.type + str(self.labelList[0].startTime))
+        for label in self.labels:
+            data = self.labels[label]
+            stimuli = label # label stores a related markerRecord
+            # get segmented auditoryStimuli Object from the markerRecord's whole length auditoryStimuli Object ('data' attribute) 
+            Num = round(label.getDuration_s() / epochLen_s)
+            ans = label.stimuli.getSegmentStimuliLists(epochLen_s,Num) 
+            labelDes = [stimuli.name, stimuli.otherNames[0]]
+#            print('Num: ',Num)
+            for i in range(Num):
+                
+#                print(data.shape,i*epochLen_s*self.srate,(i+1)*epochLen_s*self.srate)
+#                print((i+1)*epochLen_s*self.srate)
+                dataSeg = data[:,int(i*epochLen_s*self.srate) : int((i+1)*epochLen_s*self.srate)]
+                label = ans[i]
+                srate = self.srate
+                recordTemp = CDataRecord(dataSeg,label,labelDes,srate)
+                if(i*epochLen_s*self.srate <= data.shape[1]):
+#                    print('append',i*epochLen_s*self.srate,data.shape[1])
+                    oDataSet.dataRecordList.append(recordTemp)
+        
+        return oDataSet
 
 class CDataSet:
     def __init__(self,dataSetName = None):
@@ -210,11 +211,11 @@ class CDataSet:
         
         
 class CDataRecord: #base class for data with label
-    def __init__(self):
-        self.dataSeg = None #real data Segment
-        self.label = None #segmented "auditoryStimuli" object
-        self.labelDes = list() #name of the stimuli ( main)
-        self.srate = 0
+    def __init__(self,data,stimuli:CStimuli,stimuliDes:list,srate):
+        self.data = data #real data Segment
+        self.stimuli = stimuli #segmented "auditoryStimuli" object
+        self.stimuliDes = stimuliDes #name of the stimuli ( main)
+        self.srate = srate
         self.filterLog = list()
         
     def errorPrint(self,error):

@@ -41,7 +41,7 @@ class CStimuliCacheAuditory(CStimuliCache):
             return data, 300.0
         else:
             print(len(self.cache[name].soundData),self.cache[name].len_s)
-            return self.cache[name].soundData, self.cache[name].len_s
+            return self.cache[name].soundData.copy(), self.cache[name].len_s
         
     def __getitem__(self,name):
         if (name == 'none'):
@@ -50,7 +50,7 @@ class CStimuliCacheAuditory(CStimuliCache):
             return data, 300.0
         else:
             print(len(self.cache[name].soundData),self.cache[name].len_s)
-            return self.cache[name].soundData, self.cache[name].len_s
+            return self.cache[name].soundData.copy(), self.cache[name].len_s
         
 class CSoundStreamRecord:
     

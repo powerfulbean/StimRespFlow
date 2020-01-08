@@ -16,7 +16,8 @@ from .StimuliData import CStimuli,CAuditoryStimuli
 
 
 class CLabels(CRawData): 
-    # for labels created by psychopy, the last number is microsecond but not millisecond              
+    # for labels created by psychopy, the last number is microsecond but not millisecond 
+                 
     def calTimeStamp(self):
         return self.timestamps
     
@@ -384,6 +385,10 @@ class CLabelInfo:
         self._promoteFlag = False
         self._promoteTimeFlag = False
         self.stimuli = '' #label info (such as auditoryStimuli object)
+        
+    def getDuration_s(self):
+        temp = self.endTime - self.startTime
+        return temp.total_seconds()
         
     def getLabelDict(self,):
         if (self.type == 'attention') :

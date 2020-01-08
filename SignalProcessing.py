@@ -76,6 +76,7 @@ def audioStimPreprocessing(stimuli,filterHigh,epochLen_s,downSample):
 #    print('resample')
 #    
     oriSrate = round(len(stimuli)/epochLen_s)
+    print(int((oriSrate/4)/downSample))
     stiMainDownSample = resample_poly(stimuliMain,1,int((oriSrate/4)/downSample)) 
 #    print(int((oriSrate/4)/downSample))
     #it reauires that the down factor must be integer

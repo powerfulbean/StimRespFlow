@@ -22,6 +22,10 @@ class CStimuli(ABC):
     def loadStimulus(self):
         pass
     
+    @abstractmethod
+    def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):
+        pass
+    
     def getStimuliParams(self,show=False):
         if(show == True):
             for i in self._stimuliParams:
@@ -59,7 +63,7 @@ class CAuditoryStimuli(CStimuli):
         self.len_s = ''
         self.otherLen_s = list()
         
-    def getSegmentStimuliLists(self,segmentLen_s):#Note: for otherStreams only return first ele 
+    def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):#Note: for otherStreams only return first ele 
         ans = list()
         segmentMainLen_num = int(len(self.mainStream) * (segmentLen_s/self.len_s))
         segmentOtherLen_num = int(len(self.otherStreams[0]) * (segmentLen_s/self.otherLen_s[0]))
@@ -67,6 +71,10 @@ class CAuditoryStimuli(CStimuli):
         rangeNum1 = int(self.len_s / segmentLen_s)
         rangeNum2 = int(self.otherLen_s[0] / segmentLen_s)
         rangeNum = min([rangeNum1,rangeNum2])
+        
+        if(rangeNum!=segmentsNum):
+            raise ValueError("reqired segments number ",segmentsNum," is not equal to calculated segments number ",rangeNum)
+        
         for i in range(rangeNum):
             tempStimuli = CAuditoryStimuli()
             tempStimuli.mainStream = self.mainStream[i*segmentMainLen_num : (i+1) * segmentMainLen_num]
@@ -75,7 +83,7 @@ class CAuditoryStimuli(CStimuli):
             tempStimuli.otherLen_s.append(segmentLen_s)
             ans.append(tempStimuli)
     
-        return ans,rangeNum
+        return ans
     
     def getSegmentByTime(self,startTime:float,endTime:float):
 #        print(startTime,endTime)
