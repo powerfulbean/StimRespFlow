@@ -24,16 +24,20 @@ labelFiles = getFileList(oDir['dirLabels'],'.txt')
 dataFiles = getFileList(oDir['dirData'],'.txt')
 oLog = CLog(oDir['dirResult'],'programLog')
 
-oLog.safeRecordTime('stimuli cache start')
+oLog.safeRecordTime('stimuli cache start')#log
 ''' load stimuli in cache '''
 stimuliTypeList = ['MW_DS_NM','MM_SS_NM','MM_DS_WM','MW_DS_WM','WW_SS_NM']
 oStimList = CStimuliTypeList(stimuliTypeList,r'testConf/stimuliType.conf')
 oStimCache = CStimuliCacheAuditory(oDir['dirStimuli'])
 oStimCache.loadStimuli(oStimList['MW_DS_NM'])
 ''''''
-oLog.safeRecordTime('stimuli cache end')
+oLog.safeRecordTime('stimuli cache end')#log
 
-oLog.safeRecordTime('prepare dataset start')
+oLog.setLogable(False)
+oLog.safeRecord('useless')
+oLog.setLogable(True)
+
+oLog.safeRecordTime('prepare dataset start')#log
 '''load label and raw data files'''
 oRaw = CBitalinoRawdata()
 oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
@@ -85,7 +89,6 @@ oDataOrg.logOp('stimuli',EOperation.Transform,['hilbert'])
 oDataOrg.logOp('all',EOperation.Resample,[64])
 oDataSet = oDataOrg.getEpochDataSet(60)
 #saveObject(oDataOrganizor,r"./",'testOrganizorAuditory')
-
 #temp = loadObject(r"./testOrganizorAuditory.bin")
 ''''''
-oLog.safeRecordTime('prepare dataset end')
+oLog.safeRecordTime('prepare dataset end')#log

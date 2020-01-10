@@ -139,11 +139,21 @@ class CLog:
         self.save()
         self.folder = folder
         self.name = Name
+        self._logable = True
+        
+    def setLogable(self,logFlag):
+        self._logable = logFlag
+        
+    def getLogable(self):
+        return self._logable 
     
     def Open(self):
         self.fileHandle = open(self.fileName, "a+")
         
     def record(self,log,newline:bool = True):
+        if(self.getLogable() == False):
+            return
+        
         if(type(log)==list):
             for j in log:
                 self.fileHandle.write(str(j)+' ')
@@ -158,14 +168,20 @@ class CLog:
             self.fileHandle.write(' ')
         
     def openRecordSave(self,log,newline:bool = True):
+        if(self.getLogable() == False):
+            return
         self.Open()
         self.record(log,newline)
         self.save()
     
     def safeRecord(self,log,newline:bool = True):
+        if(self.getLogable() == False):
+            return
         self.openRecordSave(log ,newline)
 		
     def safeRecordTime(self,log,newline:bool = True):
+        if(self.getLogable() == False):
+            return
         datetime = _OutsideLibTime()._importDatetime()
         self.openRecordSave(log + ', time: ' + str(datetime.datetime.now()),newline)
     

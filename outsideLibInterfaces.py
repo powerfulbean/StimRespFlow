@@ -175,4 +175,23 @@ class CMNE:
     def getMNERaw(self):
         return self._oRawData
         
+class CIfSklearn:
+    
+    def __init__(self):
+        self._sk = None
+        self.get()
+    
+    def get(self):
+        import sklearn as sk
+        self._sk = sk
+        return sk
+    
+    def preprocessing(self):
+        import sklearn.preprocessing as pre
+        return pre
+    
+    def model_selection(self):
+        import sklearn.model_selection as modsel
+        return modsel
+    
         
