@@ -155,7 +155,7 @@ class _OutsideLibIO:
         return frameNum, channelNum, data, len(sound)/1000
     
     
-class CMNE:
+class CIfMNE:
     
     def __init__(self,data,channelsInfo,srate,chTypes:list):
         self.LibMNE = self._importMNE()

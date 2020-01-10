@@ -15,7 +15,7 @@ import tensorflow
 import gc
 
 
-class AccuracyHistory(keras.callbacks.Callback):
+class CAccuracyHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.acc = []
         self.val_acc=[]
@@ -25,7 +25,7 @@ class AccuracyHistory(keras.callbacks.Callback):
         
 
 
-class DeepLearning (object):
+class CDeepLearning (object):
     def __init__(self,batch_size = 1000,epochs = 100):
         self.batch_size = batch_size
         self.epochs = epochs

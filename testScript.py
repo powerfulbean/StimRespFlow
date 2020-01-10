@@ -11,8 +11,8 @@ from DataIO import getFileList,saveObject, loadObject, CLog
 from DataStruct.RawData import CBitalinoRawdata
 from DataStruct.LabelData import CVisualLabels,CAuditoryLabels
 from DataStruct.DataSet import CDataOrganizor,EOperation
-from outsideLibInterfaces import CMNE
-import SignalProcessing as SigProc
+from outsideLibInterfaces import CIfMNE
+from DataProcessing import SignalProcessing as SigProc
 
 
 ''' prepare label and data files'''
@@ -66,7 +66,7 @@ for label in oDataOrg.labelList:
     data = oDataOrg[label]
     
     #filter and resample the raw data
-    oMNE = CMNE(data,oDataOrg.channelsList,sRate,['eeg','eog'])
+    oMNE = CIfMNE(data,oDataOrg.channelsList,sRate,['eeg','eog'])
     oMNERaw = oMNE.getMNERaw()
     oMNERaw.filter(2,8,picks = ['eeg'])
     oMNERaw.filter(0.1,8, picks = ['eog'])
@@ -92,3 +92,7 @@ oDataSet = oDataOrg.getEpochDataSet(60)
 #temp = loadObject(r"./testOrganizorAuditory.bin")
 ''''''
 oLog.safeRecordTime('prepare dataset end')#log
+
+
+
+

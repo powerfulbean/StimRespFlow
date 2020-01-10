@@ -192,6 +192,7 @@ class CDataOrganizor:
                 recordTemp = CDataRecord(dataSeg,label,labelDes,srate)
                 if(i*epochLen_s*self.srate <= data.shape[1]):
 #                    print('append',i*epochLen_s*self.srate,data.shape[1])
+                    recordTemp.filterLog = self._opLogs.copy()
                     oDataSet.dataRecordList.append(recordTemp)
         
         return oDataSet
@@ -208,6 +209,14 @@ class CDataSet:
         
         self.name = temp.name
         self.dataRecordList = temp.dataRecordList
+    
+    def save(self,folderName):
+        DataIO.checkFolder(folderName)
+        print(self.name)
+        file = open(folderName + self.name.replace(':','_') + '.bin', 'wb')
+        import pickle
+        pickle.dump(self,file)
+        file.close()
         
         
 class CDataRecord: #base class for data with label
@@ -219,4 +228,4 @@ class CDataRecord: #base class for data with label
         self.filterLog = list()
         
     def errorPrint(self,error):
-        print("CDataRecorder error" + error)
+        print("CDataRecorder error: " + error)
