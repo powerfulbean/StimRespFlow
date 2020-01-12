@@ -6,13 +6,14 @@ Created on Fri Apr 13 14:20:29 2018
 """
 import keras
 from keras.layers import Dense, Flatten,Input,LSTM,Activation
-from keras.layers import Conv1D, Conv2D,MaxPooling1D,Dropout,normalization,MaxPooling2D
+from keras.layers import Conv1D, Conv2D,MaxPooling1D,Dropout,normalization,MaxPooling2D,AveragePooling1D,AveragePooling2D
 import matplotlib.pylab as plt
 from keras.models import Model
 from keras.layers.core import  Reshape
 from keras.backend.tensorflow_backend import set_session,clear_session,get_session
 import tensorflow
 import gc
+import numpy as np
 
 
 class CAccuracyHistory(keras.callbacks.Callback):
@@ -51,6 +52,18 @@ class CDeepLearning (object):
     def buildInput(self,input_shape,Name = None):
         tensor_1 = Input(shape=input_shape,name = Name)
         return tensor_1
+    
+    def getCNNInput(self,x_Data,Dim = '2D'):
+    
+        input_shape = ''
+        if(Dim == '2D'):
+            x_Data = np.expand_dims(x_Data,3)
+    #        print(x_Data.shape)
+            input_shape = (x_Data.shape[1],x_Data.shape[2],x_Data.shape[3])
+        elif(Dim == '1D'):
+            x_Data = x_Data.reshape(len(x_Data),-1,1)
+            input_shape = (x_Data.shape[1],x_Data.shape[2])
+        return x_Data, input_shape
         
     '''
     buildCNN
@@ -159,6 +172,10 @@ class CDeepLearning (object):
             return MaxPooling2D(pool_size=p[1], strides=p[2])
         elif p[0] == 'MaxPool1D':
             return MaxPooling1D(pool_size=p[1], strides=p[2])
+        elif p[0] == 'AveragePool1D':
+            return AveragePooling1D(pool_size = p[1], strides = p[2])
+        elif p[0] == 'AveragePool2D':
+            return AveragePooling2D(pool_size = p[1], strides = p[2])
         elif p[0] == 'Dropout':
             return Dropout(p[1])
         elif p[0] == 'lstm':
@@ -172,7 +189,7 @@ class CDeepLearning (object):
         elif p[0] == 'activ':
             return Activation(p[1])
         else:
-            print('dont support this layer')
+            raise ValueError('dont support this layer')
     
     def catTensor(self,tensor1,tensor2):#连接两个张量
         return keras.layers.concatenate([tensor1,tensor2])
@@ -217,7 +234,7 @@ class CDeepLearning (object):
         return x_train,x_test 
                     
             
-    def reset_keras(classifier):
+    def reset_keras(self,classifier):
         sess = get_session()
         clear_session()
         sess.close()

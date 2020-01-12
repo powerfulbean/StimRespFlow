@@ -193,5 +193,21 @@ class CIfSklearn:
     def model_selection(self):
         import sklearn.model_selection as modsel
         return modsel
+
+class CIfScipy:
     
-        
+    def __init__(self):
+        pass
+    
+    def stats(self):
+        from scipy import stats
+        return stats
+    
+class CIfKeras:
+    
+    def __init__(self):
+        pass
+    
+    def keras(self):
+        import keras
+        return keras
