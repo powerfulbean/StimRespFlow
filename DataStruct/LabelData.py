@@ -389,7 +389,7 @@ class CLabelInfo:
         temp = self.endTime - self.startTime
         return temp.total_seconds()
         
-    def getLabelDict(self,):
+    def getLabelDict(self,type = None, handle=None):
         if (self.type == 'attention') :
             name = self.name 
         elif (self.type == 'image' or self.type == 'rest' or self.type == 'cross'):
