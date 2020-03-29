@@ -5,14 +5,13 @@ Created on Sat Aug 31 01:26:24 2019
 @author: Jin Dou
 """
 import os
-from abc import abstractmethod
+from abc import abstractmethod,ABC
 
 import outsideLibInterfaces as outLib
 from DataIO import checkFolder, getFileName
 from Helper.Cache import CStimuliCache
 from .RawData import CRawData
 from .StimuliData import CStimuli,CAuditoryStimuli
-
 
 
 class CLabels(CRawData): 
@@ -80,7 +79,7 @@ class CLabels(CRawData):
         '''
         make the self.timestamps be independent from self.rawdata
         change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
-        if applicatable, allocat rawdata to CLabelInfo.stimuli
+        if applicatable, allocat rawdata to CLabelInfoCoarse.stimuli
         
         '''
         datetime = outLib._OutsideLibTime()._importDatetime()
@@ -100,7 +99,7 @@ class CLabels(CRawData):
     @abstractmethod
     def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
         ''' 
-        load stimuli in self.timestamps(CLabelInfo).stimuli
+        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
         '''
         pass
 
@@ -146,9 +145,9 @@ class CVisualLabels(CLabels):
                 i+=1
                                  
                 while(buffer[i][0] == 'sub'):
-                    tempRecord = CLabelInfo('','','','') #store crossing time
-                    tempRecord2 = CLabelInfo('','','','') #store stimuli time
-                    tempRecord3 = CLabelInfo('','','','') #store rest time
+                    tempRecord = CLabelInfoCoarse('','','','') #store crossing time
+                    tempRecord2 = CLabelInfoCoarse('','','','') #store stimuli time
+                    tempRecord3 = CLabelInfoCoarse('','','','') #store rest time
                     
                     i+=1
                     
@@ -185,7 +184,7 @@ class CVisualLabels(CLabels):
             
     def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
         ''' 
-        load stimuli in self.timestamps(CLabelInfo).stimuli
+        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
         '''
         pass
         
@@ -207,7 +206,7 @@ class CBlinksCaliLabels(CLabels):
         i = 0
         self.startTime = self.parseTimeString(buffer[i][1] + ' ' + buffer[i][2])
         while( i < len(buffer)): #buffer is the whole document
-            tempRecord = CLabelInfo('','','','') #store crossing time
+            tempRecord = CLabelInfoCoarse('','','','') #store crossing time
             #the first line, save the start date
             Type = buffer[i][0]
             if(Type == 'blink' or Type == 'lookLeft' or Type == 'lookRight'):
@@ -276,7 +275,7 @@ class CAuditoryLabels(CLabels):
                 else:
                     leftflag = False
                 
-                tempRecord = CLabelInfo('','','','')
+                tempRecord = CLabelInfoCoarse('','','','')
                 
                 i += 1
                 audioStart = buffer[i]
@@ -337,7 +336,7 @@ class CAuditoryLabels(CLabels):
     
     def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
         ''' 
-        load stimuli in self.timestamps(CLabelInfo).stimuli
+        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
         '''
         if(extension == '.wav'):
             for i in range(len(self.timestamps)):
@@ -363,33 +362,59 @@ class CAuditoryLabels(CLabels):
                 # save this auditoryStimuli object to the data attribute of this markerRecord object
                 self.rawdata.append(stimuliObject)
                 
+class CLabelInfoBase:
+    pass
+    
+class CFGetLabelDict(ABC):
+    
+    def __init__(self):
+        self._startInfoDict = None
+        self._endInfoDict = None
+        self._type = None
+    
+    def __call__(self,oLabelInfo:CLabelInfoBase):
+        err = self.handle(oLabelInfo)
+        if (err != 0 ):
+            raise ValueError('Handle face problem with error code:' + str(err))
+        if (self._check() == False):
+            raise ValueError('At least one of the attributes is None,\
+                             Please check the CFGetLabelDict.handle function')
+        return self.startInfoDict, self.endInfoDict
+    
+    @abstractmethod
+    def handle(self,oLabelInfo:CLabelInfoBase):
+        return 0
+    
+    @property
+    def startInfoDict(self):
+        return self._startInfoDict.copy()
+    
+    @property
+    def endInfoDict(self):
+        return self._endInfoDict.copy()
+    
+    @property
+    def labelType(self):
+        return self._type.copy()
+    
+    def _check(self):
+        if (type(self._type) != None):
+            return False
+        if (type(self._startInfoDict) != None):
+            return False
+        if (type(self._endInfoDict) != None):
+            return False
+        return True
 
-
-
-class CLabelInfo:
-    ''' class to store information for a label marker, including:
-        1. label name
-        2. other useful label names
-        3. start and end time
-        4. label type
-        5. label value: actual stimuli
-    '''
-    def __init__(self,name,index,startTime,endTime):
-        self.name = name
-        self.otherNames = list() # background stimuli name
+class CLabelInfo(CLabelInfoBase):
+    
+    def __init__(self,desc,index):
+        self.desc = desc
         self.index = index
-        self.startTime = startTime #datetime.time or datetime.datetime object
-        self.endTime = endTime #dateime.time or datetime.datetime object 
         self.type = ''
-        self._promoteFlag = False
-        self._promoteTimeFlag = False
         self.stimuli = '' #label info (such as auditoryStimuli object)
-        
-    def getDuration_s(self):
-        temp = self.endTime - self.startTime
-        return temp.total_seconds()
-        
-    def getLabelDict(self,type = None, handle=None):
+    
+    def getLabelDict(self,handle:CFGetLabelDict=None):
         if (self.type == 'attention') :
             name = self.name 
         elif (self.type == 'image' or self.type == 'rest' or self.type == 'cross'):
@@ -411,13 +436,34 @@ class CLabelInfo:
                 'time':str(self.endTime),
                 }
         return dict1,dict2
-    
+				
+class CLabelInfoCoarse(CLabelInfo):
+    ''' class to store information for a label marker, including:
+        1. label name
+        2. other useful label names
+        3. start and end time
+        4. label type
+        5. label value: actual stimuli
+    '''
+    def __init__(self,name,index,startTime,endTime):
+        super(CLabelInfoCoarse, self).__init__(name,index)
+        self.name = name
+        self.otherNames = list() # background stimuli name
+        self.startTime = startTime #datetime.time or datetime.datetime object
+        self.endTime = endTime #dateime.time or datetime.datetime object 
+        self._promoteFlag = False
+        self._promoteTimeFlag = False
+        
+    def getDuration_s(self):
+        temp = self.endTime - self.startTime
+        return temp.total_seconds()
+        
     def checkPromoto(self,):
         return self._promoteFlag
     
     def promote(self,datetimeModule,dateObject, data):
         ''' 
-        promote this CLabelInfo with absolute time, 
+        promote this CLabelInfoCoarse with absolute time, 
         and label data (such as image name for visual stimuli, and auditoryStimuli for auditory stimuli)
         
         '''
@@ -440,6 +486,82 @@ class CLabelInfo:
     
     def sorted_key(self,x):
         return x.startTime
+
+
+# class CLabelInfoCoarse:
+    # ''' class to store information for a label marker, including:
+        # 1. label name
+        # 2. other useful label names
+        # 3. start and end time
+        # 4. label type
+        # 5. label value: actual stimuli
+    # '''
+    # def __init__(self,name,index,startTime,endTime):
+        # self.name = name
+        # self.otherNames = list() # background stimuli name
+        # self.index = index
+        # self.startTime = startTime #datetime.time or datetime.datetime object
+        # self.endTime = endTime #dateime.time or datetime.datetime object 
+        # self.type = ''
+        # self._promoteFlag = False
+        # self._promoteTimeFlag = False
+        # self.stimuli = '' #label info (such as auditoryStimuli object)
+        
+    # def getDuration_s(self):
+        # temp = self.endTime - self.startTime
+        # return temp.total_seconds()
+        
+    # def getLabelDict(self,type = None, handle=None):
+        # if (self.type == 'attention') :
+            # name = self.name 
+        # elif (self.type == 'image' or self.type == 'rest' or self.type == 'cross'):
+            # name = self.name
+        # elif (self.type == 'cali'):
+            # name = self.name
+        # elif (self.type == 'auditory'):
+            # name = self.name + '_n_' + self.otherNames[0]
+        # else:
+            # name = self.name[self.name.find('-')+1:len(self.name)]
+            # name = self.name[0:self.name.find('_')]
+        # dict1 = {
+                # 'name':name+'_Start',
+                # 'time':str(self.startTime),
+                # }
+        
+        # dict2 = {
+                # 'name':name+'_End',
+                # 'time':str(self.endTime),
+                # }
+        # return dict1,dict2
+    
+    # def checkPromoto(self,):
+        # return self._promoteFlag
+    
+    # def promote(self,datetimeModule,dateObject, data):
+        # ''' 
+        # promote this CLabelInfoCoarse with absolute time, 
+        # and label data (such as image name for visual stimuli, and auditoryStimuli for auditory stimuli)
+        
+        # '''
+        # if(self._promoteFlag == True):
+            # print("marker has been promoted")
+        # else:
+            # self.promoteTime(datetimeModule,dateObject)    
+            # self.stimuli = data
+            # self._promoteFlag = True
+    
+    # def promoteTime(self,datetimeModule,dateObject):
+        # if(self._promoteTimeFlag == True):
+            # print("time of the marker has been promoted")
+        # else:
+            # startTime = datetimeModule.datetime(1,1,1,1,1,1)
+            # endTime = datetimeModule.datetime(1,1,1,1,1,1)
+            # self.startTime = startTime.combine(dateObject, self.startTime)
+            # self.endTime = endTime.combine(dateObject, self.endTime)
+            # self._promoteTimeFlag = True
+    
+    # def sorted_key(self,x):
+        # return x.startTime
     
 if __name__ == '__main__':
     test2 = CBlinksCaliLabels()
