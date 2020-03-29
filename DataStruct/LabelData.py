@@ -80,7 +80,7 @@ class CLabels(CRawData):
         '''
         make the self.timestamps be independent from self.rawdata
         change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
-        if applicatable, allocat rawdata to CLabelInfo.value
+        if applicatable, allocat rawdata to CLabelInfo.stimuli
         
         '''
         datetime = outLib._OutsideLibTime()._importDatetime()
@@ -95,7 +95,6 @@ class CLabels(CRawData):
     
     @abstractmethod
     def readFile(self,fileName):
-        ''' not useful for labels, because label's data can be loaded later'''
         return
     
     @abstractmethod
