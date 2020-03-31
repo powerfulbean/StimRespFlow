@@ -5,8 +5,8 @@ Created on Wed Oct  9 15:15:34 2019
 @author: Jin Dou
 """
 
-import outsideLibInterfaces as outLib
-import DataIO
+from .. import outsideLibInterfaces as outLib
+from .. import DataIO
 from .LabelData import CLabelInfo, CLabels
 from .StimuliData import CStimuli
 from enum import Enum, unique

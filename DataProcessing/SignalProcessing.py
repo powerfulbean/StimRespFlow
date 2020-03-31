@@ -4,7 +4,7 @@ Created on Sun Jun 16 20:56:49 2019
 
 @author: sam jin dou
 """
-from outsideLibInterfaces import _OutsideLibFilter, _OutsideLibTransform
+from ..outsideLibInterfaces import _OutsideLibFilter, _OutsideLibTransform
 import numpy as np
 
 

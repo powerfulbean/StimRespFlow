@@ -5,21 +5,32 @@ Created on Fri Aug 30 21:15:52 2019
 @author: Jin Dou
 """
 
-import outsideLibInterfaces as outLib
+from .. import outsideLibInterfaces as outLib
 #import six
 from abc import ABC, abstractmethod
 import numpy as np
-class CRawData(ABC):
+
+
+class CData(ABC):
     ''' 
-    rawdata: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
+    data: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
     timeStamps: An abstract concept which is used to store the information about time and all the other necessary information
     '''
+    def __init__(self):
+        self.rawdata = list()
+        self.timestamps = list()
+        self.description = dict()
+        
+        
+    def __getitem__(self,timestamp):
+        idx = self.timestamps.index(timestamp)
+        return self.rawdata[idx]
+
+class CRawData(CData):
 
     def __init__(self): #the length of timeStamps should be as same as the number of samples 
-        self.rawdata = list()
-        self.timestamps = list() 
+        super(CRawData, self).__init__()
         self.startTime = '' # store the datatime.datetime object
-        self.description = ''
         self.sampleRate = 0
         self.numChannels = 0
         

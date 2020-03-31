@@ -7,9 +7,9 @@ Created on Sat Aug 31 01:26:24 2019
 import os
 from abc import abstractmethod,ABC
 
-import outsideLibInterfaces as outLib
-from DataIO import checkFolder, getFileName
-from Helper.Cache import CStimuliCache
+from .. import outsideLibInterfaces as outLib
+from ..DataIO import checkFolder, getFileName
+from ..Helper.Cache import CStimuliCache
 from .RawData import CRawData
 from .StimuliData import CStimuli,CAuditoryStimuli
 
@@ -409,10 +409,12 @@ class CFGetLabelDict(ABC):
 class CLabelInfo(CLabelInfoBase):
     
     def __init__(self,desc,index):
-        self.desc = desc
+        self.name = desc
         self.index = index
         self.type = ''
         self.stimuli = '' #label info (such as auditoryStimuli object)
+        self.startTime ='' #datetime.time or datetime.datetime object
+        self.endTime = '' #dateime.time or datetime.datetime object 
     
     def getLabelDict(self,handle:CFGetLabelDict=None):
         if (self.type == 'attention') :
@@ -436,7 +438,12 @@ class CLabelInfo(CLabelInfoBase):
                 'time':str(self.endTime),
                 }
         return dict1,dict2
-				
+
+class CLabelInfoFine(CLabelInfo):
+    
+    def __init__(self,desc,index):
+        super(CLabelInfoFine, self).__init__(desc,index)
+	
 class CLabelInfoCoarse(CLabelInfo):
     ''' class to store information for a label marker, including:
         1. label name
@@ -447,12 +454,11 @@ class CLabelInfoCoarse(CLabelInfo):
     '''
     def __init__(self,name,index,startTime,endTime):
         super(CLabelInfoCoarse, self).__init__(name,index)
-        self.name = name
         self.otherNames = list() # background stimuli name
-        self.startTime = startTime #datetime.time or datetime.datetime object
-        self.endTime = endTime #dateime.time or datetime.datetime object 
         self._promoteFlag = False
         self._promoteTimeFlag = False
+        self.startTime = startTime #datetime.time or datetime.datetime object
+        self.endTime = endTime #dateime.time or datetime.datetime object 
         
     def getDuration_s(self):
         temp = self.endTime - self.startTime

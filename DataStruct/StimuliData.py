@@ -5,8 +5,8 @@ Created on Sat Aug 31 11:39:53 2019
 @author: Jin Dou
 """
 from abc import ABC, abstractmethod
-from DataIO import checkFolder, getFileName, readAuditoryStimuli
-from Helper.Cache import CStimuliCache
+from ..DataIO import checkFolder, getFileName, readAuditoryStimuli
+from ..Helper.Cache import CStimuliCache
 
 class CStimuli(ABC):
     def __init__(self):

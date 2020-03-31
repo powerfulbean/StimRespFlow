@@ -5,7 +5,7 @@ Created on Mon Jan  6 13:25:44 2020
 @author: Jin Dou
 """
 from configparser import ConfigParser
-from DataIO import readAuditoryStimuli, getFileName
+from ..DataIO import readAuditoryStimuli, getFileName
 import ast
 import numpy as np
 from abc import ABC, abstractmethod

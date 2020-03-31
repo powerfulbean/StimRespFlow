@@ -9,8 +9,8 @@ from configparser import ConfigParser,BasicInterpolation
 import struct 
 import array,os
 import numpy as np
-from outsideLibInterfaces import _OutsideLibIO
-from outsideLibInterfaces import _OutsideLibTime
+from .outsideLibInterfaces import _OutsideLibIO
+from .outsideLibInterfaces import _OutsideLibTime
 
 '''[start] load different kinds of data files '''
 def loadBin(Dir):
@@ -165,7 +165,7 @@ class CLog:
         if(newline == True):
             self.fileHandle.write('\n')
         else:
-            self.fileHandle.write(' ')
+            self.fileHandle.write('\t')
         
     def openRecordSave(self,log,newline:bool = True):
         if(self.getLogable() == False):
@@ -191,7 +191,7 @@ class CLog:
 ''' End '''
 
 ''' Data Folder Directory Configuration Related'''
-class DirectoryConfig:
+class CDirectoryConfig:
     
     def __init__(self,dir_List, confFile):
         self.dir_dict = dict()
