@@ -21,10 +21,36 @@ class CData(ABC):
         self.timestamps = list()
         self.description = dict()
         
-        
     def __getitem__(self,timestamp):
-        idx = self.timestamps.index(timestamp)
-        return self.rawdata[idx]
+        if(isinstance(timestamp,slice)):
+            startIdx = 0
+            endIdx = None
+            step = timestamp.step
+            if(type(step) != int and step != None):
+                raise ValueError("CData: slice's step should be an integer")
+            if(timestamp.start == None and timestamp.stop != None):
+                stopTimeId = timestamp.stop
+                endIdx = self.timestamps.index(stopTimeId)
+            elif(timestamp.stop == None and timestamp.start != None):
+                startTimeId = timestamp.start
+                startIdx = self.timestamps.index(startTimeId)
+            elif(timestamp.start != None and timestamp.stop != None):
+                startTimeId = timestamp.start
+                stopTimeId = timestamp.stop
+                startIdx = self.timestamps.index(startTimeId)
+                endIdx = self.timestamps.index(stopTimeId)
+#            print(type(step))
+            return self._fetchBySeqIndex(slice(startIdx,endIdx,step))
+                            
+        else:
+            idx = self.timestamps.index(timestamp)
+            return self._fetchBySeqIndex(idx)
+            
+    def _fetchBySeqIndex(self,idx): #not based on channel
+        if(type(self.rawdata[0]) != list and not isinstance(self.rawdata[0],np.ndarray)):
+            return self.rawdata[idx]
+        else:
+            return self.rawdata[:,idx]
 
 class CRawData(CData):
 

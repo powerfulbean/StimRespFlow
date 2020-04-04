@@ -7,9 +7,12 @@ Created on Wed Oct  9 15:15:34 2019
 
 from .. import outsideLibInterfaces as outLib
 from .. import DataIO
+from .RawData import CRawData
 from .LabelData import CLabelInfo, CLabels
 from .StimuliData import CStimuli
+from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
+import numpy as np
 
 @unique
 class EOperation(Enum):
@@ -18,8 +21,74 @@ class EOperation(Enum):
     LowPass = 'lowPass'
     BandPass = 'bandPass'
     Transform = "transform"
-    
 
+class CDataOrganizorLite:
+    
+    '''
+    each of oData's timesamples indicates a data sample,
+    each of oLabel's timesamples indicates a label related with a data sample in the oData,
+    and there is one-to-one mapping between timestamps of oData and oLabel
+    '''
+    
+    def __init__(self,nChannels,srate,channelList,keyFunc=None):#keyFunc is used for timestamps comparison
+        self.dataDict = dict() #key: (startTimeId, endTimeId); Value: CDataRecord
+        self.nChannels = nChannels
+        self.srate = srate
+        self.channelList = channelList
+        self.keyFunc = keyFunc
+        self.oCheck = CDataSetProtocol()
+    
+    def insert(self,oData:CRawData,oLabel:CLabels,stimuliDes):
+        startId = oLabel.timestamps[0]
+        endId = oLabel.timestamps[-1]
+        for idx,timeId in enumerate(oLabel.timestamps):
+            if(oData.timestamps[idx] != timeId):
+                raise ValueError("timestamp of oData and oLabel doesn't match ")
+        
+        data = oData.rawdata.copy()
+        stimuli = oLabel.rawdata.copy()
+        self.dataDict[(startId,endId)] = CDataRecord(data,stimuli,stimuliDes,self.srate)
+#        err = self.oCheck.check_DataOrganizorLite(self)
+#        return err
+        
+    def getSortedKeys(self,reverse = False):
+        keysList = list(self.dataDict.keys())
+        ans = None
+        if self.keyFunc == None:
+            ans = sorted(keysList,key = None)
+        else:
+            ans = sorted(keysList,key = self.tupleKeyFunc)
+        return ans
+        
+    def tupleKeyFunc(self,oTuple):
+        firstKey = oTuple[0]
+        if(self.keyFunc != None):
+            return self.keyFunc(firstKey)
+        else:
+            return None
+        
+    def dataRecordBasedOnTime(self,reverse = False):
+        keys = self.getSortedKeys(reverse)
+        dataList = list()
+        stimuliList = list()
+        err = self.oCheck.check_DataOrganizorLite(self)
+        if(err == False):
+            raise ValueError("DataOrganizorLite's data doesn't obey relative CProtocol")
+        for key in keys:
+            dataList.append(self.dataDict[key].data)
+            stimuliList.append(self.dataDict[key].stimuli)
+        
+        data = np.concatenate(dataList,axis = 1)
+        stimuli = np.concatenate(stimuliList,axis = 1)
+        stimuliDes = self.dataDict[keys[0]].stimuliDes
+        srate = self.dataDict[keys[0]].srate
+        
+        ans_oDataRecord = CDataRecord(data,stimuli,stimuliDes,srate)
+        return ans_oDataRecord
+        
+        
+            
+    
 class CDataOrganizor:
     '''
     !Important: the labels (CLabel) in this class have the same memory addresses 
@@ -220,12 +289,13 @@ class CDataSet:
         
         
 class CDataRecord: #base class for data with label
-    def __init__(self,data,stimuli:CStimuli,stimuliDes:list,srate):
+    def __init__(self,data,stimuli,stimuliDes:list,srate):
         self.data = data #real data Segment
         self.stimuli = stimuli #segmented "auditoryStimuli" object
         self.stimuliDes = stimuliDes #name of the stimuli ( main)
         self.srate = srate
         self.filterLog = list()
+        self.descInfo = None
         
     def errorPrint(self,error):
         print("CDataRecorder error: " + error)

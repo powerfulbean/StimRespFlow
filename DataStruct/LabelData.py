@@ -10,15 +10,15 @@ from abc import abstractmethod,ABC
 from .. import outsideLibInterfaces as outLib
 from ..DataIO import checkFolder, getFileName
 from ..Helper.Cache import CStimuliCache
-from .RawData import CRawData
+from .RawData import CData
 from .StimuliData import CStimuli,CAuditoryStimuli
 
 
-class CLabels(CRawData): 
+class CLabels(CData): 
     # for labels created by psychopy, the last number is microsecond but not millisecond 
-                 
-    def calTimeStamp(self):
-        return self.timestamps
+    def __init__(self):
+        super(CLabels, self).__init__()
+        self.startTime = None
     
     def writeInfoForMatlab(self,folder):
         import json
@@ -439,12 +439,31 @@ class CLabelInfo(CLabelInfoBase):
                 }
         return dict1,dict2
 
-class CLabelInfoFine(CLabelInfo):
+class CLabelInfoGeneral(CLabelInfo):
+    ''' Time non-related CLabelInfo Type'''
+    ''' It is used for recording general information of timestamps '''
     
-    def __init__(self,desc,index):
-        super(CLabelInfoFine, self).__init__(desc,index)
+    def __init__(self,desc,index,labelClassList):
+        super(CLabelInfoGeneral, self).__init__(desc,index)
+        self.labelClassList = labelClassList
+        
+    def __call__(self,query):
+        if(type(query) == int):
+            if(query >= 0 and query < len(self.labelClassList)):
+                return self.labelClassList[query]
+        elif(len(query) == len(self.labelClassList)):
+            if(type(query[0]) == int):
+                if( max(query) <= 1 and min(query) >= 0):
+                    ans = list()
+                    for idx, className in enumerate(self.labelClassList):
+                        if(query[idx] == 1):
+                            ans.append(className)
+                    return ans
+        
+        raise ValueError("Query's value is not valid")
 	
 class CLabelInfoCoarse(CLabelInfo):
+    ''' Time related CLabelInfo Type, but the time indicator is coarse'''
     ''' class to store information for a label marker, including:
         1. label name
         2. other useful label names
