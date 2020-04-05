@@ -28,6 +28,17 @@ class CDataOrganizorLite:
     each of oData's timesamples indicates a data sample,
     each of oLabel's timesamples indicates a label related with a data sample in the oData,
     and there is one-to-one mapping between timestamps of oData and oLabel
+    
+    CDataOrganizorLite's DataRecord's data should be simple numpy array data
+        its first dimension should indicate the channel's index of the data. 
+        (index_chanel,sample)
+    CDataOrganizorLite's DataRecord's stimuli should be simple numpy array data,
+        its first dimension should indicate the class's index of the stimuli.
+        (index_class,sample)
+        
+    there should be no time overlaps between its different DataRecords
+    
+    oLabel should only use CLabelInfoGeneral or its child class as the only type of CLabelInfo  
     '''
     
     def __init__(self,nChannels,srate,channelList,keyFunc=None):#keyFunc is used for timestamps comparison
@@ -38,7 +49,9 @@ class CDataOrganizorLite:
         self.keyFunc = keyFunc
         self.oCheck = CDataSetProtocol()
     
-    def insert(self,oData:CRawData,oLabel:CLabels,stimuliDes):
+    def insert(self,oData:CRawData,oLabel:CLabels):
+        if(oData.sampleRate != self.srate):
+            raise ValueError()
         startId = oLabel.timestamps[0]
         endId = oLabel.timestamps[-1]
         for idx,timeId in enumerate(oLabel.timestamps):
@@ -47,6 +60,7 @@ class CDataOrganizorLite:
         
         data = oData.rawdata.copy()
         stimuli = oLabel.rawdata.copy()
+        stimuliDes = oLabel.oLabelInfo.labelClassList
         self.dataDict[(startId,endId)] = CDataRecord(data,stimuli,stimuliDes,self.srate)
 #        err = self.oCheck.check_DataOrganizorLite(self)
 #        return err
@@ -85,8 +99,14 @@ class CDataOrganizorLite:
         
         ans_oDataRecord = CDataRecord(data,stimuli,stimuliDes,srate)
         return ans_oDataRecord
-        
-        
+     
+    def dataSetBasedOnStimuliDesc(self,LabelInfoClass):
+        self.oCheck.check_DataOrganizorLite(self)
+        for key in self.dataDict:
+            data = self.dataDict[key].data
+            stimuli = self.dataDict[key].stimuli
+            eventsClass = self.dataDict[key].stimuliDes
+            eventsClass.index(LabelInfoClass)
             
     
 class CDataOrganizor:
@@ -265,6 +285,7 @@ class CDataOrganizor:
                     oDataSet.dataRecordList.append(recordTemp)
         
         return oDataSet
+    
 
 class CDataSet:
     def __init__(self,dataSetName = None):

@@ -398,11 +398,11 @@ class CFGetLabelDict(ABC):
         return self._type.copy()
     
     def _check(self):
-        if (type(self._type) != None):
+        if (type(self._type) == None):
             return False
-        if (type(self._startInfoDict) != None):
+        if (type(self._startInfoDict) == None):
             return False
-        if (type(self._endInfoDict) != None):
+        if (type(self._endInfoDict) == None):
             return False
         return True
 
@@ -412,7 +412,6 @@ class CLabelInfo(CLabelInfoBase):
         self.name = desc
         self.index = index
         self.type = ''
-        self.stimuli = '' #label info (such as auditoryStimuli object)
         self.startTime ='' #datetime.time or datetime.datetime object
         self.endTime = '' #dateime.time or datetime.datetime object 
     
@@ -442,6 +441,7 @@ class CLabelInfo(CLabelInfoBase):
 class CLabelInfoGeneral(CLabelInfo):
     ''' Time non-related CLabelInfo Type'''
     ''' It is used for recording general information of timestamps '''
+    ''' Doesn't include stimuli data'''
     
     def __init__(self,desc,index,labelClassList):
         super(CLabelInfoGeneral, self).__init__(desc,index)
@@ -478,6 +478,7 @@ class CLabelInfoCoarse(CLabelInfo):
         self._promoteTimeFlag = False
         self.startTime = startTime #datetime.time or datetime.datetime object
         self.endTime = endTime #dateime.time or datetime.datetime object 
+        self.stimuli = '' #label info (such as auditoryStimuli object)
         
     def getDuration_s(self):
         temp = self.endTime - self.startTime

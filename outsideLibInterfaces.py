@@ -4,6 +4,8 @@ Created on Mon Jun 17 12:17:35 2019
 
 @author: Sam Jin Dou
 """
+#from .DataStruct.DataSet import CDataSet
+
 
 class _OutsideLibFilter:
     
@@ -157,23 +159,20 @@ class _OutsideLibIO:
     
 class CIfMNE:
     
-    def __init__(self,data,channelsInfo,srate,chTypes:list):
+    def __init__(self,channelsInfo,srate,chTypes:list):
         self.LibMNE = self._importMNE()
-        self._oRawData = self.initiateObject(data,channelsInfo,srate,chTypes)
+        self.info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
     
     def _importMNE(self):
         import mne as MNE
         return MNE
     
-    def initiateObject(self,data,channelsInfo,srate,chTypes:list):
-        info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
-        return self.LibMNE.io.RawArray(data,info)
+    def getMNERaw(self,data,channelsInfo,srate,chTypes:list):
+        return self.LibMNE.io.RawArray(data,self.info)
     
-    def plot(self,):
-        self._oRawData.plot(block=True,scalings = 'auto')
-    
-    def getMNERaw(self):
-        return self._oRawData
+    def CDataSetToEpochs(self,oDataSet,eventIdList,eventIdDict):
+        pass
+        
         
 class CIfSklearn:
     
