@@ -100,13 +100,39 @@ class CDataOrganizorLite:
         ans_oDataRecord = CDataRecord(data,stimuli,stimuliDes,srate)
         return ans_oDataRecord
      
-    def dataSetBasedOnStimuliDesc(self,LabelInfoClass):
+    def dataSetBasedOnStimuliDesc(self,LabelInfoClass,selectValue):
         self.oCheck.check_DataOrganizorLite(self)
+        oDataset = CDataSet('replace')
+        t = selectValue
+        srate = self.srate
         for key in self.dataDict:
+            eventsClass = self.dataDict[key].stimuliDes
+            stimRow = eventsClass.index(LabelInfoClass)
             data = self.dataDict[key].data
             stimuli = self.dataDict[key].stimuli
-            eventsClass = self.dataDict[key].stimuliDes
-            eventsClass.index(LabelInfoClass)
+            stimSelect = self.dataDict[key].stimuli[stimRow]
+            idx = 0
+            startIdx = 0
+            endIdx = 0
+            while(idx<len(stimSelect)-1):
+                if(stimSelect[idx] != t and stimSelect[idx+1] == t ):
+                    startIdx = idx +1
+#                    print('start idx',startIdx)
+                if(stimSelect[idx] == t and stimSelect[idx+1] != t ):
+                    endIdx = idx + 1
+#                    print('start and end idx',startIdx,endIdx)
+                    dataTemp = data[:,startIdx:endIdx]
+                    stimuliThis = stimuli[:,startIdx:endIdx]
+                    oTempDatarecord = CDataRecord(dataTemp,stimuliThis,eventsClass,srate)
+                    oDataset.dataRecordList.append(oTempDatarecord)
+                    startIdx = 0
+                    endIdx = 0
+                idx += 1
+        eventList = len(oDataset.dataRecordList) * [t]
+        
+        return oDataset,eventList
+            
+            
             
     
 class CDataOrganizor:

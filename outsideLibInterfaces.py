@@ -5,7 +5,7 @@ Created on Mon Jun 17 12:17:35 2019
 @author: Sam Jin Dou
 """
 #from .DataStruct.DataSet import CDataSet
-
+import numpy as np
 
 class _OutsideLibFilter:
     
@@ -158,10 +158,12 @@ class _OutsideLibIO:
     
     
 class CIfMNE:
-    
-    def __init__(self,channelsInfo,srate,chTypes:list):
+    import mne
+    def __init__(self,channelsInfo,srate,chTypes:list,montage:mne.channels.Montage = None):
         self.LibMNE = self._importMNE()
         self.info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
+        if(montage != None):
+            self.Montage = montage
     
     def _importMNE(self):
         import mne as MNE
@@ -171,7 +173,24 @@ class CIfMNE:
         return self.LibMNE.io.RawArray(data,self.info)
     
     def CDataSetToEpochs(self,oDataSet,eventIdList,eventIdDict):
-        pass
+        if(len(eventIdList) != len(oDataSet.dataRecordList)):
+            raise ValueError()
+        epochs_data = list()
+        events = list()
+        cnt = 0
+        for idx, dataRecord in enumerate(oDataSet.dataRecordList):
+            data = dataRecord.data
+            events.append([cnt,0,eventIdList[idx]])
+            cnt += data.shape[1]
+            data = np.expand_dims(data,0)
+            epochs_data.append(data)
+            
+        epochs_data = np.concatenate(epochs_data,axis = 0)
+        events = np.array(events)
+        epochs = self.LibMNE.EpochsArray(epochs_data, info=self.info, events=events,
+                         event_id=eventIdDict)
+        
+        return epochs
         
         
 class CIfSklearn:

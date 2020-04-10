@@ -33,7 +33,8 @@ class CDataSetProtocol(CProtocol):
                 or not isinstance(oRecord.stimuli, np.ndarray)):
                 raise ValueError("should be numpy ndarray")
             
-            if(len(oRecord.data.shape)<2 or len(oRecord.stimuli.shape)<2):
+            if(len(oRecord.data.shape)<2 or len(oRecord.stimuli.shape)<2
+               or oOrg.nChannels != len(oRecord.data)):
                 raise ValueError("the dimentions of " + name + "'s data.data and " +
                                  "data.stimuli should be bigger than one")
             if(idx < len(keys) - 1):
