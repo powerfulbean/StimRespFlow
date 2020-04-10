@@ -60,7 +60,7 @@ class CDataOrganizorLite:
         
         data = oData.rawdata.copy()
         stimuli = oLabel.rawdata.copy()
-        stimuliDes = oLabel.oLabelInfo.labelClassList
+        stimuliDes = oLabel.oLabelInfo.labelClassList.copy()
         self.dataDict[(startId,endId)] = CDataRecord(data,stimuli,stimuliDes,self.srate)
 #        err = self.oCheck.check_DataOrganizorLite(self)
 #        return err

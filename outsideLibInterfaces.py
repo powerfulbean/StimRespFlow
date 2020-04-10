@@ -190,6 +190,8 @@ class CIfMNE:
         epochs = self.LibMNE.EpochsArray(epochs_data, info=self.info, events=events,
                          event_id=eventIdDict)
         
+        epochs.set_montage(self.Montage)
+        
         return epochs
         
         
