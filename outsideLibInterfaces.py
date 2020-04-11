@@ -159,11 +159,12 @@ class _OutsideLibIO:
     
 class CIfMNE:
     import mne
-    def __init__(self,channelsInfo,srate,chTypes:list,montage:mne.channels.Montage = None):
+    def __init__(self,channelsInfo,srate,chTypes:list,montage:mne.channels.Montage = None,oLog = None):
         self.LibMNE = self._importMNE()
         self.info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
         if(montage != None):
             self.Montage = montage
+        self.oLog = oLog
     
     def _importMNE(self):
         import mne as MNE
@@ -181,6 +182,12 @@ class CIfMNE:
         for idx, dataRecord in enumerate(oDataSet.dataRecordList):
             data = dataRecord.data
             events.append([cnt,0,eventIdList[idx]])
+            if(data.shape != oDataSet.dataRecordList[0].data.shape):
+                shape1 = data.shape
+                shape = oDataSet.dataRecordList[0].data.shape
+                data = data[0:shape[0],0:shape[1]]
+                if(self.oLog!=None):
+                    self.oLog.safeRecordTime(str(idx) + "'s shape" + str(shape1)  + " is different")
             cnt += data.shape[1]
             data = np.expand_dims(data,0)
             epochs_data.append(data)

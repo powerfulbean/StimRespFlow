@@ -102,7 +102,7 @@ class CDataOrganizorLite:
      
     def dataSetBasedOnStimuliDesc(self,LabelInfoClass,selectValue):
         self.oCheck.check_DataOrganizorLite(self)
-        oDataset = CDataSet('replace')
+        oDataset = CDataSet(LabelInfoClass)
         t = selectValue
         srate = self.srate
         for key in self.dataDict:
@@ -131,6 +131,9 @@ class CDataOrganizorLite:
         eventList = len(oDataset.dataRecordList) * [t]
         
         return oDataset,eventList
+    
+    def __getitem__(self,Key):
+        return self.dataDict[Key]
             
             
             
@@ -326,10 +329,13 @@ class CDataSet:
         self.name = temp.name
         self.dataRecordList = temp.dataRecordList
     
-    def save(self,folderName):
+    def save(self,folderName,name = None):
         DataIO.checkFolder(folderName)
-        print(self.name)
-        file = open(folderName + self.name.replace(':','_') + '.bin', 'wb')
+#        print(self.name)
+        if(name == None):
+            file = open(folderName + self.name.replace(':','_') + '.bin', 'wb')
+        else:
+            file = open(folderName + name + '.bin', 'wb')
         import pickle
         pickle.dump(self,file)
         file.close()
