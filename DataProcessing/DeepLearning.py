@@ -22,9 +22,8 @@ class CPytorch:
     
 class CTorchNNYaml(CPytorch):
     
-    def __init__(self,confFile):
+    def __init__(self):
         super().__init__()
-        self.yamlDict = self._readYaml(confFile)
         
     def _readYaml(self,filePath):
         import yaml
@@ -38,11 +37,32 @@ class CTorchNNYaml(CPytorch):
         
     def _ParseType(self,conf:dict):
         if(conf['Type'] == 'Sequential'):
-            self.buildTorchSequential(conf)
+            return self.buildSequential(conf)
     
-    def buildSequential(conf:dict):
-        pass
+    def buildSequential(self,conf:dict):
+        oSeq = self.Lib.nn.Sequential()
+        ModelConfList = conf['Model']
+        for idx,ModelConf in enumerate(ModelConfList):
+            CModule = self._getNNAttr(ModelConf[0])
+            attr = ModelConf[1]
+            oModule = None
+            name = str(idx)
+            if(len(ModelConf) > 2 ):
+                '''if contain aux attribute'''
+                auxAttr = ModelConf[2]
+                if (auxAttr.get('name')!=None):
+                    ''' if aux attribute contain name attribute'''
+                    name = auxAttr['name']
+            if(type(attr) == list):
+                oModule = CModule(*attr)
+            elif(type(attr) == dict):
+                oModule = CModule(**attr)
+            oSeq.add_module(name,oModule)
+        return oSeq
     
+    def __call__(self,confFile:str):
+        yamlDict = self._readYaml(confFile)
+        return self._ParseType(yamlDict)
         
         
         
