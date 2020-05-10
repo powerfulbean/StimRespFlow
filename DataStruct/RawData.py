@@ -13,7 +13,7 @@ import numpy as np
 
 class CData(ABC):
     ''' 
-    data: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
+    rawdata: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
     timeStamps: An abstract concept which is used to store the information about time and all the other necessary information
     '''
     def __init__(self):
@@ -53,7 +53,10 @@ class CData(ABC):
             return self.rawdata[:,idx]
 
 class CRawData(CData):
-
+    '''
+    # by default, the first dimension of self.rawdata is index of channel,
+    # the second dimension of self.rawdata is timestamp
+    '''
     def __init__(self): #the length of timeStamps should be as same as the number of samples 
         super(CRawData, self).__init__()
         self.startTime = '' # store the datatime.datetime object

@@ -20,7 +20,7 @@ class CEpochToDataLoader:
     
     def ToCUDADataLoader(self,epoch,picks:list=None,shuffle=True,expandAxis = 1):
         from sklearn.preprocessing import  LabelEncoder,minmax_scale
-        if(isinstance(epoch,self.lib_MNE.Epochs)):
+        if(not isinstance(epoch,self.lib_MNE.Epochs)):
             raise ValueError('input epoch is not a instance of MNE Epochs')
         
         x = epoch.get_data(picks)
@@ -39,3 +39,24 @@ class CEpochToDataLoader:
         dataset = self.lib_torch.utils.data.TensorDataset(xTensor, yTensor)
         dataLoader = self.lib_torch.utils.data.DataLoader(dataset,shuffle=shuffle,batch_size=100)
         return dataLoader
+
+class CDataSetToDataLoader:
+    
+    def __init__(self):
+        from ..DataProcessing.DeepLearning import CPytorch
+        from ..DataStruct import DataSet
+        self.lib_torch = CPytorch().Lib
+        self.lib = DataSet
+        
+    def __call__(self,*args,**kwargs):
+        pass
+    
+    def ToDataLoader(self,Dataset,TorchDataSetType,DataLoaderArgs):
+        if(not issubclass(TorchDataSetType,self.lib_torch.utils.data.Dataset)):
+            raise ValueError('input TorchDataSetType is not a class of Torch Dataset')
+            
+        if(not isinstance(Dataset,self.lib.CDataSet)):
+            raise ValueError('input Dataset is not a instance of Torch Dataset')
+            
+        
+        
