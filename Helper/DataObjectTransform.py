@@ -49,14 +49,31 @@ class CDataSetToDataLoader:
         self.lib = DataSet
         
     def __call__(self,*args,**kwargs):
-        pass
+        self.ToDataLoader(*args,**kwargs)
     
-    def ToDataLoader(self,Dataset,TorchDataSetType,DataLoaderArgs):
+    def ToDataLoader(self,Dataset,TorchDataSetType,**Args):
         if(not issubclass(TorchDataSetType,self.lib_torch.utils.data.Dataset)):
             raise ValueError('input TorchDataSetType is not a class of Torch Dataset')
             
         if(not isinstance(Dataset,self.lib.CDataSet)):
             raise ValueError('input Dataset is not a instance of Torch Dataset')
-            
         
+        x = Dataset.data.T
+        y = Dataset.stimuli.T
+        xTensor = self.lib_torch.cuda.FloatTensor(x)
+        yTensor = self.lib_torch.cuda.LongTensor(y)
+        
+        if(Args.get('DataSetArgs') != None):
+            DataSetArgs = Args['DataSetArgs']
+            dataset = TorchDataSetType(xTensor, yTensor,**DataSetArgs)
+        else:
+            dataset = TorchDataSetType(xTensor, yTensor)
+           
+        if(Args.get('DataLoaderArgs') != None):
+            DataLoaderArgs = Args['DataLoaderArgs']
+            dataLoader = self.lib_torch.utils.data.DataLoader(dataset,**DataLoaderArgs)
+        else:
+            dataLoader = self.lib_torch.utils.data.DataLoader(dataset)
+        
+        return dataLoader
         

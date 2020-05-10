@@ -15,6 +15,9 @@ class CData(ABC):
     ''' 
     rawdata: for a Data Object, it stores the true data. for a Label object, it can store the label data (audio, image, etc.).
     timeStamps: An abstract concept which is used to store the information about time and all the other necessary information
+    
+    # by default, the first dimension of self.rawdata is index of channels or events,
+    # the second dimension of self.rawdata is timestamp
     '''
     def __init__(self):
         self.rawdata = list()
