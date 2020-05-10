@@ -21,8 +21,12 @@ class CPytorch:
         return ans
     
     def fitClassificationModel(self,model,dataLoader,testDataLoader,
-             numEpochs:int,lr:float,weight_decay:float):
-        criterion = self.Lib.nn.CrossEntropyLoss()
+             numEpochs:int,lr:float,weight_decay:float,oLossFunc = None):
+        criterion = None
+        if(oLossFunc == None):
+            criterion = self.Lib.nn.CrossEntropyLoss()
+        else:
+            criterion = oLossFunc
         optimizier = self.Lib.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         model.cuda()
         step_list = list()
@@ -34,9 +38,9 @@ class CPytorch:
             loss = None
             for idx,data in enumerate(dataLoader):
                 eeg,trainLabel = data
-                eeg.cuda()
+#                eeg.cuda()
                 trainLabel.cuda()
-                eeg = self.Lib.autograd.Variable(eeg.cuda())
+#                eeg = self.Lib.autograd.Variable(eeg.cuda())
                 # forward
                 output = model(eeg)
                 loss = criterion(output, trainLabel)
@@ -89,6 +93,50 @@ class CPytorch:
             
         return metrics
     
+    def trainClassificationModel(self,model,dataLoader,numEpochs:int,
+                                 lr:float,weight_decay:float,oLossFunc = None):
+        criterion = None
+        if(oLossFunc == None):
+            criterion = self.Lib.nn.CrossEntropyLoss()
+        else:
+            criterion = oLossFunc
+        optimizier = self.Lib.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+        model.cuda()
+        step_list = list()
+        loss_list = list()
+        metrics = list()
+        for epoch in range(numEpochs):
+            accuList = list()
+            model.train()
+            loss = None
+            for idx,data in enumerate(dataLoader):
+                eeg,trainLabel = data
+                eeg = eeg.permute(1,0,2)
+#                eeg.cuda()
+#                trainLabel.cuda()
+#                eeg = self.Lib.autograd.Variable(eeg.cuda())
+                # forward
+                output = model(eeg)
+#                print(output.shape,trainLabel.shape)
+                loss = criterion(output, trainLabel)
+                # backward
+                optimizier.zero_grad()
+                loss.backward()
+                optimizier.step()
+                train_ep_pred = model(eeg)
+                train_accuracy = self.get_onehot_accuracy(train_ep_pred, trainLabel)
+                accuList.append(train_accuracy)
+                if(idx % 10 == 0):
+                    print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,np.mean(accuList)))
+            self.Lib.cuda.empty_cache()   
+            for param_group in optimizier.param_groups:
+                print(param_group['lr'])
+    #        print(test_loss_list)
+            if epoch in [numEpochs * 0.125, numEpochs * 0.5, numEpochs * 0.75]:
+                for param_group in optimizier.param_groups:
+                    param_group['lr'] *= 0.1
+        return metrics
+    
     def get_accuracy(self,output, targets):
         """calculates accuracy from model output and targets
         """
@@ -99,6 +147,13 @@ class CPytorch:
         
         return accuracy
     
+    def get_onehot_accuracy(self,output,targets):
+        output = output.ge(0.5).float()
+        correct = (output == targets).float().sum()
+        accuracy = correct / (len(output) * output.shape[1])
+#        print(output,targets)
+        accuracy = accuracy.cpu().numpy()
+        return accuracy
     
 class CTorchNNYaml(CPytorch):
     

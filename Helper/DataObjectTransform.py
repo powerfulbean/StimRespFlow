@@ -40,7 +40,7 @@ class CEpochToDataLoader:
         dataLoader = self.lib_torch.utils.data.DataLoader(dataset,shuffle=shuffle,batch_size=100)
         return dataLoader
 
-class CDataSetToDataLoader:
+class CDataRecordToDataLoader:
     
     def __init__(self):
         from ..DataProcessing.DeepLearning import CPytorch
@@ -48,23 +48,23 @@ class CDataSetToDataLoader:
         self.lib_torch = CPytorch().Lib
         self.lib = DataSet
         
-    def __call__(self,*args,**kwargs):
-        self.ToDataLoader(*args,**kwargs)
+    def __call__(self,DataRecord,TorchDataSetType,**Args):
+        return self.ToDataLoader(DataRecord,TorchDataSetType,**Args)
     
-    def ToDataLoader(self,Dataset,TorchDataSetType,**Args):
+    def ToDataLoader(self,DataRecord,TorchDataSetType,**Args):
         if(not issubclass(TorchDataSetType,self.lib_torch.utils.data.Dataset)):
             raise ValueError('input TorchDataSetType is not a class of Torch Dataset')
             
-        if(not isinstance(Dataset,self.lib.CDataSet)):
+        if(not isinstance(DataRecord,self.lib.CDataRecord)):
             raise ValueError('input Dataset is not a instance of Torch Dataset')
         
-        x = Dataset.data.T
-        y = Dataset.stimuli.T
+        x = DataRecord.data.T
+        y = DataRecord.stimuli.T
         xTensor = self.lib_torch.cuda.FloatTensor(x)
-        yTensor = self.lib_torch.cuda.LongTensor(y)
+        yTensor = self.lib_torch.cuda.FloatTensor(y)
         
-        if(Args.get('DataSetArgs') != None):
-            DataSetArgs = Args['DataSetArgs']
+        if(Args.get('DataRecordArgs') != None):
+            DataSetArgs = Args['DataRecordArgs']
             dataset = TorchDataSetType(xTensor, yTensor,**DataSetArgs)
         else:
             dataset = TorchDataSetType(xTensor, yTensor)
