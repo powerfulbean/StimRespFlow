@@ -173,8 +173,12 @@ class CIfMNE:
         import mne as MNE
         return MNE
     
-    def getMNERaw(self,data,channelsInfo,srate,chTypes:list):
-        return self.LibMNE.io.RawArray(data,self.info)
+    def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None):
+        if channelsInfo != None and srate != None and chTypes != None:
+            info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
+            return self.LibMNE.io.RawArray(data,info)
+        else:
+            return self.LibMNE.io.RawArray(data,self.info)
     
     def CDataSetToEpochs(self,oDataSet,eventIdList,eventIdDict):
         if(len(eventIdList) != len(oDataSet.dataRecordList)):

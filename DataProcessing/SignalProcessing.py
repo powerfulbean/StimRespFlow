@@ -86,7 +86,17 @@ def audioStimPreprocessing(stimuli,filterHigh,epochLen_s,downSample):
     stiMain = oPre.getEnvelope(stiMainDownSample)
     return stiMain 
         
+def MNECutInFreqBands(data,bands:list,**args):
+    ansList = list()
+    for idx in range(len(bands)-1):
+        highpass = bands[idx]
+        lowpass = bands[idx+1]
+        temp = data.filter(highpass,lowpass,**args)
+        ansList.append(np.expand_dims(temp.get_data(),1))
+    ans = np.concatenate(ansList,axis=1)
+    return ans
+    
         
-         
+        
         
     

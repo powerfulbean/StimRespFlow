@@ -93,7 +93,7 @@ class CPytorch:
             
         return metrics
     
-    def trainClassificationModel(self,model,dataLoader,numEpochs:int,
+    def trainClassificationModel(self,model,dataLoader,testDataLoader,numEpochs:int,
                                  lr:float,weight_decay:float,oLossFunc = None):
         criterion = None
         if(oLossFunc == None):
@@ -111,7 +111,10 @@ class CPytorch:
             loss = None
             for idx,data in enumerate(dataLoader):
                 eeg,trainLabel = data
-                eeg = eeg.permute(1,0,2)
+                shapeList = list()
+                for i in range(2,len(eeg.shape)):
+                    shapeList.append(i)
+                eeg = eeg.permute(1,0,*shapeList)
 #                eeg.cuda()
 #                trainLabel.cuda()
 #                eeg = self.Lib.autograd.Variable(eeg.cuda())
@@ -128,13 +131,31 @@ class CPytorch:
                 accuList.append(train_accuracy)
                 if(idx % 10 == 0):
                     print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,np.mean(accuList)))
+            
             self.Lib.cuda.empty_cache()   
             for param_group in optimizier.param_groups:
                 print(param_group['lr'])
     #        print(test_loss_list)
+            test_loss_list = list()
+            accuListTest = list()
+            for data in testDataLoader:
+                    eeg1,testLabel = data
+                    eeg1.cuda()
+                    testLabel.cuda()
+                    # forward
+                    output1 = model(eeg1)
+                    loss1 = criterion(output1, testLabel)
+                    test_loss_list.append(loss1.cpu().data.numpy())
+                    test_accuracy = self.get_onehot_accuracy(output1, testLabel)
+                    accuListTest.append(test_accuracy)
+                
+            print("epoch: {}, loss is {}, test loss is {}, test accu is {}\n".format((epoch+1), loss1.data,np.mean(test_loss_list),np.mean(accuListTest)))
+            
             if epoch in [numEpochs * 0.125, numEpochs * 0.5, numEpochs * 0.75]:
                 for param_group in optimizier.param_groups:
                     param_group['lr'] *= 0.1
+                    
+            metrics.append([loss.numpy(),loss1.numpy(),np.mean(accuList),np.mean(accuListTest)])
         return metrics
     
     def get_accuracy(self,output, targets):

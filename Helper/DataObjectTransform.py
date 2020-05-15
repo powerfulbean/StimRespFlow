@@ -48,10 +48,12 @@ class CDataRecordToDataLoader:
         self.lib_torch = CPytorch().Lib
         self.lib = DataSet
         
-    def __call__(self,DataRecord,TorchDataSetType,**Args):
-        return self.ToDataLoader(DataRecord,TorchDataSetType,**Args)
+    def __call__(self,DataRecord,TorchDataSetType,oSamplerType=None,**Args):
+        return self.ToDataLoader(DataRecord,TorchDataSetType,oSamplerType,**Args)
     
-    def ToDataLoader(self,DataRecord,TorchDataSetType,**Args):
+    def ToDataLoader(self,DataRecord,TorchDataSetType,oSamplerType=None,**Args):
+        
+        print(oSamplerType)
         if(not issubclass(TorchDataSetType,self.lib_torch.utils.data.Dataset)):
             raise ValueError('input TorchDataSetType is not a class of Torch Dataset')
             
@@ -60,18 +62,25 @@ class CDataRecordToDataLoader:
         
         x = DataRecord.data.T
         y = DataRecord.stimuli.T
-        xTensor = self.lib_torch.cuda.FloatTensor(x)
-        yTensor = self.lib_torch.cuda.FloatTensor(y)
+        xTensor = self.lib_torch.FloatTensor(x)
+        yTensor = self.lib_torch.FloatTensor(y)
         
         if(Args.get('DataRecordArgs') != None):
             DataSetArgs = Args['DataRecordArgs']
             dataset = TorchDataSetType(xTensor, yTensor,**DataSetArgs)
         else:
             dataset = TorchDataSetType(xTensor, yTensor)
-           
+        
         if(Args.get('DataLoaderArgs') != None):
             DataLoaderArgs = Args['DataLoaderArgs']
-            dataLoader = self.lib_torch.utils.data.DataLoader(dataset,**DataLoaderArgs)
+            if(oSamplerType == None or Args.get('SamplerArgs') == None):
+                dataLoader = self.lib_torch.utils.data.DataLoader(dataset,**DataLoaderArgs)
+            else:
+                SamplerArgs = Args.get('SamplerArgs')
+#                print(SamplerArgs)
+#                return
+                oSampler = oSamplerType(dataset,**SamplerArgs)
+                dataLoader = self.lib_torch.utils.data.DataLoader(dataset,sampler=oSampler,**DataLoaderArgs)
         else:
             dataLoader = self.lib_torch.utils.data.DataLoader(dataset)
         
