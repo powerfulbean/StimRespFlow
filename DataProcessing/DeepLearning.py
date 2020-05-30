@@ -111,10 +111,11 @@ class CPytorch:
             loss = None
             for idx,data in enumerate(dataLoader):
                 eeg,trainLabel = data
-                shapeList = list()
-                for i in range(2,len(eeg.shape)):
-                    shapeList.append(i)
-                eeg = eeg.permute(1,0,*shapeList)
+#                print(eeg,trainLabel)
+#                shapeList = list()
+#                for i in range(2,len(eeg.shape)):
+#                    shapeList.append(i)
+#                eeg = eeg.permute(1,0,*shapeList)
 #                eeg.cuda()
 #                trainLabel.cuda()
 #                eeg = self.Lib.autograd.Variable(eeg.cuda())
