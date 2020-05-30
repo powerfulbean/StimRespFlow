@@ -97,7 +97,7 @@ class CPytorch:
                                  lr:float,weight_decay:float,oLossFunc = None):
         criterion = None
         if(oLossFunc == None):
-            criterion = self.Lib.nn.CrossEntropyLoss()
+            criterion = self.Lib.nn.CrossEntropyLoss().cuda()
         else:
             criterion = oLossFunc
         optimizier = self.Lib.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -129,7 +129,7 @@ class CPytorch:
                 optimizier.step()
 #                train_ep_pred = model(eeg)
                 
-                if(idx % 1000 == 0):
+                if(idx % 100 == 0):
                     train_accuracy = self.get_onehot_accuracy(output, trainLabel)
                     accuList.append(train_accuracy)
                     print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,train_accuracy))
