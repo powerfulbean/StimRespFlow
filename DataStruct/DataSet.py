@@ -56,7 +56,7 @@ class CDataOrganizorLite:
         endId = oLabel.timestamps[-1]
         for idx,timeId in enumerate(oLabel.timestamps):
             if(oData.timestamps[idx] != timeId):
-                raise ValueError("timestamp of oData and oLabel doesn't match ")
+                raise ValueError("timestamp of oData and oLabel doesn't match ", oData.timestamps[idx],timeId)
         
         data = oData.rawdata.copy()
         stimuli = oLabel.rawdata.copy()
