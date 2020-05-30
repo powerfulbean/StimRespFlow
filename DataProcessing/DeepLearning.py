@@ -126,8 +126,8 @@ class CPytorch:
                 optimizier.zero_grad()
                 loss.backward()
                 optimizier.step()
-                train_ep_pred = model(eeg)
-                train_accuracy = self.get_onehot_accuracy(train_ep_pred, trainLabel)
+#                train_ep_pred = model(eeg)
+                train_accuracy = self.get_onehot_accuracy(output, trainLabel)
                 accuList.append(train_accuracy)
                 if(idx % 10 == 0):
                     print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,np.mean(accuList)))
@@ -140,8 +140,8 @@ class CPytorch:
             accuListTest = list()
             for data in testDataLoader:
                     eeg1,testLabel = data
-                    eeg1.cuda()
-                    testLabel.cuda()
+#                    eeg1.cuda()
+#                    testLabel.cuda()
                     # forward
                     output1 = model(eeg1)
                     loss1 = criterion(output1, testLabel)
@@ -154,8 +154,11 @@ class CPytorch:
             if epoch in [numEpochs * 0.125, numEpochs * 0.5, numEpochs * 0.75]:
                 for param_group in optimizier.param_groups:
                     param_group['lr'] *= 0.1
-                    
-            metrics.append([loss.numpy(),loss1.numpy(),np.mean(accuList),np.mean(accuListTest)])
+            
+            
+            
+            metrics.append([loss.cpu().detach().numpy(),loss1.cpu().detach().numpy(),np.mean(accuList),np.mean(accuListTest)])
+            self.Lib.cuda.empty_cache()
         return metrics
     
     def get_accuracy(self,output, targets):
