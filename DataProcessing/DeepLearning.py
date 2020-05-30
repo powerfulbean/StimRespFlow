@@ -110,7 +110,7 @@ class CPytorch:
             model.train()
             loss = None
             for idx,data in enumerate(dataLoader):
-                print(idx)
+#                print(idx)
                 eeg,trainLabel = data
 #                print(eeg,trainLabel)
 #                shapeList = list()
