@@ -158,8 +158,8 @@ class _OutsideLibIO:
     
     
 class CIfMNE:
-    import mne
-    def __init__(self,channelsInfo=None,srate=None,chTypes:list=None,montage:mne.channels.Montage = None,oLog = None):
+
+    def __init__(self,channelsInfo=None,srate=None,chTypes:list=None,montage = None,oLog = None):
         self.LibMNE = self._importMNE()
         if(channelsInfo == None or srate == None):
             self.info = None
