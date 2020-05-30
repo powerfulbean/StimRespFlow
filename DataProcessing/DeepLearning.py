@@ -101,7 +101,7 @@ class CPytorch:
         else:
             criterion = oLossFunc
         optimizier = self.Lib.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-        model.cuda()
+        model = model.cuda()
         step_list = list()
         loss_list = list()
         metrics = list()
@@ -127,10 +127,11 @@ class CPytorch:
                 loss.backward()
                 optimizier.step()
 #                train_ep_pred = model(eeg)
-                train_accuracy = self.get_onehot_accuracy(output, trainLabel)
-                accuList.append(train_accuracy)
-                if(idx % 10 == 0):
-                    print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,np.mean(accuList)))
+                
+                if(idx % 1000 == 0):
+                    train_accuracy = self.get_onehot_accuracy(output, trainLabel)
+                    accuList.append(train_accuracy)
+                    print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,train_accuracy))
             
             self.Lib.cuda.empty_cache()   
             for param_group in optimizier.param_groups:
