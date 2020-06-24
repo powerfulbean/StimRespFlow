@@ -135,12 +135,14 @@ class CPytorch:
                     accuList.append(train_accuracy)
                     print("data: {}, train loss is {}, train accu is {} \n".format((idx), loss.data,train_accuracy))
             
-            self.Lib.cuda.empty_cache()   
+            self.Lib.cuda.empty_cache()
+            model.eval()
             for param_group in optimizier.param_groups:
                 print(param_group['lr'])
     #        print(test_loss_list)
             test_loss_list = list()
             accuListTest = list()
+            loss1 = ''
             for data in testDataLoader:
                     eeg1,testLabel = data
 #                    eeg1.cuda()
@@ -164,6 +166,7 @@ class CPytorch:
             self.Lib.cuda.empty_cache()
         return metrics
     
+    
     def get_accuracy(self,output, targets):
         """calculates accuracy from model output and targets
         """
@@ -181,6 +184,26 @@ class CPytorch:
 #        print(output,targets)
         accuracy = accuracy.cpu().numpy()
         return accuracy
+
+class CTorchClassify(CPytorch):
+    
+    def __init__(self):
+        super().__init__()
+        
+    def modelPredict(self,model,dataLoader):
+        model.eval()
+        model = model.cuda()
+        result = list()
+        for idx,data in enumerate(dataLoader):
+            eeg = data[0]
+            output = model(eeg)
+            print(idx * dataLoader.batch_size,'/',len(dataLoader.dataset))
+            result.append(output.cpu().detach().numpy())
+        
+        self.Lib.cuda.empty_cache()
+
+        return np.concatenate(result)
+        
     
 class CTorchNNYaml(CPytorch):
     

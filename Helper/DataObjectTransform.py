@@ -5,6 +5,7 @@ Created on Tue Apr 14 23:11:54 2020
 @author: Jin Dou
 """
 import numpy as np
+from abc import ABC,abstractmethod
 
 class CEpochToDataLoader:
     
@@ -40,23 +41,38 @@ class CEpochToDataLoader:
         dataLoader = self.lib_torch.utils.data.DataLoader(dataset,shuffle=shuffle,batch_size=100)
         return dataLoader
 
-class CDataRecordToDataLoader:
+
+class TensorsToDataLoader(ABC):
     
     def __init__(self):
         from ..DataProcessing.DeepLearning import CPytorch
-        from ..DataStruct import DataSet
         self.lib_torch = CPytorch().Lib
-        self.lib = DataSet
         
-    def __call__(self,DataRecord,TorchDataSetType,oSamplerType=None,**Args):
-        return self.ToDataLoader(DataRecord,TorchDataSetType,oSamplerType,**Args)
+    def __call__(self,*args,**kwargs):
+        pass
     
-    def ToDataLoader(self,DataRecord,TorchDataSetType,oSamplerType=None,**Args):
-        
-        print(oSamplerType)
-        if(not issubclass(TorchDataSetType,self.lib_torch.utils.data.Dataset)):
-            raise ValueError('input TorchDataSetType is not a class of Torch Dataset')
-            
+class CToTensors(ABC):
+    
+    def __init__(self):
+        from ..DataProcessing.DeepLearning import CPytorch
+        self.lib_torch = CPytorch().Lib
+    
+    def __call__(self,*args,**kwargs):
+        #return tuple
+        return self.toTensors(*args,**kwargs)
+    
+    @abstractmethod
+    def toTensors(self):
+        pass
+    
+class CDataRecordToTensors(CToTensors):
+    
+    def __init__(self):
+        super().__init__()
+        from ..DataStruct import DataSet
+        self.lib = DataSet
+    
+    def toTensors(self,DataRecord):
         if(not isinstance(DataRecord,self.lib.CDataRecord)):
             raise ValueError('input Dataset is not a instance of Torch Dataset')
         
@@ -65,24 +81,22 @@ class CDataRecordToDataLoader:
         xTensor = self.lib_torch.FloatTensor(x)
         yTensor = self.lib_torch.FloatTensor(y)
         
-        if(Args.get('DataRecordArgs') != None):
-            DataSetArgs = Args['DataRecordArgs']
-            dataset = TorchDataSetType(xTensor, yTensor,**DataSetArgs)
-        else:
-            dataset = TorchDataSetType(xTensor, yTensor)
+        return xTensor,yTensor
+    
+    
+class CRawDataToTensors(CToTensors):
+    
+    def __init__(self):
+        super().__init__()
+        from ..DataStruct import RawData
+        self.lib = RawData
+    
+    def toTensors(self,RawData):
+        assert isinstance(RawData, self.lib.CRawData)
         
-        if(Args.get('DataLoaderArgs') != None):
-            DataLoaderArgs = Args['DataLoaderArgs']
-            if(oSamplerType == None or Args.get('SamplerArgs') == None):
-                dataLoader = self.lib_torch.utils.data.DataLoader(dataset,**DataLoaderArgs)
-            else:
-                SamplerArgs = Args.get('SamplerArgs')
-#                print(SamplerArgs)
-#                return
-                oSampler = oSamplerType(dataset,**SamplerArgs)
-                dataLoader = self.lib_torch.utils.data.DataLoader(dataset,sampler=oSampler,**DataLoaderArgs)
-        else:
-            dataLoader = self.lib_torch.utils.data.DataLoader(dataset)
+        x = RawData.rawdata.T
+        xTensor = self.lib_torch.FloatTensor(x)
         
-        return dataLoader
+        return (xTensor,)
+
         

@@ -4,7 +4,6 @@ Created on Fri Apr 10 16:55:28 2020
 
 @author: Jin Dou
 """
-import sys
 
 class CStageControl:
     
