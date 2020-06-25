@@ -219,6 +219,11 @@ class CIfSklearn:
     def Lib(self):
         return self._sk
     
+    @property
+    def metricsLib(self):
+        from sklearn import metrics
+        return metrics
+    
     def get(self):
         import sklearn as sk
         self._sk = sk

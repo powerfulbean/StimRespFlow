@@ -207,8 +207,76 @@ class CTorchClassify(CPytorch):
         return np.concatenate(result)
     
     def rocAucScore(self,*args, **kwargs):
-        return self.oIfSklearn.Lib.metrics.roc_auc_score(*args,**kwargs)
+        return self.oIfSklearn.metricsLib.roc_auc_score(*args,**kwargs)
         
+    def modelTranEval(self,model,dataLoaderTrain,dataLoaderTest,numEpochs:int,
+                                 lr:float,weight_decay:float,oLossFunc = None):
+        criterion = None
+        if(oLossFunc == None):
+            criterion = self.Lib.nn.CrossEntropyLoss().cuda()
+        else:
+            criterion = oLossFunc
+        optimizier = self.Lib.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+        model = model.cuda()
+        metrics = list()
+        for epoch in range(numEpochs):
+            print("epoch:{}".format(epoch+1))
+            accuList = list()
+            model.train()
+            loss = None
+            outputCache = list()
+            labelCache = list()
+            for idx,data in enumerate(dataLoaderTrain):
+                eeg,trainLabel = data
+                # forward
+                output = model(eeg)
+                loss = criterion(output, trainLabel)
+                # backward
+                optimizier.zero_grad()
+                loss.backward()
+                optimizier.step()
+                
+                if(idx % 100 == 0 and idx != 0):
+                    train_accuracy = self.rocAucScore(np.concatenate(labelCache), np.concatenate(outputCache))
+                    accuList.append(train_accuracy)
+                    print("data: {}/{}, train loss is {}, train RocAucScore is {} \n".format((idx*dataLoaderTrain.batch_size),len(dataLoaderTrain.dataset), loss.data,train_accuracy))
+                    outputCache.clear()
+                    labelCache.clear()
+                else:
+                    outputCache.append(output.cpu().detach().numpy())
+                    labelCache.append(trainLabel.cpu().detach().numpy())
+            
+            self.Lib.cuda.empty_cache()
+            model.eval()
+            for param_group in optimizier.param_groups:
+                print("lr",param_group['lr'])
+    #        print(test_loss_list)
+            test_loss_list = list()
+            accuListTest = list()
+            loss1 = ''
+            cache1 = list()
+            cache2 = list()
+            for data in dataLoaderTest:
+                    eeg1,testLabel = data
+#                    eeg1.cuda()
+#                    testLabel.cuda()
+                    # forward
+                    output1 = model(eeg1)
+                    loss1 = criterion(output1, testLabel)
+                    test_loss_list.append(loss1.cpu().data.numpy())
+                    cache1.append(testLabel.cpu().detach().numpy())
+                    cache2.append(output1.cpu().detach().numpy())
+            print(np.concatenate(cache2).shape)        
+            test_accuracy = self.rocAucScore( np.concatenate(cache1),np.concatenate(cache2))
+            print(" test loss is {}, test RocAucScore is {}\n".format(np.mean(test_loss_list),test_accuracy))
+            
+            if epoch in [numEpochs * 0.125, numEpochs * 0.5, numEpochs * 0.75]:
+                for param_group in optimizier.param_groups:
+                    param_group['lr'] *= 0.1
+            
+            metrics.append([loss.cpu().detach().numpy(),loss1.cpu().detach().numpy(),np.mean(accuList),np.mean(accuListTest)])
+            self.Lib.cuda.empty_cache()
+        return metrics
     
 class CTorchNNYaml(CPytorch):
     

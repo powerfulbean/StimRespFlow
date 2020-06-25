@@ -74,7 +74,7 @@ class CDataRecordToTensors(CToTensors):
     
     def toTensors(self,DataRecord):
         if(not isinstance(DataRecord,self.lib.CDataRecord)):
-            raise ValueError('input Dataset is not a instance of Torch Dataset')
+            raise ValueError('input Dataset is not a instance of CDataRecord')
         
         x = DataRecord.data.T
         y = DataRecord.stimuli.T
