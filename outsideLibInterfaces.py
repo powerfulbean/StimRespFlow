@@ -215,6 +215,10 @@ class CIfSklearn:
         self._sk = None
         self.get()
     
+    @property
+    def Lib(self):
+        return self._sk
+    
     def get(self):
         import sklearn as sk
         self._sk = sk

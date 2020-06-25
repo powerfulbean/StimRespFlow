@@ -5,6 +5,7 @@ Created on Tue Apr 14 13:27:33 2020
 @author: Jin Dou
 """
 import numpy as np
+from ..outsideLibInterfaces import CIfSklearn
 
 class CPytorch:
     
@@ -189,6 +190,7 @@ class CTorchClassify(CPytorch):
     
     def __init__(self):
         super().__init__()
+        self.oIfSklearn = CIfSklearn()
         
     def modelPredict(self,model,dataLoader):
         model.eval()
@@ -203,6 +205,9 @@ class CTorchClassify(CPytorch):
         self.Lib.cuda.empty_cache()
 
         return np.concatenate(result)
+    
+    def rocAucScore(self,*args, **kwargs):
+        return self.oIfSklearn.Lib.metrics.roc_auc_score(*args,**kwargs)
         
     
 class CTorchNNYaml(CPytorch):
