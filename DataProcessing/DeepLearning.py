@@ -252,7 +252,6 @@ class CTorchClassify(CPytorch):
                 print("lr",param_group['lr'])
     #        print(test_loss_list)
             test_loss_list = list()
-            accuListTest = list()
             loss1 = ''
             cache1 = list()
             cache2 = list()
@@ -274,7 +273,7 @@ class CTorchClassify(CPytorch):
                 for param_group in optimizier.param_groups:
                     param_group['lr'] *= 0.1
             
-            metrics.append([loss.cpu().detach().numpy(),loss1.cpu().detach().numpy(),np.mean(accuList),np.mean(accuListTest)])
+            metrics.append([loss.cpu().detach().numpy(),loss1.cpu().detach().numpy(),np.mean(accuList),test_accuracy])
             self.Lib.cuda.empty_cache()
         return metrics
     
