@@ -345,7 +345,7 @@ class CDataRecord: #base class for data with label
     def __init__(self,data,stimuli,stimuliDes:list,srate):
         self.data = data #real data Segment
         self.stimuli = stimuli #segmented "auditoryStimuli" object
-        self.stimuliDes = stimuliDes #name of the stimuli ( main)
+        self.stimuliDes = stimuliDes #information of the stimuli
         self.srate = srate
         self.filterLog = list()
         self.descInfo = None
