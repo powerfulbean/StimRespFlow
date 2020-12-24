@@ -21,6 +21,29 @@ class CPytorch:
         ans = getattr(NN,name)
         return ans
     
+    def buildDataLoader(self,*tensors,TorchDataSetType,oSamplerType=None,**Args):
+        lib_torch = self.Lib
+        if(Args.get('DatasetArgs') != None):
+            DataSetArgs = Args['DatasetArgs']
+            dataset = TorchDataSetType(*tensors,**DataSetArgs)
+        else:
+            dataset = TorchDataSetType(*tensors)
+        
+        if(Args.get('DataLoaderArgs') != None):
+            DataLoaderArgs = Args['DataLoaderArgs']
+            if(oSamplerType == None or Args.get('SamplerArgs') == None):
+                dataLoader = lib_torch.utils.data.DataLoader(dataset,**DataLoaderArgs)
+            else:
+                SamplerArgs = Args.get('SamplerArgs')
+    #                print(SamplerArgs)
+    #                return
+                oSampler = oSamplerType(dataset,**SamplerArgs)
+                dataLoader = lib_torch.utils.data.DataLoader(dataset,sampler=oSampler,**DataLoaderArgs)
+        else:
+            dataLoader = lib_torch.utils.data.DataLoader(dataset)
+        
+        return dataLoader
+    
     def fitClassificationModel(self,model,dataLoader,testDataLoader,
              numEpochs:int,lr:float,weight_decay:float,oLossFunc = None):
         criterion = None

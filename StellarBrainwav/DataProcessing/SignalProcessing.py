@@ -59,6 +59,10 @@ def plotFrequencySpectrum(data,srate):
  
         
     import pylab as plt
+    plt.figure()
+    plt.subplot(2,1,1)
+    plt.plot(data)
+    plt.subplot(2,1,2)
     plt.plot(W,f_signal)
     plt.show()
 
@@ -96,6 +100,40 @@ def MNECutInFreqBands(data,bands:list,**args):
     ans = np.concatenate(ansList,axis=1)
     return ans
     
+def resampleAug(x,oriSrate,newSrate,tarSampleNum):
+    from scipy.signal import resample_poly, resample
+    x1 = resample_poly(x,newSrate * 4, oriSrate)
+    x1 = resample(x1, tarSampleNum)
+    return x1
+
+def resample(x,tarSampleNum):
+    from scipy.signal import resample
+    x1 = resample(x, tarSampleNum)
+    return x1
+
+def downsample(x,stepQ,nSteps):
+    from scipy.signal import decimate
+    for i in range(nSteps):
+        x = decimate(x,stepQ)
+    return x
+
+def butter_lowpass_filter(data, cutoff, fs, order):
+    from scipy.signal import butter, filtfilt
+    nyq = fs/2.0
+    normal_cutoff = cutoff / nyq
+    # Get the filter coefficients 
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    y = filtfilt(b, a, data)
+    return y
+
+def getEnvelope(data):
+    from scipy.signal import hilbert
+    transSig = hilbert(data)
+    return np.abs(transSig)
+
+def zscore(data):
+    from scipy.stats import zscore
+    return zscore(data)
         
         
         
