@@ -17,7 +17,7 @@ setuptools.setup(
   author_email="powerfulbean@gmail.com",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://github.com/StellarBlocks/StellarInfra",
+  url="https://github.com/StellarBlocks/StellarBrainwav",
   packages=setuptools.find_packages(),
   classifiers=[
   "Programming Language :: Python :: 3",
