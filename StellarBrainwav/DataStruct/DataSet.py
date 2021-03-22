@@ -320,6 +320,29 @@ class CDataSet:
     def __init__(self,dataSetName = None):
         self.dataRecordList = list()
         self.name = dataSetName
+        self.srate = -1
+        self.desc = dict()
+    
+    @property
+    def records(self,):
+        return self.dataRecordList
+    
+    def __getitem__(self,idx):
+        return self.records[idx]
+    
+    def __len__(self,):
+        return len(self.records)
+    
+    def __iter__(self):
+        self.n = 0
+        return self
+    
+    def __next__(self):
+        if self.n  < len(self.records):
+            self.n += 1
+            return self.records[self.n-1]
+        else:
+            raise StopIteration
         
     def constructFromFile(self,fileName):
         import pickle
@@ -352,3 +375,42 @@ class CDataRecord: #base class for data with label
         
     def errorPrint(self,error):
         print("CDataRecorder error: " + error)
+        
+class CDataDict:
+    def __init__(self,dataDict:dict):
+        self._data = dataDict
+        self.keys = list(self._data.keys())
+        self.defaultKeySeq:list = list() 
+        for key in self._data:
+            setattr(self,key,self._data[key])
+        
+    @property    
+    def T(self,):
+        Dict = dict()
+        for i in self._data:
+            Dict[i] = self._data[i].T
+        return CDataDict(Dict)
+    
+    @property
+    def data(self,):
+        self.arrayCat(self.defaultKeySeq)
+    
+    def arrayCat(self,keySeq):
+        oList = list()
+        for i in keySeq:
+            oList.append(self._data[i])
+        return np.concatenate(oList)
+      
+class CDataDictRecord(CDataRecord):
+    
+    def __init__(self,data:dict,stimuli,stimuliDes:list,srate):
+        data = CDataDict(data)
+        isinstance(data,CDataDict)
+        super().__init__(data,stimuli,stimuliDes,srate)
+        
+    
+
+
+        
+            
+        
