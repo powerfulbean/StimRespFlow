@@ -393,7 +393,11 @@ class CDataDict:
     
     @property
     def data(self,):
-        self.arrayCat(self.defaultKeySeq)
+        return self.arrayCat(self.defaultKeySeq)
+    
+    @data.setter    
+    def data(self,x):
+        self._data = x
     
     def arrayCat(self,keySeq):
         oList = list()
@@ -401,12 +405,14 @@ class CDataDict:
             oList.append(self._data[i])
         return np.concatenate(oList)
       
-class CDataDictRecord(CDataRecord):
+class CDataDictRecord(CDataRecord,CDataDict):
     
     def __init__(self,data:dict,stimuli,stimuliDes:list,srate):
-        data = CDataDict(data)
-        isinstance(data,CDataDict)
-        super().__init__(data,stimuli,stimuliDes,srate)
+        CDataDict.__init__(self,data)
+        CDataRecord.__init__(self,data,stimuli,stimuliDes,srate)
+        
+        
+    
         
     
 
