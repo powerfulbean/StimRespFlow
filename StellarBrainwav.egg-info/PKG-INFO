@@ -2,12 +2,12 @@ Metadata-Version: 2.1
 Name: StellarBrainwav
 Version: 0.0.1
 Summary: UNKNOWN
-Home-page: https://github.com/StellarBlocks/StellarInfra
+Home-page: https://github.com/StellarBlocks/StellarBrainwav
 Author: Powerfulbean
 Author-email: powerfulbean@gmail.com
 License: UNKNOWN
 Description: # StellarBrainwav
-        A library to boost the implementation of wave data science application
+        A library for boosting the implementation of brain wave data science application
         ### Libraries:
         Numpy, Keras, Struct, etc.
         
