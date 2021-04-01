@@ -403,7 +403,7 @@ class CDataDict:
         oList = list()
         for i in keySeq:
             oList.append(self._data[i])
-        return np.concatenate(oList)
+        return np.concatenate(oList,axis = 0)
       
 class CDataDictRecord(CDataRecord,CDataDict):
     

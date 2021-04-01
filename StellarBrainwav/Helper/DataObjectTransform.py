@@ -72,12 +72,15 @@ class CDataRecordToTensors(CToTensors):
         from ..DataStruct import DataSet
         self.lib = DataSet
     
-    def toTensors(self,DataRecord):
+    def toTensors(self,DataRecord,T = True):
         if(not isinstance(DataRecord,self.lib.CDataRecord)):
             raise ValueError('input Dataset is not a instance of CDataRecord')
-        
-        x = DataRecord.data.T
-        y = DataRecord.stimuli.T
+        if T:
+            x = DataRecord.data.T
+            y = DataRecord.stimuli.T
+        else:
+            x = DataRecord.data
+            y = DataRecord.stimuli
         xTensor = self.lib_torch.FloatTensor(x)
         yTensor = self.lib_torch.FloatTensor(y)
         
