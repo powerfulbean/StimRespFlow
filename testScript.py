@@ -48,7 +48,6 @@ oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
 oLabel = CAuditoryLabels()
 oLabel.readFile(labelFiles[0])
 oLabel.loadStimuli("","cache",oStimCache)
-oLabel.enhanceTimeStamps()
 ''''''
 
 ''' match labels and raw data'''

@@ -163,12 +163,11 @@ class CDataOrganizor:
         self._opLogs.append(record)
     
     def addLabels(self,oLabel:CLabels):
-        if(oLabel.timestamps[0]._promoteTimeFlag == False):
-            oLabel.enhanceTimeStamps()
         inputLabels = oLabel.timestamps
         self.type = oLabel.type
-        for i in inputLabels:
-            self.labels[i] = ''
+        for idx,i in enumerate(inputLabels):
+            stimuli = oLabel.rawdata[idx]
+            self.labels[i] = CDataRecord(None,stimuli,[{'name':stimuli.name,'otherNames':stimuli.otherNames}],self.srate)
         self.labelList = list(self.labels.keys())
     
     def __getitem__(self,label:CLabelInfo):
@@ -230,7 +229,7 @@ class CDataOrganizor:
                 label.otherNames.append(str(Dict["OtherLabelNames"][0]))
             self.labels[label] = Dict["Data"]
     
-    def assignTargetData(self,targetList,frontLag_s = 1, postLag_s = 1): #need to be improved
+    def assignTargetData(self,targetList,frontLag_s = 0, postLag_s = 0): #need to be improved
         ''' 
         Des:
             assign raw data to self.labels(CLabels) according to the absolute time of raw data and labels
@@ -262,7 +261,7 @@ class CDataOrganizor:
                             dataObject = targetList[index]
                             [data,interval ] =  dataObject.findInterval(label.startTime,label.endTime,frontLag_s,postLag_s)
                 elif (interval[0] <= label.startTime and interval[1] >= label.endTime ):
-                    self.labels[label] = data
+                    self.labels[label].data = data
 #                    print(index,' ',interval[0],interval[1],' for ',label.startTime,label.endTime)
         #            print(interval)
                     break
@@ -277,10 +276,10 @@ class CDataOrganizor:
 #                            remove_list.append(label)
 #                        else:
                         print("part of the data lost: data between: " + str(interval[1]) + ' and ' + str(label.endTime) + " is not found in the data file")
-                        self.labels[label] = data
+                        self.labels[label].data = data
                         break
                     else:
-                        data = data + data1
+                        data = np.concatenate([data,data1],axis=1)
                         interval[1] = interval1[1]
                 
                 if(breakFlag == True):
@@ -293,15 +292,14 @@ class CDataOrganizor:
 #        transObject = outLib._OutsideLibTransform()
         oDataSet = CDataSet(self.type + str(self.labelList[0].startTime))
         for label in self.labels:
-            data = self.labels[label]
-            stimuli = label # label stores a related markerRecord
+            data = self.labels[label].data
+            stimuli = self.labels[label].stimuli # label stores a related markerRecord
             # get segmented auditoryStimuli Object from the markerRecord's whole length auditoryStimuli Object ('data' attribute) 
             Num = round(label.getDuration_s() / epochLen_s)
-            ans = label.stimuli.getSegmentStimuliLists(epochLen_s,Num) 
+            ans = stimuli.getSegmentStimuliLists(epochLen_s,Num) 
             labelDes = [stimuli.name, stimuli.otherNames[0]]
 #            print('Num: ',Num)
             for i in range(Num):
-                
 #                print(data.shape,i*epochLen_s*self.srate,(i+1)*epochLen_s*self.srate)
 #                print((i+1)*epochLen_s*self.srate)
                 dataSeg = data[:,int(i*epochLen_s*self.srate) : int((i+1)*epochLen_s*self.srate)]

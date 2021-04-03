@@ -37,6 +37,10 @@ class CVisualStimuli(CStimuli):
 
 
 class CAuditoryStimuli(CStimuli):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.name = ''
+        self.otherNames = list() # background stimuli name
     
     def loadStimulus(self,mainName:str,otherNames:list,oCache : CStimuliCache = None):
         if oCache == None:

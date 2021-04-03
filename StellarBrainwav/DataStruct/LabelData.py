@@ -85,9 +85,9 @@ class CVisualLabels(CLabels):
                 i+=1
                                  
                 while(buffer[i][0] == 'sub'):
-                    tempRecord = CLabelInfoCoarse('','','','') #store crossing time
-                    tempRecord2 = CLabelInfoCoarse('','','','') #store stimuli time
-                    tempRecord3 = CLabelInfoCoarse('','','','') #store rest time
+                    tempRecord = CTimeIntervalStamp('','','','') #store crossing time
+                    tempRecord2 = CTimeIntervalStamp('','','','') #store stimuli time
+                    tempRecord3 = CTimeIntervalStamp('','','','') #store rest time
                     
                     i+=1
                     
@@ -124,7 +124,7 @@ class CVisualLabels(CLabels):
             
     def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
         ''' 
-        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
+        load stimuli in self.timestamps(CTimeIntervalStamp).stimuli
         '''
         pass
         
@@ -146,7 +146,7 @@ class CBlinksCaliLabels(CLabels):
         i = 0
         self.startTime = self.parseTimeString(buffer[i][1] + ' ' + buffer[i][2])
         while( i < len(buffer)): #buffer is the whole document
-            tempRecord = CLabelInfoCoarse('','','','') #store crossing time
+            tempRecord = CTimeIntervalStamp('','','','') #store crossing time
             #the first line, save the start date
             Type = buffer[i][0]
             if(Type == 'blink' or Type == 'lookLeft' or Type == 'lookRight'):
@@ -215,7 +215,8 @@ class CAuditoryLabels(CLabels):
                 else:
                     leftflag = False
                 
-                tempRecord = CLabelInfoCoarse('','','','')
+                tempRecord = CTimeIntervalStamp('','','','')
+                tempStimuli = CAuditoryStimuli()
                 
                 i += 1
                 audioStart = buffer[i]
@@ -229,14 +230,14 @@ class CAuditoryLabels(CLabels):
                     if(singleflag == False):
                         # stimuli name
                         stimuliName = self.stimuliname(leftflag, realName)
-                        tempRecord.name = stimuliName
+                        tempStimuli.name = stimuliName
                         #print(stimuliName)
                         otherstimulisName = self.stimuliname(not leftflag, realName)# other stimuli name
-                        tempRecord.otherNames.append(otherstimulisName)
+                        tempStimuli.otherNames.append(otherstimulisName)
                         #print(otherstimulisName)
                     else:
-                        tempRecord.name = realName
-                        tempRecord.otherNames.append(realName)
+                        tempStimuli.name = realName
+                        tempStimuli.otherNames.append(realName)
                     
                     # calculate start time
                     temp = audioStart[2:len(audioStart)] 
@@ -256,6 +257,7 @@ class CAuditoryLabels(CLabels):
                 
                 tempRecord.type = 'auditory'
                 self.timestamps.append(tempRecord)
+                self.rawdata.append(tempStimuli)
                 i+=1
             elif(buffer[i][0]=='-1'):
                 break
@@ -276,31 +278,27 @@ class CAuditoryLabels(CLabels):
     
     def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
         ''' 
-        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
+        load stimuli in self.timestamps(CTimeIntervalStamp).stimuli
         '''
         if(extension == '.wav'):
             for i in range(len(self.timestamps)):
-                label = self.timestamps[i]
+                label = self.rawdata[i]
                 mainStreamName = label.name
                 otherStreamNames = label.otherNames
                 print("AuditoryLabels, readStimuli:", mainStreamName,otherStreamNames[0])
-                stimuliObject = CAuditoryStimuli()
                 mainStreamFullPath = Folder + mainStreamName + extension
                 otherStreamFullPaths = [Folder + i + extension for i in otherStreamNames]
-                stimuliObject.loadStimulus(mainStreamFullPath,otherStreamFullPaths)
+                self.rawdata[i].loadStimulus(mainStreamFullPath,otherStreamFullPaths)
                 # save this auditoryStimuli object to the data attribute of this markerRecord object
-                self.rawdata.append(stimuliObject)
         
         elif(extension == 'cache'):
             for i in range(len(self.timestamps)):
-                label = self.timestamps[i]
+                label = self.rawdata[i]
                 mainStreamName = label.name
                 otherStreamNames = label.otherNames
                 print("AuditoryLabels, read Stimuli from cache:", mainStreamName,otherStreamNames[0])
-                stimuliObject = CAuditoryStimuli()
-                stimuliObject.loadStimulus(mainStreamName,otherStreamNames,oCache)                    
+                self.rawdata[i].loadStimulus(mainStreamName,otherStreamNames,oCache)                    
                 # save this auditoryStimuli object to the data attribute of this markerRecord object
-                self.rawdata.append(stimuliObject)
                 
 class CLabelInfoBase:
     pass
@@ -410,8 +408,6 @@ class CTimeIntervalStamp:
         5. label value: actual stimuli
     '''
     def __init__(self,name,index,startTime,endTime):
-        super(CLabelInfoCoarse, self).__init__(name,index)
-        self.otherNames = list() # background stimuli name
         self._promoteFlag = False
         self._promoteTimeFlag = False
         self.startTime = startTime #datetime.time or datetime.datetime object
@@ -424,29 +420,6 @@ class CTimeIntervalStamp:
         
     def checkPromoto(self,):
         return self._promoteFlag
-    
-    def promote(self,datetimeModule,dateObject, data):
-        ''' 
-        promote this CLabelInfoCoarse with absolute time, 
-        and label data (such as image name for visual stimuli, and auditoryStimuli for auditory stimuli)
-        
-        '''
-        if(self._promoteFlag == True):
-            print("marker has been promoted")
-        else:
-            self.promoteTime(datetimeModule,dateObject)    
-            self.stimuli = data
-            self._promoteFlag = True
-    
-    def promoteTime(self,datetimeModule,dateObject):
-        if(self._promoteTimeFlag == True):
-            print("time of the marker has been promoted")
-        else:
-            startTime = datetimeModule.datetime(1,1,1,1,1,1)
-            endTime = datetimeModule.datetime(1,1,1,1,1,1)
-            self.startTime = startTime.combine(dateObject, self.startTime)
-            self.endTime = endTime.combine(dateObject, self.endTime)
-            self._promoteTimeFlag = True
     
     def sorted_key(self,x):
         return x.startTime
@@ -503,7 +476,7 @@ class CTimeIntervalStamp:
     
     # def promote(self,datetimeModule,dateObject, data):
         # ''' 
-        # promote this CLabelInfoCoarse with absolute time, 
+        # promote this CTimeIntervalStamp with absolute time, 
         # and label data (such as image name for visual stimuli, and auditoryStimuli for auditory stimuli)
         
         # '''

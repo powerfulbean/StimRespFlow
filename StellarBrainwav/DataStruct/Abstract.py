@@ -100,7 +100,7 @@ class CRawData(CData):
     # the second dimension of self.rawdata is timestamp
     '''
     def __init__(self): #the length of timeStamps should be the same as the number of samples 
-        super(CRawData, self).__init__()
+        super().__init__()
         self.startTime = '' # store the datatime.datetime object
         self.sampleRate = 0
         self.numChannels = 0
@@ -165,8 +165,9 @@ class CRawData(CData):
 class CLabels(CData): 
     # for labels created by psychopy, the last number is microsecond but not millisecond 
     def __init__(self):
-        super(CLabels, self).__init__()
+        super().__init__()
         self.startTime = None
+        self._data = list()
     
     def writeInfoForMatlab(self,folder):
         import json
@@ -192,22 +193,9 @@ class CLabels(CData):
     def writeType(self,typeName):
         for i in self.timestamps:
             i.type = typeName
-            
-    def enhanceTimeStamps(self):
-        '''
-        make the self.timestamps be independent from self.rawdata
-        change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
-        if applicatable, allocat rawdata to CLabelInfoCoarse.stimuli
-        
-        '''
-        if(len(self.timestamps) != len(self.rawdata)):
-            print("label warning: the number of rawdata is wrong, ",len(self.timestamps),' ',len(self.rawdata))
-            #length of raw data is: ", len(self.rawdata))
-        for i,labelInfo in enumerate(self.timestamps):
-            if (i<len(self.rawdata)):
-                labelInfo.promote(datetime.datetime,self.startTime.date(),self.rawdata[i]) #allocate rawdata to 
-            else:
-                labelInfo.promoteTime(datetime.datetime,self.startTime.date())
+    
+    def dataCheck(self,data):
+        return True
     
     @abstractmethod
     def readFile(self,fileName):
