@@ -5,20 +5,21 @@ Created on Wed Oct  9 16:52:18 2019
 @author: Jin Dou
 """
 
-import DataIO
-from Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
-from DataIO import getFileList,saveObject, loadObject, CLog
-from DataStruct.RawData import CBitalinoRawdata
-from DataStruct.LabelData import CVisualLabels,CAuditoryLabels
-from DataStruct.DataSet import CDataOrganizor,EOperation
-from outsideLibInterfaces import CIfMNE
-from DataProcessing import SignalProcessing as SigProc
+from StellarBrainwav import DataIO
+from StellarBrainwav.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
+from StellarBrainwav.DataIO import getFileList,saveObject, loadObject, CLog
+from StellarBrainwav.DataStruct.Abstract import CData, CRawData
+from StellarBrainwav.DataStruct.RawData import CBitalinoRawdata,CDateTimeStampsGen
+from StellarBrainwav.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
+from StellarBrainwav.DataStruct.DataSet import CDataOrganizor,EOperation
+from StellarBrainwav.outsideLibInterfaces import CIfMNE
+from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
 
 
 ''' prepare label and data files'''
 dir_list = ['dirLabels','dirData','dirStimuli','dirResult']
 #oDir = DataIO.DirectoryConfig(dir_list,r"testConf\GlsDataDirectoryVisual.conf")
-oDir = DataIO.DirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
+oDir = DataIO.CDirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
 oDir.checkFolders()
 labelFiles = getFileList(oDir['dirLabels'],'.txt')
 dataFiles = getFileList(oDir['dirData'],'.txt')
@@ -26,7 +27,7 @@ oLog = CLog(oDir['dirResult'],'programLog')
 
 oLog.safeRecordTime('stimuli cache start')#log
 ''' load stimuli in cache '''
-stimuliTypeList = ['MW_DS_NM','MM_SS_NM','MM_DS_WM','MW_DS_WM','WW_SS_NM']
+stimuliTypeList = ['MW_DS_NM']
 oStimList = CStimuliTypeList(stimuliTypeList,r'testConf/stimuliType.conf')
 oStimCache = CStimuliCacheAuditory(oDir['dirStimuli'])
 oStimCache.loadStimuli(oStimList['MW_DS_NM'])
@@ -41,13 +42,12 @@ oLog.safeRecordTime('prepare dataset start')#log
 '''load label and raw data files'''
 oRaw = CBitalinoRawdata()
 oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
-oRaw.calTimeStamp()
+#oRaw.calTimeStamp()
 
 #oLabel = CVisualLabels()
 oLabel = CAuditoryLabels()
 oLabel.readFile(labelFiles[0])
 oLabel.loadStimuli("","cache",oStimCache)
-oLabel.enhanceTimeStamps()
 ''''''
 
 ''' match labels and raw data'''
@@ -66,8 +66,8 @@ for label in oDataOrg.labelList:
     data = oDataOrg[label]
     
     #filter and resample the raw data
-    oMNE = CIfMNE(data,oDataOrg.channelsList,sRate,['eeg','eog'])
-    oMNERaw = oMNE.getMNERaw()
+    oMNE = CIfMNE(oDataOrg.channelsList,sRate,['eeg','eog'])
+    oMNERaw = oMNE.getMNERaw(data)
     oMNERaw.filter(2,8,picks = ['eeg'])
     oMNERaw.filter(0.1,8, picks = ['eog'])
     oMNERaw.resample(64,npad = 'auto')
