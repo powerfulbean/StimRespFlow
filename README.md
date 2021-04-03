@@ -10,3 +10,5 @@ For a normal evaluation of an offline model, always three processes are included
 So maybe at least three "classes" are needed. Which are CRawDataPre; CDataSetPre; CModel;
 
 This framework should help people easily manage these three processes. 
+
+Provide time checking protocol in the framework for verfying the brain wave data is correctly aligned with the label (stimuli)
