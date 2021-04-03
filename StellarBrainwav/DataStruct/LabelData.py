@@ -8,38 +8,14 @@ import os
 from abc import abstractmethod,ABC
 
 from .. import outsideLibInterfaces as outLib
-from ..DataIO import checkFolder, getFileName
+from ..DataIO import  getFileName
 from ..Helper.Cache import CStimuliCache
-from .RawData import CData
-from .StimuliData import CStimuli,CAuditoryStimuli
+from .Abstract import CLabels
+from .StimuliData import CAuditoryStimuli
+import datetime
 
 
-class CLabels(CData): 
-    # for labels created by psychopy, the last number is microsecond but not millisecond 
-    def __init__(self):
-        super(CLabels, self).__init__()
-        self.startTime = None
-    
-    def writeInfoForMatlab(self,folder):
-        import json
-        ans = dict()
-        ans["startDate"] = str(self.startTime)
-        dataDict = dict()
-        cnt = 0
-        for i in self.timestamps:
-            s,e = i.getLabelDict() # get start and end event time
-            dataDict[str(cnt)] = s
-            cnt+=1
-            dataDict[str(cnt)] = e
-            cnt+=1 
-        ans["labels"] = dataDict
-        app_json = json.dumps(ans)
-        #print(app_json)
-        checkFolder(folder)
-        fileAddress = str(folder) + self.description+"_labels_" + str(self.startTime).replace(":","-") + ".jin" 
-        f = open(fileAddress,'w+')
-        f.write(app_json)
-        f.close
+class CVisualLabels(CLabels):
     
     def stimuliEventParser(self,buffer, stimuliStartTag, StimuliEndTag, i, recordObject):
         stimuliStart = buffer[i]
@@ -47,11 +23,10 @@ class CLabels(CData):
             temp = stimuliStart[1]
             realName = temp
             recordObject.name = realName
-            datetime = outLib._OutsideLibTime()._importDatetime() 
             
             temp = stimuliStart[2:len(stimuliStart)] # calculate start time
             [h,m,s,ms] = [int(t) for t in temp]
-            startTime = datetime.time(h,m,s,ms)
+            startTime = datetime.datetime(self.startTime.year,self.startTime.month,self.startTime.day,h,m,s,ms)
             recordObject.startTime = startTime
             i+=1
             
@@ -61,7 +36,7 @@ class CLabels(CData):
                 recordObject.index = stimuliEnd[1]
                 temp = stimuliEnd[2:len(stimuliEnd)] # calculate end time
                 [h,m,s,ms] = [int(t) for t in temp]
-                endTime = datetime.time(h,m,s,ms)
+                endTime = datetime.datetime(self.startTime.year,self.startTime.month,self.startTime.day,h,m,s,ms)
                 recordObject.endTime = endTime
                 i+=1
             else:
@@ -70,40 +45,6 @@ class CLabels(CData):
             print("visuallabels, parser error")
         
         return i, recordObject
-
-    def writeType(self,typeName):
-        for i in self.timestamps:
-            i.type = typeName
-            
-    def enhanceTimeStamps(self):
-        '''
-        make the self.timestamps be independent from self.rawdata
-        change the datetime.time (doesn't contain information of year,month,day) object into datetime.datetime object
-        if applicatable, allocat rawdata to CLabelInfoCoarse.stimuli
-        
-        '''
-        datetime = outLib._OutsideLibTime()._importDatetime()
-        if(len(self.timestamps) != len(self.rawdata)):
-            print("label warning: the number of rawdata is wrong, ",len(self.timestamps),' ',len(self.rawdata))
-            #length of raw data is: ", len(self.rawdata))
-        for i,labelInfo in enumerate(self.timestamps):
-            if (i<len(self.rawdata)):
-                labelInfo.promote(datetime,self.startTime.date(),self.rawdata[i]) #allocate rawdata to 
-            else:
-                labelInfo.promoteTime(datetime,self.startTime.date())
-    
-    @abstractmethod
-    def readFile(self,fileName):
-        return
-    
-    @abstractmethod
-    def loadStimuli(self,Folder, extension, oCache : CStimuliCache = None):
-        ''' 
-        load stimuli in self.timestamps(CLabelInfoCoarse).stimuli
-        '''
-        pass
-
-class CVisualLabels(CLabels):
     
     def readFile(self,fileName, readStimuli = False, stimuliDir = None):
         ''' 
@@ -115,7 +56,6 @@ class CVisualLabels(CLabels):
         self.description = 'Visual'
         self.type = "Visual"
         buffer = []
-        datetime = outLib._OutsideLibTime()._importDatetime()    
         
         with open(fileName, 'r') as the_file: #opoen the labels file
             lines = the_file.readlines()
@@ -301,7 +241,7 @@ class CAuditoryLabels(CLabels):
                     # calculate start time
                     temp = audioStart[2:len(audioStart)] 
                     [h,m,s,ms] = [int(t) for t in temp]
-                    startTime = datetime.time(h,m,s,ms)
+                    startTime = datetime.datetime(self.startTime.year,self.startTime.month,self.startTime.day,h,m,s,ms)
                     tempRecord.startTime = startTime
                     i+=1
                     
@@ -311,7 +251,7 @@ class CAuditoryLabels(CLabels):
                         tempRecord.index = audioEnd[1]
                         temp = audioEnd[2:len(audioEnd)]
                         [h,m,s,ms] = [int(t) for t in temp]
-                        endTime = datetime.time(h,m,s,ms)
+                        endTime = datetime.datetime(self.startTime.year,self.startTime.month,self.startTime.day,h,m,s,ms)
                         tempRecord.endTime = endTime
                 
                 tempRecord.type = 'auditory'
@@ -412,8 +352,6 @@ class CLabelInfo(CLabelInfoBase):
         self.name = desc
         self.index = index
         self.type = ''
-        self.startTime ='' #datetime.time or datetime.datetime object
-        self.endTime = '' #dateime.time or datetime.datetime object 
     
     def getLabelDict(self,handle:CFGetLabelDict=None):
         if (self.type == 'attention') :
@@ -462,7 +400,7 @@ class CLabelInfoGeneral(CLabelInfo):
         
         raise ValueError("Query's value is not valid")
 	
-class CLabelInfoCoarse(CLabelInfo):
+class CTimeIntervalStamp:
     ''' Time related CLabelInfo Type, but the time indicator is coarse'''
     ''' class to store information for a label marker, including:
         1. label name

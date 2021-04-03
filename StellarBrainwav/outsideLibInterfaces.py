@@ -161,7 +161,7 @@ class CIfMNE:
 
     def __init__(self,channelsInfo=None,srate=None,chTypes:list=None,montage = None,oLog = None):
         self.LibMNE = self._importMNE()
-        if(channelsInfo == None or srate == None):
+        if (channelsInfo is None) or (srate is None):
             self.info = None
         else:
             self.info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
@@ -174,7 +174,7 @@ class CIfMNE:
         return MNE
     
     def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None):
-        if channelsInfo != None and srate != None and chTypes != None:
+        if self.info is None :
             info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
             return self.LibMNE.io.RawArray(data,info)
         else:
