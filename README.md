@@ -1,7 +1,7 @@
 # StellarBrainwav
 A library for boosting the implementation of brain wave data science application
 ### Libraries:
-Numpy, Keras, Struct, etc.
+Numpy, Keras, pyTorch, etc.
 
 ## Some Initial Idea about the design of this framework
 
