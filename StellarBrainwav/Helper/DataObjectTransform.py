@@ -6,6 +6,30 @@ Created on Tue Apr 14 23:11:54 2020
 """
 import numpy as np
 from abc import ABC,abstractmethod
+import mne
+# from typing import Tuple
+
+class CTransformBase(ABC):
+    
+    def __call__(self,*args,**kwargs):
+        return self.trans(*args,**kwargs)
+    
+    @abstractmethod
+    def trans(self):
+        pass
+        
+class CEEGLabToMNE(CTransformBase):
+    
+    @staticmethod
+    def chanlocs(eeglabChanlocs:dict): #-> tuple[list[str],mne.channels.DigMontage]:
+        from mne.io.eeglab import eeglab
+        locs:list[dict] = eeglab._dol_to_lod(eeglabChanlocs)
+        class temp:
+            pass
+        oTemp = temp()
+        oTemp.chanlocs = locs
+        chNames, montage = eeglab._get_eeg_montage_information(oTemp, True)
+        return chNames, montage
 
 class CEpochToDataLoader:
     

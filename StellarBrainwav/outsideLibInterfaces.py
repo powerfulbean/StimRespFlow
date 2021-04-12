@@ -159,12 +159,12 @@ class _OutsideLibIO:
     
 class CIfMNE:
 
-    def __init__(self,channelsInfo=None,srate=None,chTypes:list=None,montage = None,oLog = None):
+    def __init__(self,chNames=None,srate=None,chTypes=None,montage = None,oLog = None):
         self.LibMNE = self._importMNE()
-        if (channelsInfo is None) or (srate is None):
+        if (chNames is None) or (srate is None):
             self.info = None
         else:
-            self.info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
+            self.info = self.LibMNE.create_info(chNames, srate,ch_types = chTypes)
         if(montage != None):
             self.Montage = montage
         self.oLog = oLog
@@ -174,11 +174,15 @@ class CIfMNE:
         return MNE
     
     def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None):
+        oRaw = None
         if self.info is None :
             info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
-            return self.LibMNE.io.RawArray(data,info)
+            oRaw = self.LibMNE.io.RawArray(data,info)
         else:
-            return self.LibMNE.io.RawArray(data,self.info)
+            oRaw = self.LibMNE.io.RawArray(data,self.info)
+        if self.Montage is not None:
+            oRaw.set_montage(self.Montage)
+        return oRaw            
     
     def CDataSetToEpochs(self,oDataSet,eventIdList,eventIdDict):
         if(len(eventIdList) != len(oDataSet.dataRecordList)):
