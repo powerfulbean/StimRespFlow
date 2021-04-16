@@ -109,6 +109,7 @@ class CRawData(CData):
         out = True
         assert isinstance(data,np.ndarray)
         assert len(data.shape) == 2
+        assert len(self.timestamps) == self._data.shape[1]
         return out
             
     def calTimeStamp(self,timeStampsGenerator:CTimeStampsGen):
@@ -195,6 +196,7 @@ class CLabels(CData):
             i.type = typeName
     
     def dataCheck(self,data):
+        assert len(self.timestamps) == len(self._data)
         return True
     
     @abstractmethod
