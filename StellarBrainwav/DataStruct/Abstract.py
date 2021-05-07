@@ -46,6 +46,15 @@ class CData(ABC):
     def rawdata(self,data):
         assert self.dataCheck(data)
         self._data = data
+        
+    @property    
+    def data(self):
+        return self._data
+    
+    @data.setter
+    def data(self,data):
+        assert self.dataCheck(data)
+        self._data = data
     
     @abstractmethod
     def dataCheck(self,data):

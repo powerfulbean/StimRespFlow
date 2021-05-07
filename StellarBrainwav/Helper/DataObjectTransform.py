@@ -78,8 +78,8 @@ class TensorsToDataLoader(ABC):
 class CToTensors(ABC):
     
     def __init__(self):
-        from ..DataProcessing.DeepLearning import CPytorch
-        self.lib_torch = CPytorch().Lib
+        import torch
+        self.lib_torch = torch
     
     def __call__(self,*args,**kwargs):
         #return tuple

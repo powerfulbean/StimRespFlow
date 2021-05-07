@@ -401,25 +401,15 @@ class CLabelInfoGeneral(CLabelInfo):
 class CTimeIntervalStamp:
     ''' Time related CLabelInfo Type, but the time indicator is coarse'''
     ''' class to store information for a label marker, including:
-        1. label name
-        2. other useful label names
         3. start and end time
-        4. label type
-        5. label value: actual stimuli
     '''
-    def __init__(self,name,index,startTime,endTime):
-        self._promoteFlag = False
-        self._promoteTimeFlag = False
+    def __init__(self,startTime,endTime,*args):
         self.startTime = startTime #datetime.time or datetime.datetime object
         self.endTime = endTime #dateime.time or datetime.datetime object 
-        self.stimuli = '' #label info (such as auditoryStimuli object)
         
     def getDuration_s(self):
         temp = self.endTime - self.startTime
         return temp.total_seconds()
-        
-    def checkPromoto(self,):
-        return self._promoteFlag
     
     def sorted_key(self,x):
         return x.startTime
