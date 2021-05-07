@@ -6,12 +6,15 @@ Created on Thu May  6 17:25:27 2021
 """
 import torch
 import ignite
-from ignite.metrics import Loss
+from ignite.metrics import Loss,RunningAverage
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.contrib.handlers import ProgressBar
 from matplotlib import pyplot as plt
 
-fTruePredOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
+from.Metrics import CMPearsonr
+
+fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
+fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
 fPickLossFromOutput = lambda output: output['loss']
 fPickPredTrueFromOutput = lambda output: (output['pred'],output['true'])
 
@@ -41,7 +44,7 @@ class CTrainer:
     
     def setOptm(self,criterion,optimizer,lrScheduler = None):
         self.criterion = criterion
-        self.addMetrics('loss', Loss(self.criterion,output_transform=fPickLossFromOutput))
+        self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))
         self.optimizer = optimizer
         self.lrScheduler = lrScheduler
         
@@ -56,26 +59,36 @@ class CTrainer:
     def hookTrainingResults(self,trainer):
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
+        if self.lrScheduler:
+            # print(metrics['corr'])
+            self.lrScheduler.step(metrics['corr'])
         print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
     def hookValidationResults(self,trainer):
         self.evaluator.run(self.dtldDev)
         metrics = self.evaluator.state.metrics
+        # if self.lrScheduler:
+            # print(metrics['corr'])
+            # self.lrScheduler.step(metrics['corr'])
         print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
         
     def setWorker(self,model):
-        from ignite.contrib.handlers.param_scheduler import LRScheduler
-        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion)
-        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics)
+        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,output_transform=fTruePredLossOutput)
+        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,output_transform=fTruePredOutput)
         
-        pbar = ProgressBar()
+        RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
+        CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
+        # for i in self.metrics:
+        #     if i != 'loss':
+        #         self.metrics[i].attach(self.trainer,i)
+        
+        pbar = ProgressBar(persist=True,ncols = 75)
         pbar.attach(self.trainer, metric_names='all')
         
-        scheduler = LRScheduler(self.lrScheduler)
-        self.trainer.add_event_handler(Events.ITERATION_COMPLETED, scheduler)
+        # scheduler = LRScheduler(self.lrScheduler)
+        # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
-        
         
     def train(self,model):
         self.setWorker(model)

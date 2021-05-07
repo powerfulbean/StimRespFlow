@@ -10,6 +10,7 @@ from ignite.metrics import Metric
 from ignite.exceptions import NotComputableError
 # These decorators helps with distributed settings
 from ignite.metrics.metric import sync_all_reduce, reinit__is_reduced
+from ignite.engine import Events
 
 def TensorsToNumpy(*tensors):
     out = tuple()
@@ -34,9 +35,10 @@ def BatchPearsonr(pred,y):
 
 class CMPearsonr(Metric):
 
-    def __init__(self, output_transform=lambda x: x, device="cpu"):
+    def __init__(self, output_transform=lambda x: x, device="cpu",avgOutput:bool = True):
         self._personr = None
         self._nExamples = None
+        self._avgOutput:bool = avgOutput
         super().__init__(output_transform=output_transform, device=device)
 
     @reinit__is_reduced
@@ -49,12 +51,25 @@ class CMPearsonr(Metric):
     def update(self, output):
         y_pred, y = output[0].detach(), output[1].detach()
         tensors = TensorsToNumpy(y_pred,y)
-        self._personr += BatchPearsonr(tensors)
+        self._personr += BatchPearsonr(*tensors)
         self._nExamples += 1
 
     @sync_all_reduce("_num_examples", "_num_correct")
     def compute(self):
         if self._num_examples == 0:
             raise NotComputableError('CustomAccuracy must have at least one example before it can be computed.')
-        return self._personr / self._nExamples
+        if self._avgOutput:
+            # print('examples',self._nExamples)
+            return np.mean(self._personr / self._nExamples)
+        else:
+            return self._personr / self._nExamples
+        
+    def attachForTrain(self, engine, name: str, _usage = None):
+        if self.epoch_bound:
+            # restart average every epoch
+            engine.add_event_handler(Events.EPOCH_STARTED, self.started)
+        # compute metric
+        engine.add_event_handler(Events.ITERATION_COMPLETED, self.iteration_completed)
+        # apply running average
+        engine.add_event_handler(Events.ITERATION_COMPLETED, self.completed, name)
 
