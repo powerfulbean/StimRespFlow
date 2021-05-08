@@ -34,12 +34,18 @@ class CTrainer:
         self.device = device
         self.dtldTrain = dtldTrain
         self.dtldDev = dtldTest
+        self.trainer = None
+        self.evaluator = None
+        self.model = None
+        
         self.tarFolder = None
         self.oLog = None
         self.metrics = dict()
+        self.metricsRecord:dict= dict()
         
-        self.trainer = None
-        self.evaluator = None
+        self.bestEpoch = -1
+        self.bestTargetMetricValue = -1
+        self.targetMetric:str = None
         
     
     def setOptm(self,criterion,optimizer,lrScheduler = None):
@@ -62,25 +68,51 @@ class CTrainer:
         if self.lrScheduler:
             # print(metrics['corr'])
             self.lrScheduler.step(metrics['corr'])
-        print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
+        
+        for i in self.metricsRecord:
+            self.metricsRecord[i]['train'].append(metrics[i])
+        
+        if self.oLog:
+            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
+        else:
+            print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
     def hookValidationResults(self,trainer):
         self.evaluator.run(self.dtldDev)
         metrics = self.evaluator.state.metrics
+        targetMetric = metrics[self.targetMetric]
+        
+        for i in self.metricsRecord:
+            self.metricsRecord[i]['eval'].append(metrics[i])
+            
+        if targetMetric > self.bestTargetMetricValue:
+            self.bestEpoch = trainer.state.epoch
+            self.bestTargetMetricValue = targetMetric
+            # then save checkpoint
+            checkpoint = {
+                'state_dict': self.model.state_dict(),
+                'targetMetric': targetMetric,
+            }
+            torch.save(checkpoint,self.tarFolder + '/savedModel_feedForward_best.pt')
         # if self.lrScheduler:
             # print(metrics['corr'])
             # self.lrScheduler.step(metrics['corr'])
-        print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
+        if self.oLog:
+            self.oLog('Validation','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
+        else:
+            print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
         
-    def setWorker(self,model):
+    def setWorker(self,model,targetMetric):
+        self._setRecording()
+        self.targetMetric = targetMetric
         self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,output_transform=fTruePredLossOutput)
         self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,output_transform=fTruePredOutput)
-        
+        self.model = model
         RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
-        CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
-        # for i in self.metrics:
-        #     if i != 'loss':
-        #         self.metrics[i].attach(self.trainer,i)
+        # CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
+        for i in self.metrics:
+            if i != 'loss':
+                self.metrics[i].attach(self.trainer,i)
         
         pbar = ProgressBar(persist=True,ncols = 75)
         pbar.attach(self.trainer, metric_names='all')
@@ -90,6 +122,11 @@ class CTrainer:
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
         
-    def train(self,model):
-        self.setWorker(model)
+    def _setRecording(self):
+        for i in self.metrics:
+            self.metricsRecord[i] = {'train':list(),'eval':list()}
+        
+    def train(self,model,targetMetric):
+        self.setWorker(model,targetMetric)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
+        return self.bestEpoch, self.bestTargetMetricValue
