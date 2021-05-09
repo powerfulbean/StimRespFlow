@@ -24,8 +24,7 @@ def fPickPredTrueFromOutputT(output):
 
 class CTrainer:
     
-    def __init__(self,epoch,device,dtldTrain,dtldTest,fExtVar):
-        self.fExtVar = fExtVar
+    def __init__(self,epoch,device,dtldTrain,dtldTest):
         self.curEpoch = 0
         self.nEpoch = epoch
         self.optimizer = None
@@ -46,6 +45,8 @@ class CTrainer:
         self.bestEpoch = -1
         self.bestTargetMetricValue = -1
         self.targetMetric:str = None
+        self.lrRecord:list = list()
+        self.fPlotsFunc:list = list()
         
     
     def setOptm(self,criterion,optimizer,lrScheduler = None):
@@ -62,9 +63,30 @@ class CTrainer:
         assert isinstance(metric,ignite.metrics.Metric)
         self.metrics[name] = metric
     
+    def addPlotFunc(self,func):
+        self.fPlotsFunc.append(func)
+    
+    def plots(self,epoch,best = False):
+        figsList = list()
+        for func in self.fPlotsFunc:
+            figs = func(self.model)
+            figsList += figs
+        for idx, f in enumerate(figsList):
+            if best:
+                f.savefig(self.tarFolder + '/' + '_epoch_best_' + str(idx) + '.png')
+            else:
+                f.savefig(self.tarFolder + '/' + '_epoch_' + str(epoch) + '_' + str(idx) + '.png')
+            plt.close(f)  
+    
+    def recordLr(self,):
+        for param_group in self.optimizer.param_groups:
+            self.lrRecord.append(param_group['lr'])
+    
     def hookTrainingResults(self,trainer):
+        self.plots(trainer.state.epoch)
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
+        self.recordLr()
         if self.lrScheduler:
             # print(metrics['corr'])
             self.lrScheduler.step(metrics['corr'])
@@ -86,6 +108,7 @@ class CTrainer:
             self.metricsRecord[i]['eval'].append(metrics[i])
             
         if targetMetric > self.bestTargetMetricValue:
+            self.plots(trainer.state.epoch,True)
             self.bestEpoch = trainer.state.epoch
             self.bestTargetMetricValue = targetMetric
             # then save checkpoint
