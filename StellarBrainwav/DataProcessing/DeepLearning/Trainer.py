@@ -11,8 +11,6 @@ from ignite.engine import Events, create_supervised_trainer, create_supervised_e
 from ignite.contrib.handlers import ProgressBar
 from matplotlib import pyplot as plt
 
-from.Metrics import CMPearsonr
-
 fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
 fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
 fPickLossFromOutput = lambda output: output['loss']
@@ -24,15 +22,14 @@ def fPickPredTrueFromOutputT(output):
 
 class CTrainer:
     
-    def __init__(self,epoch,device,dtldTrain,dtldTest):
+    def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
         self.curEpoch = 0
         self.nEpoch = epoch
         self.optimizer = None
         self.lrScheduler = None
         self.criterion = None
         self.device = device
-        self.dtldTrain = dtldTrain
-        self.dtldDev = dtldTest
+        
         self.trainer = None
         self.evaluator = None
         self.model = None
@@ -48,6 +45,11 @@ class CTrainer:
         self.lrRecord:list = list()
         self.fPlotsFunc:list = list()
         
+        self.setOptm(criterion,optimizer,lrScheduler)
+        
+    def setDataLoader(self,dtldTrain,dtldTest):
+        self.dtldTrain = dtldTrain
+        self.dtldDev = dtldTest
     
     def setOptm(self,criterion,optimizer,lrScheduler = None):
         self.criterion = criterion
@@ -95,7 +97,7 @@ class CTrainer:
             self.metricsRecord[i]['train'].append(metrics[i])
         
         if self.oLog:
-            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
+            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
         else:
             print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
