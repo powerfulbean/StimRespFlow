@@ -9,7 +9,9 @@ import ignite
 from ignite.metrics import Loss,RunningAverage
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.contrib.handlers import ProgressBar
+from ignite import handlers as igHandler
 from matplotlib import pyplot as plt
+import numpy as np
 
 fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
 fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
@@ -46,6 +48,7 @@ class CTrainer:
         self.fPlotsFunc:list = list()
         
         self.setOptm(criterion,optimizer,lrScheduler)
+        self.extList:list = list()
         
     def setDataLoader(self,dtldTrain,dtldTest):
         self.dtldTrain = dtldTrain
@@ -84,15 +87,16 @@ class CTrainer:
         for param_group in self.optimizer.param_groups:
             self.lrRecord.append(param_group['lr'])
     
+    def addEvaluatorExtensions(self,handler):
+        # self.evaluator.add_event_handler(Events.COMPLETED, handler)
+        self.extList.append([Events.COMPLETED, handler])
+            
+    
     def hookTrainingResults(self,trainer):
         self.plots(trainer.state.epoch)
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
         self.recordLr()
-        if self.lrScheduler:
-            # print(metrics['corr'])
-            self.lrScheduler.step(metrics['corr'])
-        
         for i in self.metricsRecord:
             self.metricsRecord[i]['train'].append(metrics[i])
         
@@ -105,6 +109,10 @@ class CTrainer:
         self.evaluator.run(self.dtldDev)
         metrics = self.evaluator.state.metrics
         targetMetric = metrics[self.targetMetric]
+        
+        if self.lrScheduler:
+            # print(metrics['corr'])
+            self.lrScheduler.step(metrics['corr'])
         
         for i in self.metricsRecord:
             self.metricsRecord[i]['eval'].append(metrics[i])
@@ -126,7 +134,11 @@ class CTrainer:
             self.oLog('Validation','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
             print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
-        
+    
+    def setEvalExt(self):
+        for i in self.extList:
+            self.evaluator.add_event_handler(*i)
+    
     def setWorker(self,model,targetMetric):
         self._setRecording()
         self.targetMetric = targetMetric
@@ -146,6 +158,7 @@ class CTrainer:
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
+        self.setEvalExt()
         
     def _setRecording(self):
         for i in self.metrics:
@@ -155,3 +168,46 @@ class CTrainer:
         self.setWorker(model,targetMetric)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
         return self.bestEpoch, self.bestTargetMetricValue
+
+def safeAllocate(arraylike):
+    out = None
+    if not isinstance(arraylike,torch.Tensor):
+        out = torch.from_numpy(arraylike)
+    else:
+        out = arraylike
+    return out
+
+def collate_fn(batch,channelFirst = True):
+    nBatch = len(batch)
+    outBatch = []
+    dimIdxLen = -1
+    dimIdxChannel = -1
+    if channelFirst:
+        dimIdxLen = 1
+        dimIdxChannel = 0
+    else:
+        dimIdxLen = 0
+        dimIdxChannel = 1
+    
+    for idx,item in enumerate(batch[0]):
+        maxLen = item.shape[dimIdxLen]
+        nChannel = item.shape[dimIdxChannel]
+        for i in range(nBatch):
+            maxLen = max(batch[i][idx].shape[dimIdxLen],maxLen)
+        zerosInput = [0] * 3
+        zerosInput[0] = nBatch
+        zerosInput[1 + dimIdxLen] = maxLen
+        zerosInput[1 + dimIdxChannel] = nChannel
+        tmp = torch.zeros(*zerosInput)
+        for i in range(nBatch):
+            indices = [0] * 3
+            indices[0] = i
+            indices[1 + dimIdxLen] = slice(batch[i][idx].shape[dimIdxLen])
+            indices[1 + dimIdxChannel] = slice(None)
+            # print(indices,i)
+            indices = tuple(indices)
+            # print(indices,tmp[indices].shape,batch[i][idx].shape)
+            tmp[indices] = safeAllocate(batch[i][idx])
+            
+        outBatch.append(tmp)
+    return outBatch
