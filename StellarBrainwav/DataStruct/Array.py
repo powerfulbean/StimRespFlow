@@ -5,6 +5,9 @@ Created on Wed May 12 15:47:52 2021
 @author: ShiningStone
 """
 import numpy as np
+import copy
+
+    
 
 class CStimuliVector():
     '''
@@ -119,6 +122,7 @@ class CStimuliVector():
             indexList = self.sliceToIndex(listIdxOrSlice)
             selected = self._list.__getitem__(listIdxOrSlice)
             # print('120',selected)
+            assert len(value) == len(indexList)
             for idx,item in enumerate(selected):
                 if np.isscalar(item):
                     start = featSlice.start
@@ -149,9 +153,31 @@ class CStimuliVector():
     def __array__(self, dtype=None):
         return np.array(self._list).T
     
+    def __iter__(self):
+        return CStimuliVectorIterator(self)
+    
     def numpy(self,dtype=None):
         return self.__array__(dtype)
+    
+    def clear(self,):
+        self._list.clear()
+        
+    def copy(self):
+        return copy.copy(self)
 
+class CStimuliVectorIterator:
+   ''' Iterator class '''
+   def __init__(self, vector:CStimuliVector):
+       self._vector = vector
+       self._index = 0
+       self.len = len(vector._list)
+   def __next__(self):
+       ''''Returns the next value from team object's lists '''
+       if self._index < self.len:
+           out = self._vector._list[self._index]
+           self._index += 1
+           return out
+       raise StopIteration
 # class CStimuliVector(list):
 #     '''
 #     An array-like list
