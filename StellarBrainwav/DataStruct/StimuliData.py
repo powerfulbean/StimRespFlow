@@ -4,45 +4,25 @@ Created on Sat Aug 31 11:39:53 2019
 
 @author: Jin Dou
 """
-from abc import ABC, abstractmethod
 from ..DataIO import checkFolder, getFileName, readAuditoryStimuli
 from ..Helper.Cache import CStimuliCache
-
-class CStimuli(ABC):
-    def __init__(self):
-        self.type = ""
-        self._stimuliParams = list()
-        self.configStimuliParams()
-      
-    @abstractmethod
-    def configStimuliParams(self):
-        self._stimuliParams=[""]
-        
-    @abstractmethod
-    def loadStimulus(self):
-        pass
-    
-    @abstractmethod
-    def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):
-        pass
-    
-    def getStimuliParams(self,show=False):
-        if(show == True):
-            for i in self._stimuliParams:
-                print(i)
-        return self._stimuliParams.copy()
+from .Abstract import CStimuli
 
 class CVisualStimuli(CStimuli):
     pass
-
 
 class CAuditoryStimuli(CStimuli):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.name = ''
         self.otherNames = list() # background stimuli name
+        
+    def getNFeat(self):
+        return 1 + len(self.otherStreams)
     
     def loadStimulus(self,mainName:str,otherNames:list,oCache : CStimuliCache = None):
+        self.otherStreams.clear()
+        self.otherLen_s.clear()
         if oCache == None:
             mainStream, len_s = readAuditoryStimuli(mainName) 
             self.mainStream = mainStream
@@ -63,7 +43,7 @@ class CAuditoryStimuli(CStimuli):
     def configStimuliParams(self):
         self._stimuliParams=["mainStream","otherStreams","len_s","otherLen_s"]
         self.mainStream = ''
-        self.otherStreams = list()
+        self.otherStreams = list([1])
         self.len_s = ''
         self.otherLen_s = list()
         

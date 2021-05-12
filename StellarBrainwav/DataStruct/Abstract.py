@@ -7,9 +7,9 @@ Created on Fri Apr  2 15:03:21 2021
 
 from abc import ABC, abstractmethod
 import numpy as np
+from .Array import CStimuliVector
 from ..DataIO import checkFolder
 from ..Helper.Cache import CStimuliCache
-import datetime
 
 class CTimeStampsGen(ABC):
     def __init__(self,start,delta,nLen):
@@ -173,13 +173,69 @@ class CRawData(CData):
     def readFile(self,fileName):
         ''' abstract method for file reading'''
         pass
+
+#derive from numpy array
+class CStimuli(np.ndarray):
+    """
+    __len__ return the number of features
     
+    we force the _data's first dimension to indicate features, 
+    and second dimension to indicate length.
+    """
+    def __new__(cls, input_array, info=None):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        obj = np.asarray(input_array).view(cls)
+        # add the new attribute to the created instance
+        obj.info = info
+        # Finally, we must return the newly created object:
+        return obj
+    
+    def __init__(self):
+        self.type = ""
+        self._stimuliParams = list()
+        self.configStimuliParams()
+      
+    @abstractmethod
+    def configStimuliParams(self):
+        self._stimuliParams=[""]
+        
+    @abstractmethod
+    def loadStimulus(self):
+        pass
+    
+    @abstractmethod
+    def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):
+        pass
+    
+    def getStimuliParams(self,show=False):
+        if(show == True):
+            for i in self._stimuliParams:
+                print(i)
+        return self._stimuliParams.copy()
+    
+    def __len__(self):
+        return self.getNFeat()
+    
+    @abstractmethod
+    def getNFeat(self):
+        pass
+
 class CLabels(CData): 
     # for labels created by psychopy, the last number is microsecond but not millisecond 
-    def __init__(self):
+    '''
+    By default, we will create a 'CLabelDataList' object for self._data, however
+    please feel free to use other list/array like data struct to store the features
+    of your label(i.e. stimuli)
+    
+    we force the _data's first dimension to indicate features, 
+    and second dimension to indicate length.
+    '''
+    def __init__(self,nFeat):
         super().__init__()
         self.startTime = None
-        self._data = list()
+        self._data = CStimuliVector(nFeat) #list()
+        self.nFeat = nFeat
     
     def writeInfoForMatlab(self,folder):
         import json
@@ -207,7 +263,11 @@ class CLabels(CData):
             i.type = typeName
     
     def dataCheck(self,data):
-        assert len(self.timestamps) == len(data)
+        assert self.nFeat == len(data)
+        if hasattr(data, 'shape'):
+            assert len(self.timestamps) == data.shape[1]
+        else:
+            assert len(self.timestamps) == len(data[0])
         return True
     
     def append(self,timeStamp,stimuli):
