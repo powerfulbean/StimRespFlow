@@ -61,7 +61,7 @@ class CStimuliVector():
         if self._list.__len__() == 0:
             return None
         
-        featSlice,listSlice = self._idxTrans(idx)
+        featSlice,listSlice = self._idxTransForSetItem(idx)
         # idx1IntFlag = False
         # if type(idx[1]) == int:
         #     idx1IntFlag = True
@@ -69,12 +69,15 @@ class CStimuliVector():
         if self._flagItemIsScalar:
             assert featSlice.start == 0 and featSlice.stop == 1
             featSlice = slice(None)
-        selectedList = self._list.__getitem__(listSlice)
-        sample = selectedList[0]
-        nNewFeat = len(sample[featSlice]) if not np.isscalar(sample) else 1
-        out = CStimuliVector(nNewFeat)
-        for elem in selectedList:
-            out.append(elem[featSlice])
+        selected = self._list.__getitem__(listSlice)
+        if type(selected) == list:
+            sample = selected[0]
+            nNewFeat = len(sample[featSlice]) if not np.isscalar(sample) else 1
+            out = CStimuliVector(nNewFeat)
+            for elem in selected:
+                out.append(elem[featSlice])
+        else:
+            out = selected
         return out
     
     def sliceToIndex(self,oSlice:slice):
