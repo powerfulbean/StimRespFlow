@@ -56,42 +56,42 @@ oDataOrg.addLabels(oLabel)
 oDataOrg.assignTargetData([oRaw])
 ''''''
 
-''' Use MNE to preprocess the data'''
-
-nChannels = oDataOrg.n_channels
-channelsList = oDataOrg.channelsList
-sRate = oDataOrg.srate
-
-for label in oDataOrg.labelList:
-    data = oDataOrg[label]
-    
-    #filter and resample the raw data
-    oMNE = CIfMNE(oDataOrg.channelsList,sRate,['eeg','eog'])
-    oMNERaw = oMNE.getMNERaw(data)
-    oMNERaw.filter(2,8,picks = ['eeg'])
-    oMNERaw.filter(0.1,8, picks = ['eog'])
-    oMNERaw.resample(64,npad = 'auto')
-    oDataOrg[label] = oMNERaw.get_data()
-    oDataOrg.srate = oMNERaw.info["sfreq"] #! very important
-    
-    #prepare the envelope of the stimuli
-    mainStream = label.stimuli.mainStream
-    otherStream = label.stimuli.otherStreams[0]
-    mainEnv = SigProc.audioStimPreprocessing(mainStream,8,label.stimuli.len_s,64)
-    otherEnv = SigProc.audioStimPreprocessing(otherStream,8,label.stimuli.otherLen_s[0],64)
-    label.stimuli.mainStream = mainEnv
-    label.stimuli.otherStreams[0] = otherEnv
-
-oDataOrg.logOp('earEEG',EOperation.BandPass,[2,8])
-oDataOrg.logOp('Eog',EOperation.BandPass,[0.1,8])
-oDataOrg.logOp('stimuli',EOperation.LowPass,[8])
-oDataOrg.logOp('stimuli',EOperation.Transform,['hilbert'])
-oDataOrg.logOp('all',EOperation.Resample,[64])
-oDataSet = oDataOrg.getEpochDataSet(60)
-#saveObject(oDataOrganizor,r"./",'testOrganizorAuditory')
-#temp = loadObject(r"./testOrganizorAuditory.bin")
-''''''
-oLog.safeRecordTime('prepare dataset end')#log
+#''' Use MNE to preprocess the data'''
+#
+#nChannels = oDataOrg.n_channels
+#channelsList = oDataOrg.channelsList
+#sRate = oDataOrg.srate
+#
+#for label in oDataOrg.labelList:
+#    data = oDataOrg[label]
+#    
+#    #filter and resample the raw data
+#    oMNE = CIfMNE(oDataOrg.channelsList,sRate,['eeg','eog'])
+#    oMNERaw = oMNE.getMNERaw(data)
+#    oMNERaw.filter(2,8,picks = ['eeg'])
+#    oMNERaw.filter(0.1,8, picks = ['eog'])
+#    oMNERaw.resample(64,npad = 'auto')
+#    oDataOrg[label] = oMNERaw.get_data()
+#    oDataOrg.srate = oMNERaw.info["sfreq"] #! very important
+#    
+#    #prepare the envelope of the stimuli
+#    mainStream = label.stimuli.mainStream
+#    otherStream = label.stimuli.otherStreams[0]
+#    mainEnv = SigProc.audioStimPreprocessing(mainStream,8,label.stimuli.len_s,64)
+#    otherEnv = SigProc.audioStimPreprocessing(otherStream,8,label.stimuli.otherLen_s[0],64)
+#    label.stimuli.mainStream = mainEnv
+#    label.stimuli.otherStreams[0] = otherEnv
+#
+#oDataOrg.logOp('earEEG',EOperation.BandPass,[2,8])
+#oDataOrg.logOp('Eog',EOperation.BandPass,[0.1,8])
+#oDataOrg.logOp('stimuli',EOperation.LowPass,[8])
+#oDataOrg.logOp('stimuli',EOperation.Transform,['hilbert'])
+#oDataOrg.logOp('all',EOperation.Resample,[64])
+#oDataSet = oDataOrg.getEpochDataSet(60)
+##saveObject(oDataOrganizor,r"./",'testOrganizorAuditory')
+##temp = loadObject(r"./testOrganizorAuditory.bin")
+#''''''
+#oLog.safeRecordTime('prepare dataset end')#log
 
 
 

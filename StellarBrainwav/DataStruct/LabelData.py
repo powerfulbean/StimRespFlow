@@ -256,8 +256,7 @@ class CAuditoryLabels(CLabels):
                         tempRecord.endTime = endTime
                 
                 tempRecord.type = 'auditory'
-                self.timestamps.append(tempRecord)
-                self.rawdata.append(tempStimuli)
+                self.append(tempRecord,tempStimuli)
                 i+=1
             elif(buffer[i][0]=='-1'):
                 break
