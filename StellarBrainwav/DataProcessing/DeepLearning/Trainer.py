@@ -22,6 +22,8 @@ def fPickPredTrueFromOutputT(output):
     pred,true = output['pred'],output['true']
     return (pred.transpose(-1,-2),true.transpose(-1,-2))
 
+
+
 class CTrainer:
     
     def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
@@ -68,6 +70,13 @@ class CTrainer:
         assert isinstance(metric,ignite.metrics.Metric)
         self.metrics[name] = metric
     
+    def score_function(self,engine):
+        self.evaluator.run(self.dtldDev)
+        metrics = self.evaluator.state.metrics
+        print('a')
+        val = metrics['corr']
+        return val
+
     def addPlotFunc(self,func):
         self.fPlotsFunc.append(func)
     
@@ -157,8 +166,11 @@ class CTrainer:
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
+        from ignite.handlers import EarlyStopping
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
-        self.setEvalExt()
+        # handler = EarlyStopping(patience=5, score_function=self.score_function, trainer=self.trainer)
+        # self.addEvaluatorExtensions(handler)
+        # self.setEvalExt()
         
     def _setRecording(self):
         for i in self.metrics:

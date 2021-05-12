@@ -40,6 +40,7 @@ class CData(ABC):
     
     @property    
     def rawdata(self):
+        assert self.dataCheck(self._data)
         return self._data
     
     @rawdata.setter
@@ -49,6 +50,7 @@ class CData(ABC):
         
     @property    
     def data(self):
+        assert self.dataCheck(self._data)
         return self._data
     
     @data.setter
