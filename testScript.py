@@ -45,7 +45,7 @@ oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
 #oRaw.calTimeStamp()
 
 #oLabel = CVisualLabels()
-oLabel = CAuditoryLabels()
+oLabel = CAuditoryLabels(2)
 oLabel.readFile(labelFiles[0])
 oLabel.loadStimuli("","cache",oStimCache)
 ''''''
