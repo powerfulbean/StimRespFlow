@@ -52,6 +52,17 @@ class CTrainer:
         self.setOptm(criterion,optimizer,lrScheduler)
         self.extList:list = list()
         
+        self.exprFlag = False
+    
+    def addLr(self):
+        # print('cha yan')
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] += 0.0001
+    
+    def addExpr(self):
+        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.addLr)
+        
+        
     def setDataLoader(self,dtldTrain,dtldTest):
         self.dtldTrain = dtldTrain
         self.dtldDev = dtldTest
@@ -119,7 +130,7 @@ class CTrainer:
         metrics = self.evaluator.state.metrics
         targetMetric = metrics[self.targetMetric]
         
-        if self.lrScheduler:
+        if isinstance(self.lrScheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
             # print(metrics['corr'])
             self.lrScheduler.step(metrics['corr'])
         
@@ -147,6 +158,9 @@ class CTrainer:
     def setEvalExt(self):
         for i in self.extList:
             self.evaluator.add_event_handler(*i)
+            
+    def step(self):
+        self.lrScheduler.step()
     
     def setWorker(self,model,targetMetric):
         self._setRecording()
@@ -166,8 +180,11 @@ class CTrainer:
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
-        from ignite.handlers import EarlyStopping
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
+        # self.addExpr()
+        if isinstance(self.lrScheduler, torch.optim.lr_scheduler.CyclicLR):
+            print('CyclicLR')
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)
         # handler = EarlyStopping(patience=5, score_function=self.score_function, trainer=self.trainer)
         # self.addEvaluatorExtensions(handler)
         # self.setEvalExt()

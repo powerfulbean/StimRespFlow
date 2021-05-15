@@ -7,6 +7,7 @@ Created on Wed Oct  9 16:52:18 2019
 
 from StellarBrainwav import DataIO
 from StellarBrainwav.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
+from StellarBrainwav.Helper.StageControl import CStageControl
 from StellarBrainwav.DataIO import getFileList,saveObject, loadObject, CLog
 from StellarBrainwav.DataStruct.Abstract import CData, CRawData
 from StellarBrainwav.DataStruct.RawData import CBitalinoRawdata,CDateTimeStampsGen
@@ -14,47 +15,111 @@ from StellarBrainwav.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
 from StellarBrainwav.DataStruct.DataSet import CDataOrganizor,EOperation
 from StellarBrainwav.outsideLibInterfaces import CIfMNE
 from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
+from StellarBrainwav.DataStruct.Array import CStimuliVector
+import numpy as np
+
+oStage = CStageControl([1.3])
+
+if oStage(1):
+    oTemp = CStimuliVector(3)
+    oTemp.append(np.array([11,12,13]))
+    oTemp.append(np.array([21,22,23]))
+    oTemp.append(np.array([31,32,33]))
+    oTemp.append(np.array([41,42,43]))
+    
+    oTemp[0] = np.ones((oTemp.shape[1],1))
+    oTemp[:,1] = np.zeros((1,oTemp.shape[0]))
+    print(oTemp)
+
+if oStage(1.1):
+    oTemp = CStimuliVector(3)
+    oTemp.append(np.array([11,12,13]))
+    oTemp.append(np.array([21,22,23]))
+    oTemp.append(np.array([31,32,33]))
+    oTemp.append(np.array([41,42,43]))
+    print(oTemp.numpy())
+    oTemp[0:2] = np.ones((oTemp.shape[1],2))
+    print(oTemp.numpy())
+    oTemp[:,0:2] = np.zeros((2,oTemp.shape[0]))
+    print(oTemp.numpy())
+    
+if oStage(1.2):
+    oTemp = CStimuliVector(1)
+    oTemp.append('I')
+    oTemp.append('am')
+    oTemp.append('powerfulbean')
+    oTemp.append('!')
+    oTemp[0] = ['shit'] * 4
+    print(oTemp.numpy())
+    oTemp[0,0:2] = ['what?'] * 2
+    print(oTemp.numpy())
+    oTemp[:,0] = np.array([1,2,3])
+    print(oTemp.numpy())
+    oTemp[:,1] = np.array([1,2,3])
+    print(oTemp.numpy())
+    oTemp[:,2] = np.array([1,2,3])
+    print(oTemp.numpy())
+    oTemp[:,3] = np.array([1,2,3])
+    print(oTemp.numpy())
+    
+if oStage(1.3):
+    oTemp = CStimuliVector(1)
+    oTemp.append('I')
+    oTemp.append('am')
+    oTemp.append('powerfulbean')
+    oTemp.append('!')
+    oTemp[0] = ['shit'] * 4
+    print(oTemp.numpy())
+    oTemp[0,0:2] = ['what?'] * 2
+    print(oTemp.numpy())
+    oTemp[:,0:2] = [np.array([1,2,3]),np.array([1,2,3])]
+    oTemp[0,2:] = [np.array([2,1,3]),np.array([2,1,3])]
+    print(oTemp)
+    print(oTemp.numpy())
+    oTemp[1,2:] = [np.array([-2]),np.array([-2])]
+    print(oTemp)
 
 
-''' prepare label and data files'''
-dir_list = ['dirLabels','dirData','dirStimuli','dirResult']
-#oDir = DataIO.DirectoryConfig(dir_list,r"testConf\GlsDataDirectoryVisual.conf")
-oDir = DataIO.CDirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
-oDir.checkFolders()
-labelFiles = getFileList(oDir['dirLabels'],'.txt')
-dataFiles = getFileList(oDir['dirData'],'.txt')
-oLog = CLog(oDir['dirResult'],'programLog')
-
-oLog.safeRecordTime('stimuli cache start')#log
-''' load stimuli in cache '''
-stimuliTypeList = ['MW_DS_NM']
-oStimList = CStimuliTypeList(stimuliTypeList,r'testConf/stimuliType.conf')
-oStimCache = CStimuliCacheAuditory(oDir['dirStimuli'])
-oStimCache.loadStimuli(oStimList['MW_DS_NM'])
-''''''
-oLog.safeRecordTime('stimuli cache end')#log
-
-oLog.setLogable(False)
-oLog.safeRecord('useless')
-oLog.setLogable(True)
-
-oLog.safeRecordTime('prepare dataset start')#log
-'''load label and raw data files'''
-oRaw = CBitalinoRawdata()
-oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
-#oRaw.calTimeStamp()
-
-#oLabel = CVisualLabels()
-oLabel = CAuditoryLabels(2)
-oLabel.readFile(labelFiles[0])
-oLabel.loadStimuli("","cache",oStimCache)
-''''''
-
-''' match labels and raw data'''
-oDataOrg = CDataOrganizor(oRaw.numChannels,oRaw.sampleRate,oRaw.description['channelInfo'][1])
-oDataOrg.addLabels(oLabel)
-oDataOrg.assignTargetData([oRaw])
-''''''
+if oStage(2):
+    ''' prepare label and data files'''
+    dir_list = ['dirLabels','dirData','dirStimuli','dirResult']
+    #oDir = DataIO.DirectoryConfig(dir_list,r"testConf\GlsDataDirectoryVisual.conf")
+    oDir = DataIO.CDirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
+    oDir.checkFolders()
+    labelFiles = getFileList(oDir['dirLabels'],'.txt')
+    dataFiles = getFileList(oDir['dirData'],'.txt')
+    oLog = CLog(oDir['dirResult'],'programLog')
+    
+    oLog.safeRecordTime('stimuli cache start')#log
+    ''' load stimuli in cache '''
+    stimuliTypeList = ['MW_DS_NM']
+    oStimList = CStimuliTypeList(stimuliTypeList,r'testConf/stimuliType.conf')
+    oStimCache = CStimuliCacheAuditory(oDir['dirStimuli'])
+    oStimCache.loadStimuli(oStimList['MW_DS_NM'])
+    ''''''
+    oLog.safeRecordTime('stimuli cache end')#log
+    
+    oLog.setLogable(False)
+    oLog.safeRecord('useless')
+    oLog.setLogable(True)
+    
+    oLog.safeRecordTime('prepare dataset start')#log
+    '''load label and raw data files'''
+    oRaw = CBitalinoRawdata()
+    oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
+    #oRaw.calTimeStamp()
+    
+    #oLabel = CVisualLabels()
+    oLabel = CAuditoryLabels()
+    oLabel.readFile(labelFiles[0])
+    oLabel.loadStimuli("","cache",oStimCache)
+    ''''''
+    
+    ''' match labels and raw data'''
+    oDataOrg = CDataOrganizor(oRaw.numChannels,oRaw.sampleRate,oRaw.description['channelInfo'][1])
+    oDataOrg.addLabels(oLabel)
+    oDataOrg.assignTargetData([oRaw])
+    ''''''
 
 #''' Use MNE to preprocess the data'''
 #
