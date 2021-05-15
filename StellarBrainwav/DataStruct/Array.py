@@ -9,7 +9,7 @@ import copy
 
     
 
-class CStimuliVector():
+class CStimuliVectors():
     '''
     An array-like list
     '''
@@ -157,7 +157,7 @@ class CStimuliVector():
         return np.array(self._list).T
     
     def __iter__(self):
-        return CStimuliVectorIterator(self)
+        return CStimuliVector.Iterator(self)
     
     def numpy(self,dtype=None):
         return self.__array__(dtype)
@@ -168,19 +168,23 @@ class CStimuliVector():
     def copy(self):
         return copy.copy(self)
 
-class CStimuliVectorIterator:
-   ''' Iterator class '''
-   def __init__(self, vector:CStimuliVector):
-       self._vector = vector
-       self._index = 0
-       self.len = len(vector._list)
-   def __next__(self):
-       ''''Returns the next value from team object's lists '''
-       if self._index < self.len:
-           out = self._vector._list[self._index]
-           self._index += 1
-           return out
-       raise StopIteration
+    class Iterator:
+       ''' Iterator class '''
+       def __init__(self, vector):
+           self._vector = vector
+           self._index = 0
+           self.len = len(vector._list)
+       def __next__(self):
+           ''''Returns the next value from team object's lists '''
+           if self._index < self.len:
+               out = self._vector._list[self._index]
+               self._index += 1
+               return out
+           raise StopIteration
+       
+class CStimuli()
+       
+       
 # class CStimuliVector(list):
 #     '''
 #     An array-like list

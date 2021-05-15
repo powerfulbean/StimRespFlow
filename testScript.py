@@ -18,7 +18,7 @@ from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
 from StellarBrainwav.DataStruct.Array import CStimuliVector
 import numpy as np
 
-oStage = CStageControl([1.3])
+oStage = CStageControl([1.2])
 
 if oStage(1):
     oTemp = CStimuliVector(3)

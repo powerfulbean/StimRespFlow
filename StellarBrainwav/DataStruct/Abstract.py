@@ -7,7 +7,7 @@ Created on Fri Apr  2 15:03:21 2021
 
 from abc import ABC, abstractmethod
 import numpy as np
-from .Array import CStimuliVector
+from .Array import CStimuliVectors
 from ..DataIO import checkFolder
 from ..Helper.Cache import CStimuliCache
 
@@ -234,8 +234,17 @@ class CLabels(CData):
     def __init__(self,nFeat):
         super().__init__()
         self.startTime = None
-        self._data = CStimuliVector(nFeat) #list()
-        self.nFeat = nFeat
+        self._data = CStimuliVectors(nFeat) #list()
+        self._nFeat = nFeat
+    
+    @property
+    def nFeat(self):
+        return self._nFeat
+    
+    @nFeat.setter
+    def nFeat(self,v):
+        self._nFeat = v
+        self._data.nFeat = v
     
     def writeInfoForMatlab(self,folder):
         import json
