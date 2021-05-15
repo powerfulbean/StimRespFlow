@@ -133,7 +133,14 @@ class CStimuliVectors():
                     self._list.__setitem__(indexList[idx],value[idx][:])
                 else:
                     selected[idx][featSlice] = value[idx][:]
-        
+                    
+    def __call__(self,tIdx):
+        """
+        Get the stimulus object at the specific tIdx
+        """
+        assert type(tIdx) == int
+        return self._list[tIdx]
+    
     def append(self,stimuliObject):
         if np.isscalar(stimuliObject):
             assert self.nFeat == 1
@@ -183,11 +190,7 @@ class CStimuliVectors():
 class CStimulusVector(np.ndarray):
     
     def __new__(cls,shape,*args,**kwargs):
-        if type(shape) == int:
-            shape = [shape,1]
-        elif len(shape) == 1:
-            shape = list(shape) + [1]
-        obj = super(CStimulusVector,cls).__new__(cls,shape,*args,**kwargs)
+        obj = super().__new__(cls,shape,*args,**kwargs)
         addedAttr:dict = cls.configAttr()
         for i in addedAttr:
            setattr(obj, i, addedAttr[i])
@@ -205,6 +208,7 @@ class CStimulusVector(np.ndarray):
         
     def __len__(self):
         return self.shape[0]
+    
     
     
        
