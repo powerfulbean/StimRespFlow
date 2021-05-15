@@ -7,8 +7,6 @@ Created on Wed May 12 15:47:52 2021
 import numpy as np
 import copy
 
-    
-
 class CStimuliVectors():
     '''
     An array-like list
@@ -157,7 +155,7 @@ class CStimuliVectors():
         return np.array(self._list).T
     
     def __iter__(self):
-        return CStimuliVector.Iterator(self)
+        return CStimuliVectors.Iterator(self)
     
     def numpy(self,dtype=None):
         return self.__array__(dtype)
@@ -182,7 +180,26 @@ class CStimuliVectors():
                return out
            raise StopIteration
        
-class CStimuli()
+class CStimuliVector(np.ndarray):
+    
+    def __new__(cls,*args,**kwargs):
+        obj = super(CStimuliVector,cls).__new__(cls,*args,**kwargs)
+        addedAttr:dict = cls.configAttr()
+        for i in addedAttr:
+           setattr(obj, i, addedAttr[i])
+        obj.attrDict = addedAttr
+        return obj
+    
+    @classmethod
+    def configAttr(cls)->dict:
+        return {'name':'CStimuliVector'}
+
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None: return
+        self.info = getattr(obj, 'name', None)
+    
+    
        
        
 # class CStimuliVector(list):

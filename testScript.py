@@ -9,19 +9,19 @@ from StellarBrainwav import DataIO
 from StellarBrainwav.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
 from StellarBrainwav.Helper.StageControl import CStageControl
 from StellarBrainwav.DataIO import getFileList,saveObject, loadObject, CLog
-from StellarBrainwav.DataStruct.Abstract import CData, CRawData
+from StellarBrainwav.DataStruct.Abstract import CData, CRawData,CStimuli
 from StellarBrainwav.DataStruct.RawData import CBitalinoRawdata,CDateTimeStampsGen
 from StellarBrainwav.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
 from StellarBrainwav.DataStruct.DataSet import CDataOrganizor,EOperation
 from StellarBrainwav.outsideLibInterfaces import CIfMNE
 from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
-from StellarBrainwav.DataStruct.Array import CStimuliVector
+from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimuliVector
 import numpy as np
 
-oStage = CStageControl([1.2])
+oStage = CStageControl([1.4,1.5])
 
 if oStage(1):
-    oTemp = CStimuliVector(3)
+    oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
     oTemp.append(np.array([21,22,23]))
     oTemp.append(np.array([31,32,33]))
@@ -32,7 +32,7 @@ if oStage(1):
     print(oTemp)
 
 if oStage(1.1):
-    oTemp = CStimuliVector(3)
+    oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
     oTemp.append(np.array([21,22,23]))
     oTemp.append(np.array([31,32,33]))
@@ -44,7 +44,7 @@ if oStage(1.1):
     print(oTemp.numpy())
     
 if oStage(1.2):
-    oTemp = CStimuliVector(1)
+    oTemp = CStimuliVectors(1)
     oTemp.append('I')
     oTemp.append('am')
     oTemp.append('powerfulbean')
@@ -63,7 +63,7 @@ if oStage(1.2):
     print(oTemp.numpy())
     
 if oStage(1.3):
-    oTemp = CStimuliVector(1)
+    oTemp = CStimuliVectors(1)
     oTemp.append('I')
     oTemp.append('am')
     oTemp.append('powerfulbean')
@@ -79,6 +79,11 @@ if oStage(1.3):
     oTemp[1,2:] = [np.array([-2]),np.array([-2])]
     print(oTemp)
 
+if oStage(1.4):
+    oTemp1 = CStimuliVector([1,2,3])
+    
+if oStage(1.5):
+    oTemp2 = CStimuli([1,2,3])
 
 if oStage(2):
     ''' prepare label and data files'''
