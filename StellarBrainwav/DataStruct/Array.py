@@ -71,7 +71,7 @@ class CStimuliVectors():
         if type(selected) == list:
             sample = selected[0]
             nNewFeat = len(sample[featSlice]) if not np.isscalar(sample) else 1
-            out = CStimuliVector(nNewFeat)
+            out = CStimuliVectors(nNewFeat)
             for elem in selected:
                 out.append(elem[featSlice])
         else:
@@ -180,10 +180,14 @@ class CStimuliVectors():
                return out
            raise StopIteration
        
-class CStimuliVector(np.ndarray):
+class CStimulusVector(np.ndarray):
     
-    def __new__(cls,*args,**kwargs):
-        obj = super(CStimuliVector,cls).__new__(cls,*args,**kwargs)
+    def __new__(cls,shape,*args,**kwargs):
+        if type(shape) == int:
+            shape = [shape,1]
+        elif len(shape) == 1:
+            shape = list(shape) + [1]
+        obj = super(CStimulusVector,cls).__new__(cls,shape,*args,**kwargs)
         addedAttr:dict = cls.configAttr()
         for i in addedAttr:
            setattr(obj, i, addedAttr[i])
@@ -198,6 +202,9 @@ class CStimuliVector(np.ndarray):
         # see InfoArray.__array_finalize__ for comments
         if obj is None: return
         self.info = getattr(obj, 'name', None)
+        
+    def __len__(self):
+        return self.shape[0]
     
     
        

@@ -7,7 +7,7 @@ Created on Fri Apr  2 15:03:21 2021
 
 from abc import ABC, abstractmethod
 import numpy as np
-from .Array import CStimuliVectors,CStimuliVector
+from .Array import CStimuliVectors,CStimulusVector
 from ..DataIO import checkFolder
 from ..Helper.Cache import CStimuliCache
 
@@ -174,28 +174,35 @@ class CRawData(CData):
         ''' abstract method for file reading'''
         pass
 
-#derive from numpy array
-class CStimuli(CStimuliVector):
-    """
-    __len__ return the number of features
+class CStimulusMixin(ABC):
     
-    we force the _data's first dimension to indicate features, 
-    and second dimension to indicate length.
-    """
-    @classmethod
     @abstractmethod
-    def configAttr(self)->dict:
+    def configAttr()->dict:
         attr = dict()
-        attr['name'] = 'CStimuli'
+        attr['name'] = 'CStimulusMixin'
         return attr
         
     @abstractmethod
     def loadStimulus(self):
         pass
     
-    @abstractmethod
-    def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):
-        pass
+
+#derive from numpy array
+class CStimulus(CStimulusMixin,CStimulusVector):
+    """
+    __len__ return the number of features
+    
+    we force the _data's first dimension to indicate features, 
+    and second dimension to indicate length.
+    """
+    
+    def __new__(cls,shape,*args,**kwargs):
+        if hasattr(cls, '__abstractmethods__') and len(cls.__abstractmethods__) > 0:
+            raise TypeError(f"Can't instantiate abstract class {cls.__name__} with abstract methods {', '.join(cls.__abstractmethods__)}")
+        return super().__new__(cls,shape)
+    # @abstractmethod
+    # def getSegmentStimuliLists(self,segmentLen_s,segmentsNum):
+    #     pass
     
     def getStimuliParams(self,show=False):
         if(show == True):
@@ -203,12 +210,10 @@ class CStimuli(CStimuliVector):
                 print(i)
         return self._stimuliParams.copy()
     
-    def __len__(self):
-        return self.getNFeat()
     
-    @abstractmethod
-    def getNFeat(self):
-        pass
+    # @abstractmethod
+    # def getNFeat(self):
+    #     pass
 
 class CLabels(CData): 
     # for labels created by psychopy, the last number is microsecond but not millisecond 

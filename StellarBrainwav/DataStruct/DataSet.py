@@ -9,7 +9,6 @@ from .. import outsideLibInterfaces as outLib
 from .. import DataIO
 from .RawData import CRawData
 from .LabelData import CLabelInfo, CLabels
-from .StimuliData import CStimuli
 from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
 import numpy as np

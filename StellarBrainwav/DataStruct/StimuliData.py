@@ -6,12 +6,27 @@ Created on Sat Aug 31 11:39:53 2019
 """
 from ..DataIO import checkFolder, getFileName, readAuditoryStimuli
 from ..Helper.Cache import CStimuliCache
-from .Abstract import CStimuli
+from .Abstract import CStimulus
 
-class CVisualStimuli(CStimuli):
+class CWordStimulus(CStimulus):
+    def configAttr()->dict:
+        attr = dict()
+        attr['name'] = 'CWordStimulus'
+        attr['word'] = ""
+        return attr
+    
+    def loadStimulus(self,vec):
+        assert len(vec) == self.shape[0]
+        self.__setitem__(slice(None), vec.reshape(-1,1))
+    # def configAttr():
+    #     attr = dict()
+    #     attr['word'] = ""
+    #     return attr
+        
+class CVisualStimuli(CStimulus):
     pass
 
-class CAuditoryStimuli(CStimuli):
+class CAuditoryStimuli(CStimulus):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.name = ''

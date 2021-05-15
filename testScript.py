@@ -9,16 +9,17 @@ from StellarBrainwav import DataIO
 from StellarBrainwav.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
 from StellarBrainwav.Helper.StageControl import CStageControl
 from StellarBrainwav.DataIO import getFileList,saveObject, loadObject, CLog
-from StellarBrainwav.DataStruct.Abstract import CData, CRawData,CStimuli
+from StellarBrainwav.DataStruct.Abstract import CData, CRawData,CStimulus
 from StellarBrainwav.DataStruct.RawData import CBitalinoRawdata,CDateTimeStampsGen
 from StellarBrainwav.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
 from StellarBrainwav.DataStruct.DataSet import CDataOrganizor,EOperation
 from StellarBrainwav.outsideLibInterfaces import CIfMNE
 from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
-from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimuliVector
+from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimulusVector
+from StellarBrainwav.DataStruct.StimuliData import CWordStimulus
 import numpy as np
 
-oStage = CStageControl([1.4,1.5])
+oStage = CStageControl([1.6])
 
 if oStage(1):
     oTemp = CStimuliVectors(3)
@@ -80,10 +81,13 @@ if oStage(1.3):
     print(oTemp)
 
 if oStage(1.4):
-    oTemp1 = CStimuliVector([1,2,3])
+    oTemp1 = CStimulusVector([1,2,3])
     
 if oStage(1.5):
-    oTemp2 = CStimuli([1,2,3])
+    oTemp2 = CStimulus([1,2,3])
+    
+if oStage(1.6):
+    otemp3 = CWordStimulus(128)
 
 if oStage(2):
     ''' prepare label and data files'''
