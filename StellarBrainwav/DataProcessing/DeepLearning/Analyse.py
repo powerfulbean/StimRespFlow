@@ -4,8 +4,9 @@ Created on Thu May 13 10:25:13 2021
 
 @author: ShiningStone
 """
-
+import torch
 from matplotlib import pyplot as plt
+import numpy as np
 
 def plotTraingRecord(records:dict):
     metrics = records['metrics']
@@ -38,3 +39,7 @@ def metricsVsEpoch(records:dict,key):
     plt.title(f'{key} lr')
     plt.xlabel('epoch')
     plt.ylabel('value')
+    
+def twoDatasetsEqual(set1,set2):
+    assert np.all([torch.equal(set2[idx][0],i[0]) for idx,i in enumerate(set1)])
+    assert np.all([torch.equal(set2[idx][1],i[1]) for idx,i in enumerate(set1)])    
