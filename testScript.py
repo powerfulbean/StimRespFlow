@@ -19,7 +19,7 @@ from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimulusVector
 from StellarBrainwav.DataStruct.StimuliData import CWordStimulus
 import numpy as np
 
-oStage = CStageControl([1.6])
+oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
 
 if oStage(1):
     oTemp = CStimuliVectors(3)
