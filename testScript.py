@@ -17,10 +17,12 @@ from StellarBrainwav.outsideLibInterfaces import CIfMNE
 from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
 from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimulusVector
 from StellarBrainwav.DataStruct.StimuliData import CWordStimulus
+
+from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
-oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-
+# oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
+oStage = CStageControl([3])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -130,6 +132,42 @@ if oStage(2):
     oDataOrg.assignTargetData([oRaw])
     ''''''
 
+if oStage(3):
+    @StagesEngine.stage('test1',1)
+    def testFirst0(a):
+        print(a)
+        
+    @StagesEngine.stage('test1',2)
+    def testFirst1(a):
+        print(a**2,'-1')
+        
+    @StagesEngine.stage('test2',1)
+    def testFirst2(a):
+        print(a**2,a-2)
+    StagesEngine.paramsLoadFlag = True
+    testFirst0(1)
+    testFirst1(2)
+    testFirst2(3)
+    StagesEngine.paramsLoadFlag = False
+    StagesEngine.startEngine()
+    print()
+    with StagesEngine.CStagesEngine(['test2','test1']) as oStagesEngine:
+        testFirst0(-1)
+        testFirst1(-2)
+        testFirst2(-3)
+        oStagesEngine.startEngine()
+    print()  
+    with StagesEngine.CStagesEngine(['test2','test1']) as oStagesEngine:
+        testFirst0(-1)
+        testFirst1(-2)
+        testFirst2(-3)
+        oStagesEngine.startEngine(['test1','test2'])
+    print()
+    testFirst0(-1)
+    testFirst1(-2)
+    testFirst2(-3)
+    oStagesEngine.startEngine(['test1','test2'])
+    oStagesEngine.startEngine(['test2','test1'])
 #''' Use MNE to preprocess the data'''
 #
 #nChannels = oDataOrg.n_channels
