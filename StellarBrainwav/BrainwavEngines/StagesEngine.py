@@ -6,7 +6,7 @@ Created on Wed Jun  9 00:54:46 2021
 """
 
 class CStageSeqItem:
-    def __init__(self,func,args,kwargs):
+    def __init__(self,func,args = [],kwargs = {}):
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -37,8 +37,10 @@ def stage(stage:str,seqId:int):
         global funcSeqList
         if stage not in funcSeqList:
             funcSeqList[stage] = dict()
+        funcSeqList[stage][seqId] = CStageSeqItem(func)
         def wrapper(*args,**kwargs):
-            funcSeqList[stage][seqId] = CStageSeqItem(func, args, kwargs)
+            funcSeqList[stage][seqId].args = args
+            funcSeqList[stage][seqId].kwargs = kwargs
             if paramsLoadFlag:
                 return None
             else:
