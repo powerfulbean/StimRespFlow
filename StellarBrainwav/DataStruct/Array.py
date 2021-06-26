@@ -249,7 +249,7 @@ class CStimulusVector(np.ndarray):
         # see InfoArray.__array_finalize__ for comments
         if obj is None: return
         self.info = getattr(obj, 'name', None)
-        addedAttr:dict = self.__class__.configAttr()
+        addedAttr:dict = obj.__class__.configAttr()
         for i in addedAttr:
            setattr(self, i, getattr(obj,i)) 
         
