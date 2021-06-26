@@ -128,6 +128,12 @@ class CStimuliVectors():
                 else:
                     selected[idx][featIdx] = value[idx][:]
                     
+    def replace(self,idx,vec):
+        nNewFeat = len(vec)
+        self._list[idx][0:nNewFeat] = vec
+        self._list[idx] = self._list[idx][0:nNewFeat]
+        # pass
+                    
     # def __setitem__(self,idx,value):
     #     """
     #     # After consideration, we feel that it is enough to only allow the user 
@@ -236,13 +242,16 @@ class CStimulusVector(np.ndarray):
         return obj
     
     @classmethod
-    def configAttr(cls)->dict:
+    def configAttr()->dict:
         return {'name':'CStimuliVector'}
 
     def __array_finalize__(self, obj):
         # see InfoArray.__array_finalize__ for comments
         if obj is None: return
         self.info = getattr(obj, 'name', None)
+        addedAttr:dict = self.__class__.configAttr()
+        for i in addedAttr:
+           setattr(self, i, getattr(obj,i)) 
         
     def __len__(self):
         return self.shape[0]
