@@ -360,6 +360,11 @@ class CDataSet:
         pickle.dump(self,file)
         file.close()
         
+    def sort(self,keyFunc):
+        self.dataRecordList.sort(key = keyFunc)
+        return self
+        
+        
         
 class CDataRecord: #base class for data with label
     def __init__(self,data,stimuli,stimuliDes:list,srate):
@@ -374,6 +379,7 @@ class CDataRecord: #base class for data with label
         print("CDataRecorder error: " + error)
         
 class CDataDict:
+    ''' assume the first dimension is channel'''
     def __init__(self,dataDict:dict):
         self._data = dataDict
         self.keys = list(self._data.keys())
