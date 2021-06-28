@@ -383,7 +383,8 @@ class CDataDict:
     def __init__(self,dataDict:dict):
         self._data = dataDict
         self.keys = list(self._data.keys())
-        self.defaultKeySeq:list = list() 
+        self.defaultKeySeq:list = list()
+        self.channelAxis = 0
         for key in self._data:
             setattr(self,key,self._data[key])
         
@@ -402,11 +403,11 @@ class CDataDict:
     def data(self,x):
         self._data = x
     
-    def arrayCat(self,keySeq,axis = 0):
+    def arrayCat(self,keySeq):
         oList = list()
         for i in keySeq:
             oList.append(self._data[i])
-        return np.concatenate(oList,axis = axis)
+        return np.concatenate(oList,axis = self.channelAxis)
       
 class CDataDictRecord(CDataRecord,CDataDict):
     
