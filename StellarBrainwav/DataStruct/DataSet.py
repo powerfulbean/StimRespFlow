@@ -402,11 +402,11 @@ class CDataDict:
     def data(self,x):
         self._data = x
     
-    def arrayCat(self,keySeq):
+    def arrayCat(self,keySeq,axis = 0):
         oList = list()
         for i in keySeq:
             oList.append(self._data[i])
-        return np.concatenate(oList,axis = 0)
+        return np.concatenate(oList,axis = axis)
       
 class CDataDictRecord(CDataRecord,CDataDict):
     
