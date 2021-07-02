@@ -184,10 +184,10 @@ if oStage(4.1):
     paramDict['test2'] = 2
     paramDict['test3'] = 3
     tarFolder = r'F:/Dataset/stellarBrainwavTest'
-    oStudy = sbSM.CStudy(tarFolder,'test_CStudy',list(paramDict),('test_again_inside_with',max))
+    oStudy = sbSM.CStudy(tarFolder,'test_CStudy',list(paramDict),('inside_with',max))
     with oStudy.newExpr(paramDict,['test_again_inside_with']) as oLog:
-        paramDict['inside_with'] = 13
-        paramDict['test_again_inside_with'] = 14
+        paramDict['inside_with'] = 15
+        paramDict['test_again_inside_with'] = 16
         oLog('test, hello StellarBrainwav')
 #''' Use MNE to preprocess the data'''
 #

@@ -82,8 +82,10 @@ class CExpr:
         
 
 class CStudy:
-    def __init__(self,studyPath:str,studyName:str,exprLogKeys:list,keyNFuncForBest:tuple = None):
-        studyPath = siDM.CPath(studyPath)
+    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list,keyNFuncForBest:tuple = None):
+        studyHostPath = siDM.CPath(studyHostPath)
+        studyPath = studyHostPath / studyName
+        siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
@@ -134,7 +136,7 @@ class CStudy:
     def oExprLog(self):
         return self._oExprLog
     
-    def newExpr(self,dataToAppend = None,keysIncludedInStudyFile:list = None):
+    def newExpr(self,dataToAppend,keysIncludedInStudyFile:list = None):
         assert isinstance(keysIncludedInStudyFile, list)
         if self.keyNFuncForBest:
             if keysIncludedInStudyFile is None:
