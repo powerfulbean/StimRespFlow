@@ -22,7 +22,7 @@ from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([3])
+oStage = CStageControl([4.1])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -168,6 +168,27 @@ if oStage(3):
     testFirst2(-3)
     oStagesEngine.startEngine(['test1','test2'])
     oStagesEngine.startEngine(['test2','test1'])
+    
+    
+if oStage(4):
+    from StellarBrainwav.Helper import StudyManage as sbSM
+    tarFolder = r'F:/Dataset/stellarBrainwavTest'
+    oStudy = sbSM.CStudy(tarFolder,'test_CStudy',['test1','test2','test3'])
+    oStudy.save()
+    oExpr = oStudy.newExpr()
+    
+if oStage(4.1):
+    from StellarBrainwav.Helper import StudyManage as sbSM
+    paramDict = dict()
+    paramDict['test1'] = 1
+    paramDict['test2'] = 2
+    paramDict['test3'] = 3
+    tarFolder = r'F:/Dataset/stellarBrainwavTest'
+    oStudy = sbSM.CStudy(tarFolder,'test_CStudy',list(paramDict),('test_again_inside_with',max))
+    with oStudy.newExpr(paramDict,['test_again_inside_with']) as oLog:
+        paramDict['inside_with'] = 13
+        paramDict['test_again_inside_with'] = 14
+        oLog('test, hello StellarBrainwav')
 #''' Use MNE to preprocess the data'''
 #
 #nChannels = oDataOrg.n_channels
