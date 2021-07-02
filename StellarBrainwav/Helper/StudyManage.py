@@ -43,7 +43,7 @@ class CExpr:
         self.keysIncludedInStudyFile = keysIncludedInStudyFile
         
     def start(self):
-        self._oLog.Mode = 'fast'
+        # self._oLog.Mode = 'fast'
         self.starttime = datetime.datetime.now()
         self._oLog("start time:",self.starttime)
         
