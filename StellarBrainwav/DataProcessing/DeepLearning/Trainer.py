@@ -13,15 +13,35 @@ from ignite import handlers as igHandler
 from matplotlib import pyplot as plt
 import numpy as np
 
-fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
-fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
+# fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
+# fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
 fPickLossFromOutput = lambda output: output['loss']
-fPickPredTrueFromOutput = lambda output: (output['pred'],output['true'])
+fPickPredTrueFromOutput = lambda output: (output['y_pred'],output['y'])
 
 def fPickPredTrueFromOutputT(output):
-    pred,true = output['pred'],output['true']
+    pred,true = output['y_pred'],output['y']
     return (pred.transpose(-1,-2),true.transpose(-1,-2))
 
+class TCEngineOutput:
+    
+    def __call__(x, y, y_pred, loss = None):
+        out = dict()
+        out['x'] = x
+        out['y'] = y
+        out['y_pred'] = y_pred
+        if loss:
+            out['loss'] = loss
+        return out 
+    
+def tfEngineOutput(x, y, y_pred, loss = None):
+    out = dict()
+    out['x'] = x
+    out['y'] = y
+    out['y_pred'] = y_pred
+    if loss:
+        out['loss'] = loss
+    return out 
+            
 
 
 class CTrainer:
@@ -163,10 +183,11 @@ class CTrainer:
         self.lrScheduler.step()
     
     def setWorker(self,model,targetMetric):
+        ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
-        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,output_transform=fTruePredLossOutput)
-        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,output_transform=fTruePredOutput)
+        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,output_transform=tfEngineOutput)
+        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,output_transform=tfEngineOutput)
         self.model = model
         RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
         # CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
