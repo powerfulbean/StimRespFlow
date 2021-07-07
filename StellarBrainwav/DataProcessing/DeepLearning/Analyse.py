@@ -42,4 +42,7 @@ def metricsVsEpoch(records:dict,key):
     
 def twoDatasetsEqual(set1,set2):
     assert np.all([torch.equal(set2[idx][0],i[0]) for idx,i in enumerate(set1)])
-    assert np.all([torch.equal(set2[idx][1],i[1]) for idx,i in enumerate(set1)])    
+    assert np.all([torch.equal(set2[idx][1],i[1]) for idx,i in enumerate(set1)])   
+    
+def twoDatasetsEqualOnSpecific(set1,set2,spec):
+    assert np.all([torch.equal(set2[idx][spec],i[spec]) for idx,i in enumerate(set1)])   
