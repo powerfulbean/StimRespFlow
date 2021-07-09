@@ -6,6 +6,7 @@ Created on Mon Jun 17 12:17:35 2019
 """
 #from .DataStruct.DataSet import CDataSet
 import numpy as np
+import mne
 
 class _OutsideLibFilter:
     
@@ -173,7 +174,7 @@ class CIfMNE:
         import mne as MNE
         return MNE
     
-    def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None):
+    def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None) -> mne.io.RawArray:
         oRaw = None
         if self.info is None :
             info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)

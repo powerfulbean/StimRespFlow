@@ -30,6 +30,11 @@ class CEEGLabToMNE(CTransformBase):
         oTemp.chanlocs = locs
         chNames, montage = eeglab._get_eeg_montage_information(oTemp, True)
         return chNames, montage
+    
+    @staticmethod
+    def readFormalFile(path):
+        montage = mne.channels.read_custom_montage(path)
+        return montage.ch_names, montage
 
 class CEpochToDataLoader:
     
