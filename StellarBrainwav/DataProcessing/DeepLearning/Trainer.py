@@ -182,12 +182,12 @@ class CTrainer:
     def step(self):
         self.lrScheduler.step()
     
-    def setWorker(self,model,targetMetric):
+    def setWorker(self,model,targetMetric,device = 'cpu'):
         ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
-        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,output_transform=tfEngineOutput)
-        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,output_transform=tfEngineOutput)
+        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,device=device,output_transform=tfEngineOutput)
+        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
         self.model = model
         RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
         # CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
@@ -219,8 +219,8 @@ class CTrainer:
         for param_group in self.optimizer.param_groups:
             print(param_group['lr'])
         
-    def train(self,model,targetMetric):
-        self.setWorker(model,targetMetric)
+    def train(self,model,targetMetric,device = 'cpu'):
+        self.setWorker(model,targetMetric,device)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
         return self.bestEpoch, self.bestTargetMetricValue
 
