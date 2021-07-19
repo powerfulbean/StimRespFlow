@@ -90,7 +90,8 @@ class CStudy:
         self.keyNFuncForBest = keyNFuncForBest
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
-            a = input()
+            #a = input()
+            a = 'y'
             if a.lower() == 'y':
                 doc = dict()
                 for i in StudyKeys:
