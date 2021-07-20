@@ -12,7 +12,7 @@ from StellarInfra.Logger import CExprLogger,CLog
 
 STUDY_FILE_NAME = '.study'
 EXPR_FILE_NAME = '.expr'
-EXPR_LOG_FILE_NAME = 'stellarBrainwav_expr.xlsx'
+EXPR_LOG_FILE_NAME = '_expr.xlsx'
 EXPR_LOG_FILE_PRIMARY_KEY = 'expr_index'
 
 StudyKeys = ['study_name','best_experiment_indices','best_experiment_metrics','experiment_list']
@@ -98,12 +98,12 @@ class CStudy:
                     doc[i] = ''
                 doc['study_name'] = studyName
                 doc['experiment_list'] = []
-                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / EXPR_LOG_FILE_NAME)
+                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
                 self._oExprLog.save()
                 siIO.saveDictJson(studyPath / '.study', doc) #keep as the last line of this code block
         try:
             self._doc = siIO.loadJson(studyPath / '.study')
-            self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / EXPR_LOG_FILE_NAME)
+            self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
         except:
             raise
             
