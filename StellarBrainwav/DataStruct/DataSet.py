@@ -346,8 +346,13 @@ class CDataSet:
         file = open(fileName, 'rb')
         temp = pickle.load(file)
         
-        self.name = temp.name
-        self.dataRecordList = temp.dataRecordList
+#        self.name = temp.name
+#        self.dataRecordList = temp.dataRecordList
+        
+        for key in temp.__dict__:
+            setattr(self,key,getattr(temp,key))
+            
+        
     
     def save(self,folderName,name = None):
         DataIO.checkFolder(folderName)
