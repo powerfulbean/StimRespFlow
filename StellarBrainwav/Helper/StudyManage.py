@@ -175,6 +175,7 @@ def studySummary(motherFolder,keywords = ['']):
     for subFolder in subfolders:
         if not all([i in subFolder for i in keywords]):
             continue
+        print(f'{motherFolder}/{subFolder}')
         filePath = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')[0]
 #        print(filePath)
         oExprStudy = CExprFile(filePath)
