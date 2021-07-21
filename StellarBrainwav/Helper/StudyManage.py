@@ -14,9 +14,25 @@ STUDY_FILE_NAME = '.study'
 EXPR_FILE_NAME = '.expr'
 EXPR_LOG_FILE_NAME = '_expr.xlsx'
 EXPR_LOG_FILE_PRIMARY_KEY = 'expr_index'
+EXPR_SUM_FILE_PRIMARY_KEY = 'study_tag'
 
 StudyKeys = ['study_name','best_experiment_indices','best_experiment_metrics','experiment_list']
 ExperimentKeys = [EXPR_LOG_FILE_PRIMARY_KEY,'startTime','endTime']
+
+class CExprFile(CExprLogger):
+    def __init__(self,file:str):
+        self._load([], file)
+        
+
+class CStudySummaryExprLogger(CExprLogger):
+    def __init__(self,file:str):
+        newKeysList = [EXPR_SUM_FILE_PRIMARY_KEY]
+        self._load(newKeysList, file)
+        
+    def append(self,data):
+        data = data.copy()
+        self._df = self._df.append(data,ignore_index = True)
+        self.save()
 
 class CStudyExprLogger(CExprLogger):
     def __init__(self,oStudy,keys:list,file:str):
@@ -151,6 +167,20 @@ class CStudy:
     def doc(self):
         return self._doc
     
+def studySummary(motherFolder,keywords = ['']):
+    name = motherFolder + '/' + '_'.join(keywords) + '_study_summary.xlsx'
+    print(name)
+    subfolders = siDM.getSubFolderName(motherFolder)
+    oExpr = CStudySummaryExprLogger(name)
+    for subFolder in subfolders:
+        filePath = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')[0]
+#        print(filePath)
+        oExprStudy = CExprFile(filePath)
+        df = oExprStudy.df
+        df[EXPR_SUM_FILE_PRIMARY_KEY] = [subFolder] * len(df)
+        oExpr.append(df)
+    return oExpr
         
+    
     
                 
