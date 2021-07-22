@@ -167,20 +167,28 @@ class CStudy:
     def doc(self):
         return self._doc
     
-def studySummary(motherFolder,keywords = ['']):
-    name = motherFolder + '/' + '_'.join(keywords) + '_study_summary.xlsx'
+def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = ['']):
+    name = motherFolder + '/' + '_'.join(keywords) + '_exclude'+ '_'.join(excludes) + '_study_summary.xlsx'
     print(name)
     subfolders = siDM.getSubFolderName(motherFolder)
     oExpr = CStudySummaryExprLogger(name)
     for subFolder in subfolders:
         if not all([i in subFolder for i in keywords]):
             continue
+        if any([i in subFolder for i in excludes]):
+            continue
         print(f'{motherFolder}/{subFolder}')
         filePath = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')[0]
 #        print(filePath)
         oExprStudy = CExprFile(filePath)
         df = oExprStudy.df
-        df[EXPR_SUM_FILE_PRIMARY_KEY] = [subFolder] * len(df)
+        if onlyBestKey:
+            idx = df[onlyBestKey].idxmax()
+            df = df.iloc[idx]
+        if onlyBestKey:
+            df[EXPR_SUM_FILE_PRIMARY_KEY] = subFolder
+        else:
+            df[EXPR_SUM_FILE_PRIMARY_KEY] = [subFolder] * len(df)
         oExpr.append(df)
     return oExpr
         
