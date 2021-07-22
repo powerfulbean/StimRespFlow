@@ -64,9 +64,9 @@ class CExpr:
         self._oLog("start time:",self.starttime)
         
     def end(self):
+        self._oLog.Mode = 'safe'
         self.endtime = datetime.datetime.now()
         self._oLog("end time:",self.endtime)
-        self._oLog.Mode = 'safe'
         
     def append(self,data:dict):
         #save to experiment log excel file
@@ -94,7 +94,11 @@ class CExpr:
     
     def __exit__(self,*args):
         self.end()
-        self.append(self.dataToAppend)
+        if all([i is None for i in args]):
+            self.append(self.dataToAppend)
+        else:
+            self.oLog.t(args[1])
+        
         
 
 class CStudy:
@@ -114,14 +118,16 @@ class CStudy:
                     doc[i] = ''
                 doc['study_name'] = studyName
                 doc['experiment_list'] = []
+                self._doc = doc
                 self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
-                self._oExprLog.save()
-                siIO.saveDictJson(studyPath / '.study', doc) #keep as the last line of this code block
-        try:
-            self._doc = siIO.loadJson(studyPath / '.study')
-            self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
-        except:
-            raise
+                # self._oExprLog.save()
+                # siIO.saveDictJson(studyPath / '.study', doc) #keep as the last line of this code block
+        else:
+            try:
+                self._doc = siIO.loadJson(studyPath / '.study')
+                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
+            except:
+                raise
             
     def setStudyName(self,name:str):
         self._doc['study_name'] = name
@@ -167,16 +173,18 @@ class CStudy:
     def doc(self):
         return self._doc
     
-def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = ['']):
-    name = motherFolder + '/' + '_'.join(keywords) + '_exclude'+ '_'.join(excludes) + '_study_summary.xlsx'
+def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
+    excludeString = lambda excludes: '_exclude_'+ '_'.join(excludes) if len(excludes) > 0 else '' 
+    name = motherFolder + '/' + '_'.join(keywords) + excludeString(excludes) + '_study_summary.xlsx'
     print(name)
     subfolders = siDM.getSubFolderName(motherFolder)
     oExpr = CStudySummaryExprLogger(name)
     for subFolder in subfolders:
         if not all([i in subFolder for i in keywords]):
             continue
-        if any([i in subFolder for i in excludes]):
-            continue
+        if len(excludes) >0:
+            if any([i in subFolder for i in excludes]):
+                continue
         print(f'{motherFolder}/{subFolder}')
         filePath = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')[0]
 #        print(filePath)

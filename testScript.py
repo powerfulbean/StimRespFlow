@@ -22,7 +22,7 @@ from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([5])
+oStage = CStageControl([4.1])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -189,10 +189,13 @@ if oStage(4.1):
         paramDict['inside_with'] = 15
         paramDict['test_again_inside_with'] = 16
         oLog('test, hello StellarBrainwav')
+        # a
         
 if oStage(5):
     oDataset = CDataSet()
     oDataset.constructFromFile(r'.\read semantic EEG.bin')
+    
+    
     
     
 #''' Use MNE to preprocess the data'''
