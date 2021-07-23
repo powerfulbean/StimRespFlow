@@ -22,7 +22,7 @@ from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([4.1])
+oStage = CStageControl([4.2])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -190,6 +190,12 @@ if oStage(4.1):
         paramDict['test_again_inside_with'] = 16
         oLog('test, hello StellarBrainwav')
         # a
+if oStage(4.2):
+    from StellarBrainwav.Helper import StudyManage as sbSM
+    studyRoot = r'D:\OneDrive\ShiningStoneResearch\Language\FinetuneNLPCorrelatesEEG\result'
+    oStudy = sbSM.CStudy(studyRoot, '19subj_onset_0ms_700ms', [],('bestCorr',max))
+    print(oStudy.getNewExprIndex())
+        
         
 if oStage(5):
     oDataset = CDataSet()

@@ -94,6 +94,7 @@ class CExpr:
     
     def __exit__(self,*args):
         self.end()
+        #append result only when exits successfully
         if all([i is None for i in args]):
             self.append(self.dataToAppend)
         else:
@@ -133,7 +134,6 @@ class CStudy:
         self._doc['study_name'] = name
             
     def getNewExprIndex(self):
-        
         if len(self._oExprLog.df[EXPR_LOG_FILE_PRIMARY_KEY]) == 0:
             return 0
         else:
