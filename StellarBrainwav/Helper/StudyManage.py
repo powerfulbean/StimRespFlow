@@ -176,7 +176,7 @@ class CStudy:
     
 def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
     excludeString = lambda excludes: '_exclude-'+ '_'.join(excludes) if len(excludes) > 0 else '' 
-    bestString = lambda onlyBestKey: '_best-' + str(onlyBestKey) if onlyBestKey() else ''
+    bestString = lambda onlyBestKey: '_best-' + str(onlyBestKey) if onlyBestKey else ''
     name = motherFolder + '/' + '_'.join(keywords) + excludeString(excludes) + bestString(onlyBestKey) + '_study_summary.xlsx'
     print(name)
     subfolders = siDM.getSubFolderName(motherFolder)
