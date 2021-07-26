@@ -28,6 +28,7 @@ class CStudySummaryExprLogger(CExprLogger):
     def __init__(self,file:str):
         newKeysList = [EXPR_SUM_FILE_PRIMARY_KEY]
         self._load(newKeysList, file)
+        self.df = self.df[0:0]#clear all existing rows
         
     def append(self,data):
         data = data.copy()
@@ -174,8 +175,9 @@ class CStudy:
         return self._doc
     
 def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
-    excludeString = lambda excludes: '_exclude_'+ '_'.join(excludes) if len(excludes) > 0 else '' 
-    name = motherFolder + '/' + '_'.join(keywords) + excludeString(excludes) + '_study_summary.xlsx'
+    excludeString = lambda excludes: '_exclude-'+ '_'.join(excludes) if len(excludes) > 0 else '' 
+    bestString = lambda onlyBestKey: '_best-' + str(onlyBestKey) if onlyBestKey() else ''
+    name = motherFolder + '/' + '_'.join(keywords) + excludeString(excludes) + bestString(onlyBestKey) + '_study_summary.xlsx'
     print(name)
     subfolders = siDM.getSubFolderName(motherFolder)
     oExpr = CStudySummaryExprLogger(name)
