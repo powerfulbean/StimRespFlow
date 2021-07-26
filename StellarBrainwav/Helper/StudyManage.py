@@ -28,7 +28,7 @@ class CStudySummaryExprLogger(CExprLogger):
     def __init__(self,file:str):
         newKeysList = [EXPR_SUM_FILE_PRIMARY_KEY]
         self._load(newKeysList, file)
-        self.df = self.df[0:0]#clear all existing rows
+        self._df = self.df[0:0]#clear all existing rows
         
     def append(self,data):
         data = data.copy()
