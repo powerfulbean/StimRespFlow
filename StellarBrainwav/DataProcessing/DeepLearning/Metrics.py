@@ -62,7 +62,7 @@ class CMPearsonr(Metric):
             # print('examples',self._nExamples)
             return np.mean(self._personr / self._nExamples)
         else:
-            return self._personr / self._nExamples
+            return np.mean(self._personr / self._nExamples,axis = 0)
         
     def attachForTrain(self, engine, name: str, _usage = None):
         if self.epoch_bound:

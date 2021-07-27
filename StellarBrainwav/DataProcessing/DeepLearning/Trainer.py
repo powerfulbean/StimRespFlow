@@ -223,6 +223,14 @@ class CTrainer:
         self.setWorker(model,targetMetric,device)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
         return self.bestEpoch, self.bestTargetMetricValue
+    
+    def test(self,model,dtldTest,device = 'cpu'):
+        self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))
+        self.tester = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
+        self.tester.run(dtldTest)
+        metrics = self.tester.state.metrics
+        return metrics
+        
 
 def safeAllocate(arraylike):
     out = None
