@@ -351,8 +351,6 @@ class CDataSet:
         
         for key in temp.__dict__:
             setattr(self,key,getattr(temp,key))
-            
-        
     
     def save(self,folderName,name = None):
         DataIO.checkFolder(folderName)
@@ -368,6 +366,11 @@ class CDataSet:
     def sort(self,keyFunc):
         self.dataRecordList.sort(key = keyFunc)
         return self
+    
+    
+    def __del__(self):
+        print(f"{self.__class__} dataRecordsList clear")
+        self.dataRecordList.clear()
         
         
         
