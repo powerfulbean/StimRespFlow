@@ -367,6 +367,14 @@ class CDataSet:
         self.dataRecordList.sort(key = keyFunc)
         return self
     
+    def clear(self):
+        self.dataRecordList.clear()
+            
+    def clearRef(self,indices):
+        assert type(indices) == list
+        for index in sorted(indices, reverse=True):
+            self.dataRecordList[index] = None
+        
     
     def __del__(self):
         print(f"{self.__class__} dataRecordsList clear")
