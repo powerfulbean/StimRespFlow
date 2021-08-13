@@ -176,13 +176,16 @@ class CIfMNE:
     
     def getMNERaw(self,data,channelsInfo=None,srate=None,chTypes:list=None) -> mne.io.RawArray:
         oRaw = None
-        if self.info is None :
+        if self.info is None or ((channelsInfo is not None) and (chTypes is not None)):
             info = self.LibMNE.create_info(channelsInfo, srate,ch_types = chTypes)
             oRaw = self.LibMNE.io.RawArray(data,info)
         else:
             oRaw = self.LibMNE.io.RawArray(data,self.info)
         if self.Montage is not None:
-            oRaw.set_montage(self.Montage)
+            try:
+                oRaw.set_montage(self.Montage)
+            except:
+                print('failed to set montage')
         return oRaw
 
     def getMNEEvoked(self,data,channelsInfo=None,srate=None,chTypes:list=None):

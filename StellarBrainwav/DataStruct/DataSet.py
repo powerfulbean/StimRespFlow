@@ -381,7 +381,6 @@ class CDataSet:
         self.dataRecordList.clear()
         
         
-        
 class CDataRecord: #base class for data with label
     def __init__(self,data,stimuli,stimuliDes:list,srate):
         self.data = data #real data Segment
