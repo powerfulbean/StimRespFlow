@@ -6,7 +6,7 @@ Created on Wed May 12 15:47:52 2021
 """
 import numpy as np
 import copy
-
+import warnings
 class CStimuliVectors():
     '''
     An array-like list
@@ -255,4 +255,45 @@ class CStimulusVector(np.ndarray):
         
     def __len__(self):
         return self.shape[0]
+
+class CWaveArray(np.ndarray):
+    def __new__(cls,nChan,arrLike = None ,*args,**kwargs):
+        if arrLike is None:
+            obj = super().__new__(cls,(nChan,0),*args,**kwargs)
+        else:
+            arr = np.array(arrLike)
+            if arr.shape[0] != nChan:
+                raise ValueError(f"The channel number of input array should be {nChan}")
+            else:
+                obj = np.array(arr)
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None: return
+        # print(self.shape,obj.shape)
+        if obj.shape[0] != self.nChan:
+            raise ValueError("The channel numbers of two ndarray should be the same")
+        # see InfoArray.__array_finalize__ for comments
+        # super().__array_finalize__(obj)
+        
+    def __len__(self):
+        return self.shape[1]
+    
+    @property
+    def nChan(self):
+        return self.shape[0]
+    
+    def resize(self, new_shape):
+        warnings.warn(f"The function 'resize' for {str(self.__class__)} is forbidden")
+        return self
+    
+    def sort(self,*args,**kwargs):
+        warnings.warn(f"The function 'sort' for {str(self.__class__)} is forbidden")
+        return self
+    
+    # def append(self,arrlike):
+    #     arr = np.array(arrlike)
+    #     self = np.append(self, arr,axis = 1)
+    #     print(self)
+        
     

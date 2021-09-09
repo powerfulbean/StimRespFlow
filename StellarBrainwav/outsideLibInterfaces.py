@@ -166,8 +166,8 @@ class CIfMNE:
             self.info = None
         else:
             self.info = self.LibMNE.create_info(chNames, srate,ch_types = chTypes)
-        if(montage != None):
-            self.Montage = montage
+        # if(montage != None):
+        self.Montage = montage
         self.oLog = oLog
     
     def _importMNE(self):

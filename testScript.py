@@ -22,7 +22,7 @@ from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([4.2])
+oStage = CStageControl([6])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -202,8 +202,21 @@ if oStage(5):
     oDataset.constructFromFile(r'.\read semantic EEG.bin')
     
     
-    
-    
+if oStage(6):
+    from StellarBrainwav.DataStruct.Array import CWaveArray
+    import numpy as np
+    array = np.ndarray((2,100))
+    oData = array.view(CWaveArray)
+    oWave = CWaveArray(10)
+    oWave.resize((1,2))
+    oWave.sort()
+    # oWave.append(np.ndarray((10,2)))
+    oWave2 = CWaveArray(10,np.ndarray((10,2)))
+    print(oWave2)
+    oWave2 = CWaveArray(2,[[1,2,3],[1,2,3]])
+    print(oWave2)
+    oWave2 = CWaveArray(10,np.ndarray((11,2)))
+    print(oWave2)
 #''' Use MNE to preprocess the data'''
 #
 #nChannels = oDataOrg.n_channels
