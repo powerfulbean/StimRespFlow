@@ -7,7 +7,7 @@ Created on Fri Apr  2 15:03:21 2021
 
 from abc import ABC, abstractmethod
 import numpy as np
-from .Array import CStimuliVectors,CStimulusVector
+from .Array import CStimuliVectors,CStimulusVector,CWaveArray
 from ..DataIO import checkFolder
 from ..Helper.Cache import CStimuliCache
 
@@ -22,9 +22,15 @@ class CTimeStampsGen(ABC):
     def __iter__(self):
         return self
     
-    @abstractmethod
     def __next__(self):
-        pass
+        if self.idx >= self.nLen:
+            raise StopIteration
+        else:
+            out = self.state
+            self.state += self.delta
+            self.idx += 1
+            return out
+    
         
 
 class CData(ABC):
@@ -35,32 +41,39 @@ class CData(ABC):
     '''
     def __init__(self):
         self._data = None
-        self.timestamps:list = list()
+        self._timestamps:list = list()
         self.description = dict()
+    
+    @property
+    def timestamps(self):
+        return self._timestamps
+    
+    @timestamps.setter
+    def timestamps(self,timestamps):
+        timestamps = list(timestamps)
+        self._timestamps = timestamps
     
     @property    
     def rawdata(self):
-        assert self.dataCheck(self._data)
+        self.dataCheck(self._data)
         return self._data
     
     @rawdata.setter
     def rawdata(self,data):
-        assert self.dataCheck(data)
-        self._data = data
+        self._data = self.dataCheck(data)
         
     @property    
     def data(self):
-        assert self.dataCheck(self._data)
+        self.dataCheck(self._data)
         return self._data
     
     @data.setter
     def data(self,data):
-        assert self.dataCheck(data)
-        self._data = data
+        self._data = self.dataCheck(data)
     
     @abstractmethod
     def dataCheck(self,data):
-        return True
+        return data
     
     def row(self,row):
         return self.rawdata[row,:]
@@ -102,7 +115,6 @@ class CData(ABC):
             return self.rawdata[:,idx]
         else:
             return self.rawdata[idx]
-        
 
 
 class CRawData(CData):
@@ -173,6 +185,58 @@ class CRawData(CData):
     def readFile(self,fileName):
         ''' abstract method for file reading'''
         pass
+
+class CWaveData(CData):
+    
+    def __init__(self,nChan,srate,timeStampsGen:CTimeStampsGen):
+        self._nChan = nChan
+        self._srate = srate
+        self._timeStampsGen = timeStampsGen
+        self.calTimeStamp(self._timeStampsGen)
+        self.startTime = self._timeStampsGen.start
+        
+        
+    def dataCheck(self,data:np.ndarray):
+        data = CWaveArray(self._nChan,data)
+        assert isinstance(data,np.ndarray)
+        assert len(data.shape) == 2
+        assert len(self.timestamps) == data.shape[1]
+        assert data.shape[0] == self._nChan
+        return data
+            
+    def calTimeStamp(self,timeStampsGenerator:CTimeStampsGen):
+        self.timestamps = [i for i in timeStampsGenerator]
+    
+    @property
+    def nChan(self):
+        return self.data.shape[0]
+    
+    @nChan.setter
+    def nChan(self,nChan):
+        self._nChan = nChan
+        
+    def append(self,data,timestamps:list = None):
+        data = CWaveArray(self.nChan, data)
+        self.data = np.append(self.data, data)
+        if timestamps:
+            self.timestamps.append(timestamps)
+        else:
+            self._timeStampsGen.nLen = len(self.data)
+            self.calTimeStamp(self._timeStampsGen)
+    
+    @abstractmethod
+    def readFile(self,fileName):
+        ''' abstract method for file reading'''
+        pass
+        
+    @property
+    def srate(self):
+        return self._srate
+    
+    @srate.setter
+    def srate(self,new):
+        self._srate = new
+        
 
 class CStimulusMixin(ABC):
     

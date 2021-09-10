@@ -22,7 +22,7 @@ from StellarBrainwav.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([6])
+oStage = CStageControl([2.1])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -131,6 +131,15 @@ if oStage(2):
     oDataOrg.addLabels(oLabel)
     oDataOrg.assignTargetData([oRaw])
     ''''''
+    
+if oStage(2.1):
+    from StellarBrainwav.DataStruct.WaveData import CBitalinoWaveData
+    '''load label and raw data files'''
+    dir_list = ['dirLabels','dirData','dirStimuli','dirResult']
+    oDir = DataIO.CDirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
+    dataFiles = getFileList(oDir['dirData'],'.txt')
+    oRaw = CBitalinoWaveData()
+    oRaw.readFile(dataFiles[0],mode = 'EEGandEOG')
 
 if oStage(3):
     @StagesEngine.stage('test1',1)
@@ -211,6 +220,7 @@ if oStage(6):
     oWave.resize((1,2))
     oWave.sort()
     # oWave.append(np.ndarray((10,2)))
+    print(oWave)
     oWave2 = CWaveArray(10,np.ndarray((10,2)))
     print(oWave2)
     oWave2 = CWaveArray(2,[[1,2,3],[1,2,3]])

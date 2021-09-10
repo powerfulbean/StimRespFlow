@@ -262,10 +262,11 @@ class CWaveArray(np.ndarray):
             obj = super().__new__(cls,(nChan,0),*args,**kwargs)
         else:
             arr = np.array(arrLike)
+            arr = arr.view(CWaveArray)
             if arr.shape[0] != nChan:
                 raise ValueError(f"The channel number of input array should be {nChan}")
             else:
-                obj = np.array(arr)
+                obj = arr
         return obj
 
     def __array_finalize__(self, obj):
@@ -280,6 +281,10 @@ class CWaveArray(np.ndarray):
         return self.shape[1]
     
     @property
+    def nLen(self):
+        return self.shape[1]
+    
+    @property
     def nChan(self):
         return self.shape[0]
     
@@ -291,9 +296,4 @@ class CWaveArray(np.ndarray):
         warnings.warn(f"The function 'sort' for {str(self.__class__)} is forbidden")
         return self
     
-    # def append(self,arrlike):
-    #     arr = np.array(arrlike)
-    #     self = np.append(self, arr,axis = 1)
-    #     print(self)
-        
     
