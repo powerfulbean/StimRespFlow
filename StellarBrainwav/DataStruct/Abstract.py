@@ -215,14 +215,16 @@ class CWaveData(CData):
     def nChan(self,nChan):
         self._nChan = nChan
         
-    def append(self,data,timestamps:list = None):
-        data = CWaveArray(self.nChan, data)
-        self.data = np.append(self.data, data)
-        if timestamps:
-            self.timestamps.append(timestamps)
-        else:
-            self._timeStampsGen.nLen = len(self.data)
-            self.calTimeStamp(self._timeStampsGen)
+    def append(self,oRaw):
+        # data = CWaveArray(self.nChan, data)
+        # if timestamps:
+        #     self.timestamps.append(timestamps)
+        # else:
+        #     self._timeStampsGen.nLen = len(self.data)
+        #     self.calTimeStamp(self._timeStampsGen)
+        assert isinstance(oRaw, self.__class__)
+        self.timestamps.append(oRaw.timestamps)
+        self.data = np.append(self._data, oRaw._data,axis = 1)
     
     @abstractmethod
     def readFile(self,fileName):

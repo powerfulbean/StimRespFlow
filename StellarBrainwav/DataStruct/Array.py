@@ -271,7 +271,8 @@ class CWaveArray(np.ndarray):
 
     def __array_finalize__(self, obj):
         if obj is None: return
-        # print(self.shape,obj.shape)
+        # print(self.shape,obj.shape,self.nChan)
+        # print(obj.shape[0] == self.nChan)
         if obj.shape[0] != self.nChan:
             raise ValueError("The channel numbers of two ndarray should be the same")
         # see InfoArray.__array_finalize__ for comments
@@ -295,5 +296,6 @@ class CWaveArray(np.ndarray):
     def sort(self,*args,**kwargs):
         warnings.warn(f"The function 'sort' for {str(self.__class__)} is forbidden")
         return self
+    
     
     
