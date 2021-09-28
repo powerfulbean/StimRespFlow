@@ -34,7 +34,7 @@ class CStudyPathBase(ABC):
         pass
 
     @abstractmethod
-    def studyName(self,key):
+    def study(self,key):
         pass
 
 class CExprFile(CExprLogger):
@@ -131,12 +131,13 @@ class CStudy:
         else:
             raise
     
-    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = None):
+    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = None, studyShortcut = None):
         studyHostPath = siDM.CPath(studyHostPath)
         studyPath = studyHostPath / studyName
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
+        self.shortcut = studyShortcut
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
             #a = input()
@@ -203,16 +204,15 @@ class CStudy:
         return self._doc
     
     @property
-    def bestExprTuple(self):
+    def bestExprIdx(self):
         # self.summary()
         idx = self.doc['best_experiment_indices'][-1]
-        studyName = self.doc['config']['study_name']
-        return (studyName,idx)
+        return (self.shortcut, idx)
 
 class _CStudy_EasyConfig(CStudy):
 
     def __init__(self,pathDict:dict,*args,**kwargs):
-        super().__init__(pathDict['root'], pathDict['tag'], *args,**kwargs)
+        super().__init__(pathDict['root'], pathDict['tag'], *args,studyShortcut= pathDict['shortcut'],**kwargs)
         
 
     
