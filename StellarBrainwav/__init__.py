@@ -1,1 +1,1 @@
-from Helper import StudyManage
+from .Helper import StudyManage
