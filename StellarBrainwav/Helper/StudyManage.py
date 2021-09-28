@@ -5,6 +5,7 @@ Created on Thu Jul  1 20:15:15 2021
 @author: ShiningStone
 """
 import datetime
+from abc import ABC,abstractmethod
 
 from StellarInfra import DirManage as siDM
 from StellarInfra import IO as siIO
@@ -16,8 +17,25 @@ EXPR_LOG_FILE_NAME = '_expr.xlsx'
 EXPR_LOG_FILE_PRIMARY_KEY = 'expr_index'
 EXPR_SUM_FILE_PRIMARY_KEY = 'study_tag'
 
-StudyKeys = ['study_name','best_experiment_indices','best_experiment_metrics','experiment_list']
+StudyKeys = ['config','experiment_list']
 ExperimentKeys = [EXPR_LOG_FILE_PRIMARY_KEY,'startTime','endTime']
+
+class CStudyPathBase(ABC):
+    '''
+    Used for preparaing necessary data and path
+    '''
+    
+    def __init__(self,confFile,*args,**kwargs):
+        self.oPath = siDM.CPathConfig(confFile,*args,**kwargs)
+        self.config()
+        
+    @abstractmethod
+    def config(self,):
+        pass
+
+    @abstractmethod
+    def studyName(self,key):
+        pass
 
 class CExprFile(CExprLogger):
     def __init__(self,file:str):
@@ -104,7 +122,16 @@ class CExpr:
         
 
 class CStudy:
-    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list,keyNFuncForBest:tuple = None):
+    
+    def __new__(cls,*args,**kwargs):
+        if isinstance(args[0],str):
+            return super().__new__(cls)
+        elif isinstance(args[0],dict):
+            return super().__new__(_CStudy_EasyConfig)
+        else:
+            raise
+    
+    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = None):
         studyHostPath = siDM.CPath(studyHostPath)
         studyPath = studyHostPath / studyName
         siDM.checkFolder(studyPath)
@@ -118,7 +145,8 @@ class CStudy:
                 doc = dict()
                 for i in StudyKeys:
                     doc[i] = ''
-                doc['study_name'] = studyName
+                doc['config'] = dict()
+                doc['config']['study_name'] = studyName
                 doc['experiment_list'] = []
                 self._doc = doc
                 self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
@@ -149,7 +177,7 @@ class CStudy:
             df = self.oExprLog.df
             tempKey = EXPR_LOG_FILE_PRIMARY_KEY
             self.doc["best_experiment_indices"] = list(df[tempKey][df[key] == tarValue])
-            self.doc["best_experiment_metrics"] = key
+            self.doc['config']["best_experiment_metrics"] = key
     
     def save(self):
         self.summary()
@@ -173,6 +201,20 @@ class CStudy:
     @property
     def doc(self):
         return self._doc
+    
+    @property
+    def bestExprTuple(self):
+        # self.summary()
+        idx = self.doc['best_experiment_indices'][-1]
+        studyName = self.doc['config']['study_name']
+        return (studyName,idx)
+
+class _CStudy_EasyConfig(CStudy):
+
+    def __init__(self,pathDict:dict,*args,**kwargs):
+        super().__init__(pathDict['root'], pathDict['tag'], *args,**kwargs)
+        
+
     
 def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
     excludeString = lambda excludes: '_exclude-'+ '_'.join(excludes) if len(excludes) > 0 else '' 
