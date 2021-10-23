@@ -26,7 +26,7 @@ class CStudyPathBase(ABC):
     '''
     
     def __init__(self,confFile,*args,**kwargs):
-        self.oPath = siDM.CPathConfig(confFile,*args,**kwargs)
+        self.oPath = siDM.CPathConfig(confFile,*args,checkFolders = False,**kwargs)
         self.config()
         
     @abstractmethod
