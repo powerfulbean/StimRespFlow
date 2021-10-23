@@ -1,5 +1,5 @@
-# StellarBrainwav
-A library for boosting the implementation of brain wave data science application
+# StimRespFlow
+A framework for boosting the implementation of stimulus-response research code in the field of cognitive science and neuroscience 
 ### Libraries:
 MNE, pyTorch, Sckikit-Learn, SciPy, Numpy, Struct, etc.
 
