@@ -17,9 +17,11 @@ def non_parametric_bootstrap(x, f, niter=500, **kwargs):
     niter - number of iterations to run
     """
     statistic = np.zeros(niter)
+    rng = np.random.default_rng(42)
     for i in range(niter):
         # simulate x
-        indices = np.random.randint(0, len(x), len(x))
+        # indices = np.random.randint(0, len(x), len(x))
+        indices = rng.integers(0,len(x),len(x))
         X = x[indices]       
         statistic[i] = f(X, **kwargs)
     return statistic
