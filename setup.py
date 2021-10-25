@@ -11,8 +11,8 @@ with open("./README.md", "r") as fh:
   long_description = fh.read()
 
 setuptools.setup(
-  name="StellarBrainwav",
-  version="0.0.1",
+  name="StimRespFlow",
+  version="2.1",
   author="Powerfulbean",
   author_email="powerfulbean@gmail.com",
   long_description=long_description,
