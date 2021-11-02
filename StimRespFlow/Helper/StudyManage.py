@@ -35,7 +35,14 @@ class CStudyPathBase(ABC):
 
     @abstractmethod
     def study(self,key):
-        pass
+        return {'root':None,'tag':None}
+    
+    def getBestExpr(self,keyForStudy):
+        paths = self.study(keyForStudy)
+        bestIdx =  _CStudy_EasyConfig(paths).bestExprIdx[1]
+        return paths['root'] / paths['tag'] / bestIdx
+        
+    
 
 class CExprFile(CExprLogger):
     def __init__(self,file:str):
