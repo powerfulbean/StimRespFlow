@@ -7,7 +7,7 @@ Created on Thu May  6 17:25:27 2021
 import torch
 import ignite
 from ignite.metrics import Loss,RunningAverage
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator,Engine
 from ignite.contrib.handlers import ProgressBar
 from ignite import handlers as igHandler
 from matplotlib import pyplot as plt
@@ -42,8 +42,6 @@ def tfEngineOutput(x, y, y_pred, loss = None):
         out['loss'] = loss
     return out 
             
-
-
 class CTrainer:
     
     def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
@@ -182,12 +180,21 @@ class CTrainer:
     def step(self):
         self.lrScheduler.step()
     
-    def setWorker(self,model,targetMetric,device = 'cpu'):
+    def setWorker(self,model,targetMetric,device = 'cpu',trainingStep = None,evaluationStep = None):
         ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
-        self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,device=device,output_transform=tfEngineOutput)
-        self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
+        if trainingStep:
+            self.trainer = Engine(trainingStep(self,outputAdapter=tfEngineOutput))
+        else:
+            self.trainer = create_supervised_trainer(model,self.optimizer,self.criterion,device=device,output_transform=tfEngineOutput)
+        if evaluationStep:
+            self.evaluator = Engine(evaluationStep(self,outputAdapter=tfEngineOutput))
+            metrics = self.metrics or {}
+            for name, metric in metrics.items():
+                metric.attach(self.evaluator, name)
+        else:
+            self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
         self.model = model
         RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
         # CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
@@ -219,18 +226,29 @@ class CTrainer:
         for param_group in self.optimizer.param_groups:
             print(param_group['lr'])
         
-    def train(self,model,targetMetric,device = 'cpu'):
-        self.setWorker(model,targetMetric,device)
+    def train(self,model,targetMetric,device = 'cpu',**kwargs):
+        self.setWorker(model,targetMetric,device,**kwargs)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
         return self.bestEpoch, self.bestTargetMetricValue
     
-    def test(self,model,dtldTest,device = 'cpu'):
+    def test(self,model,dtldTest,device = 'cpu',evaluationStep = None):
         self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))
-        self.tester = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
+        if evaluationStep:
+            self.tester = Engine(evaluationStep(self.trainer,outputAdapter=tfEngineOutput))
+        else:
+            self.tester = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
         self.tester.run(dtldTest)
         metrics = self.tester.state.metrics
         return metrics
-        
+
+class CTrainerFunc:
+    
+    def __init__(self,trainer:CTrainer,outputAdapter:callable = lambda x: x):
+        self.trainer = trainer
+        self.outputAdapter = outputAdapter
+
+    def __call__(self,engine,batch):
+        return self.outputAdapter(*self.func(engine,batch))       
 
 def safeAllocate(arraylike):
     out = None
@@ -242,6 +260,42 @@ def safeAllocate(arraylike):
 
 def collate_fn(batch,channelFirst = True):
     nBatch = len(batch)
+    outBatch = []
+    dimIdxLen = -1
+    dimIdxChannel = -1
+    if channelFirst:
+        dimIdxLen = 1
+        dimIdxChannel = 0
+    else:
+        dimIdxLen = 0
+        dimIdxChannel = 1
+    
+    for idx,item in enumerate(batch[0]):
+        maxLen = item.shape[dimIdxLen]
+        nChannel = item.shape[dimIdxChannel]
+        for i in range(nBatch):
+            maxLen = max(batch[i][idx].shape[dimIdxLen],maxLen)
+        zerosInput = [0] * 3
+        zerosInput[0] = nBatch
+        zerosInput[1 + dimIdxLen] = maxLen
+        zerosInput[1 + dimIdxChannel] = nChannel
+        tmp = torch.zeros(*zerosInput)
+        for i in range(nBatch):
+            indices = [0] * 3
+            indices[0] = i
+            indices[1 + dimIdxLen] = slice(batch[i][idx].shape[dimIdxLen])
+            indices[1 + dimIdxChannel] = slice(None)
+            # print(indices,i)
+            indices = tuple(indices)
+            # print(indices,tmp[indices].shape,batch[i][idx].shape)
+            tmp[indices] = safeAllocate(batch[i][idx])
+            
+        outBatch.append(tmp)
+    return outBatch
+
+def collate_fn_dict(batch,channelFirst = True):
+    nBatch = len(batch)
+    print(len(batch))
     outBatch = []
     dimIdxLen = -1
     dimIdxChannel = -1

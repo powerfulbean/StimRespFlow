@@ -7,11 +7,20 @@ Created on Wed Oct  9 15:15:34 2019
 
 from .. import outsideLibInterfaces as outLib
 from .. import DataIO
-from .RawData import CRawData
+from .Abstract import CWaveData
 from .LabelData import CLabelInfo, CLabels
 from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
 import numpy as np
+
+
+class CFlowDict(dict):
+    
+    def setInfo(self,inDict:dict):
+        if self.__dict__.get('info'):
+            self.info.update(inDict)
+        else:
+            self.info = dict(inDict)
 
 @unique
 class EOperation(Enum):
@@ -48,7 +57,7 @@ class CDataOrganizorLite:
         self.keyFunc = keyFunc
         self.oCheck = CDataSetProtocol()
     
-    def insert(self,oData:CRawData,oLabel:CLabels):
+    def insert(self,oData:CWaveData,oLabel:CLabels):
         if(oData.sampleRate != self.srate):
             raise ValueError()
         startId = oLabel.timestamps[0]

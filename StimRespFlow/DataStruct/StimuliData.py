@@ -23,10 +23,10 @@ class CWordStimulus(CStimulus):
     #     attr['word'] = ""
     #     return attr
         
-class CVisualStimuli(CStimulus):
+class CVisualStimulus(CStimulus):
     pass
 
-class CAuditoryStimuli(CStimulus):
+class CAuditoryStimulus(CStimulus):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.name = ''
@@ -75,7 +75,7 @@ class CAuditoryStimuli(CStimulus):
             raise ValueError("reqired segments number ",segmentsNum," is not equal to calculated segments number ",rangeNum)
         
         for i in range(rangeNum):
-            tempStimuli = CAuditoryStimuli()
+            tempStimuli = CAuditoryStimulus()
             tempStimuli.mainStream = self.mainStream[i*segmentMainLen_num : (i+1) * segmentMainLen_num]
             tempStimuli.otherStreams.append(self.otherStreams[0][i*segmentOtherLen_num : (i+1) * segmentOtherLen_num])
             tempStimuli.len_s = segmentLen_s
@@ -91,7 +91,7 @@ class CAuditoryStimuli(CStimulus):
         startIdx = int(startTime* srateM)
         endIdx = int(endTime* srateO)
 #        print('len1',startTime,srateM,len(self.mainStream))
-        tempStimuli = CAuditoryStimuli()
+        tempStimuli = CAuditoryStimulus()
         tempStimuli.mainStream = self.mainStream[startIdx:endIdx]
         tempStimuli.otherStreams.append(self.otherStreams[0][startIdx:endIdx])
         tempStimuli.len_s = int(endTime- startTime)

@@ -11,7 +11,7 @@ from .. import outsideLibInterfaces as outLib
 from ..DataIO import  getFileName
 from ..Helper.Cache import CStimuliCache
 from .Abstract import CLabels
-from .StimuliData import CAuditoryStimuli
+from .StimuliData import CAuditoryStimulus
 import datetime
 
 
