@@ -5,24 +5,24 @@ Created on Wed Oct  9 16:52:18 2019
 @author: Jin Dou
 """
 
-from StellarBrainwav import DataIO
-from StellarBrainwav.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
-from StellarBrainwav.Helper.StageControl import CStageControl
-from StellarBrainwav.DataIO import getFileList,saveObject, loadObject, CLog
-from StellarBrainwav.DataStruct.Abstract import CData, CRawData,CStimulus
-from StellarBrainwav.DataStruct.RawData import CBitalinoRawdata,CDateTimeStampsGen
-from StellarBrainwav.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
-from StellarBrainwav.DataStruct.DataSet import CDataOrganizor,EOperation,CDataSet
-from StellarBrainwav.outsideLibInterfaces import CIfMNE
-from StellarBrainwav.DataProcessing import SignalProcessing as SigProc
-from StellarBrainwav.DataStruct.Array import CStimuliVectors,CStimulusVector
-from StellarBrainwav.DataStruct.StimuliData import CWordStimulus
+from StimRespFlow import DataIO
+from StimRespFlow.Helper.Cache import CStimuliCacheAuditory, CStimuliTypeList
+from StimRespFlow.Helper.StageControl import CStageControl
+from StimRespFlow.DataIO import getFileList,saveObject, loadObject, CLog
+from StimRespFlow.DataStruct.Abstract import CData, CRawData,CStimulus
+from StimRespFlow.DataStruct.WaveData import CBitalinoWaveData,CDateTimeStampsGen
+from StimRespFlow.DataStruct.LabelData import CVisualLabels,CAuditoryLabels
+from StimRespFlow.DataStruct.DataSet import CDataOrganizor,EOperation,CDataSet
+from StimRespFlow.outsideLibInterfaces import CIfMNE
+from StimRespFlow.DataProcessing import SignalProcessing as SigProc
+from StimRespFlow.DataStruct.Array import CStimuliVectors,CStimulusVector
+from StimRespFlow.DataStruct.StimuliData import CWordStimulus
 
-from StellarBrainwav.BrainwavEngines import StagesEngine
+from StimRespFlow.BrainwavEngines import StagesEngine
 import numpy as np
 
 # oStage = CStageControl([1.1,1.2,1.3,1.4,1.6])
-oStage = CStageControl([2.1])
+oStage = CStageControl([7])
 if oStage(1):
     oTemp = CStimuliVectors(3)
     oTemp.append(np.array([11,12,13]))
@@ -133,7 +133,7 @@ if oStage(2):
     ''''''
     
 if oStage(2.1):
-    from StellarBrainwav.DataStruct.WaveData import CBitalinoWaveData
+    from StimRespFlow.DataStruct.WaveData import CBitalinoWaveData
     '''load label and raw data files'''
     dir_list = ['dirLabels','dirData','dirStimuli','dirResult']
     oDir = DataIO.CDirectoryConfig(dir_list,r"testConf\GlsDataDirectoryAuditory.conf")
@@ -180,27 +180,27 @@ if oStage(3):
     
     
 if oStage(4):
-    from StellarBrainwav.Helper import StudyManage as sbSM
-    tarFolder = r'F:/Dataset/stellarBrainwavTest'
+    from StimRespFlow.Helper import StudyManage as sbSM
+    tarFolder = r'F:/Dataset/StimRespFlowTest'
     oStudy = sbSM.CStudy(tarFolder,'test_CStudy',['test1','test2','test3'])
     oStudy.save()
     oExpr = oStudy.newExpr()
     
 if oStage(4.1):
-    from StellarBrainwav.Helper import StudyManage as sbSM
+    from StimRespFlow.Helper import StudyManage as sbSM
     paramDict = dict()
     paramDict['test1'] = 1
     paramDict['test2'] = 2
     paramDict['test3'] = 3
-    tarFolder = r'F:/Dataset/stellarBrainwavTest'
+    tarFolder = r'F:/Dataset/StimRespFlowTest'
     oStudy = sbSM.CStudy(tarFolder,'test_CStudy',list(paramDict),('inside_with',max))
     with oStudy.newExpr(paramDict,['test_again_inside_with']) as oLog:
         paramDict['inside_with'] = 15
         paramDict['test_again_inside_with'] = 16
-        oLog('test, hello StellarBrainwav')
+        oLog('test, hello StimRespFlow')
         # a
 if oStage(4.2):
-    from StellarBrainwav.Helper import StudyManage as sbSM
+    from StimRespFlow.Helper import StudyManage as sbSM
     studyRoot = r'D:\OneDrive\ShiningStoneResearch\Language\FinetuneNLPCorrelatesEEG\result'
     oStudy = sbSM.CStudy(studyRoot, '19subj_onset_0ms_700ms', [],('bestCorr',max))
     print(oStudy.getNewExprIndex())
@@ -212,7 +212,7 @@ if oStage(5):
     
     
 if oStage(6):
-    from StellarBrainwav.DataStruct.Array import CWaveArray
+    from StimRespFlow.DataStruct.Array import CWaveArray
     import numpy as np
     array = np.ndarray((2,100))
     oData = array.view(CWaveArray)
@@ -227,6 +227,26 @@ if oStage(6):
     print(oWave2)
     oWave2 = CWaveArray(10,np.ndarray((11,2)))
     print(oWave2)
+    
+if oStage(7):
+    # test op trace engine
+    from StimRespFlow.BrainwavEngines import OpTraceEngine as sbOE
+    class Test(sbOE.MixinTraceable):
+        @sbOE.MixinTraceable.tracedOp('print_add',['b'])
+        def add(self,a,b):
+            print('add = ',a+b)
+    
+    class Test2():
+        @sbOE.MixinTraceable.tracedOp('print_add')
+        def add(self,a,b):
+            print('add = ',a+b)
+            
+            
+    oTemp = Test()
+    oTemp2 = Test2()
+    # oTemp.add.doc += '1'
+    oTemp.add(1,b=2)
+    oTemp2.add(1,2)
 #''' Use MNE to preprocess the data'''
 #
 #nChannels = oDataOrg.n_channels

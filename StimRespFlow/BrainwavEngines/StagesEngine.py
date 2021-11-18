@@ -2,7 +2,7 @@
 """
 Created on Wed Jun  9 00:54:46 2021
 
-@author: ShiningStone
+@author: Jin Dou
 """
 
 class CStageSeqItem:
