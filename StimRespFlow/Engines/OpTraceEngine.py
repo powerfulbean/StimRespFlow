@@ -12,10 +12,13 @@ class MixinTraceable:
         
     @property
     def opRecords(self):
-        return self._opRecords
+        return list(set(self._opRecords))
     
     def addOp(self,doc:str):
         doc = str(doc)
+        if self.__dict__.get('_opRecords') is None:
+            raise AttributeError("Can't add new op records before MixinTraceable.__init__() call")
+            
         self._opRecords.append(doc)
         
     def tracedOp(doc:str,kwToRecord:list = []):
@@ -27,7 +30,7 @@ class MixinTraceable:
                 if not isinstance(self, MixinTraceable):
                     raise TypeError("the decorated method should belong to a 'MixinTraceable' type object")
                 for kw in kwToRecord:
-                    newDoc += f'-{kw}_{kwargs[kw]}'
+                    newDoc += f'-{kw}~{kwargs[kw]}'
                 self.addOp(newDoc)
                 return func(self,*args,**kwargs)
             return _wrapper
