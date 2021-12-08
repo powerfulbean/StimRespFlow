@@ -180,11 +180,12 @@ class CTrainer:
     def step(self):
         self.lrScheduler.step()
     
-    def setWorker(self,model,targetMetric,device = 'cpu',trainingStep = None,evaluationStep = None):
+    def setWorker(self,model,targetMetric,trainingStep = None,evaluationStep = None):
         ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
-        self.model = model
+        device = self.device
+        self.model = model.to(device)
         if trainingStep:
             self.trainer = Engine(trainingStep(self,outputAdapter=tfEngineOutput))
         else:
@@ -227,7 +228,7 @@ class CTrainer:
             print(param_group['lr'])
         
     def train(self,model,targetMetric,device = 'cpu',**kwargs):
-        self.setWorker(model,targetMetric,device,**kwargs)
+        self.setWorker(model,targetMetric,**kwargs)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
         return self.bestEpoch, self.bestTargetMetricValue
     
@@ -247,6 +248,7 @@ class CTrainerFunc:
         self.trainer = trainer
         self.outputAdapter = outputAdapter
         self.model = trainer.model
+        self.device = self.trainer.device
 
     def __call__(self,engine,batch):
         return self.outputAdapter(*self.func(engine,batch))       
