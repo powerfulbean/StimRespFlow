@@ -13,6 +13,7 @@ from ..Helper.Cache import CStimuliCache
 from .Abstract import CLabels
 from .StimuliData import CAuditoryStimulus
 import datetime
+import numpy as np
 
 
 class CVisualLabels(CLabels):
@@ -412,6 +413,9 @@ class CTimeIntervalStamp:
     
     def sorted_key(self,x):
         return x.startTime
+    
+    def __array__(self,type = None):
+        return np.array([self.startTime,self.endTime])
 
 
 # class CLabelInfoCoarse:

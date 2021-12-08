@@ -184,6 +184,7 @@ class CTrainer:
         ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
+        self.model = model
         if trainingStep:
             self.trainer = Engine(trainingStep(self,outputAdapter=tfEngineOutput))
         else:
@@ -195,7 +196,6 @@ class CTrainer:
                 metric.attach(self.evaluator, name)
         else:
             self.evaluator = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
-        self.model = model
         RunningAverage(output_transform=fPickLossFromOutput).attach(self.trainer, "loss")
         # CMPearsonr(output_transform=fPickPredTrueFromOutputT).attachForTrain(self.trainer, "corr")
         for i in self.metrics:
@@ -246,9 +246,13 @@ class CTrainerFunc:
     def __init__(self,trainer:CTrainer,outputAdapter:callable = lambda x: x):
         self.trainer = trainer
         self.outputAdapter = outputAdapter
+        self.model = trainer.model
 
     def __call__(self,engine,batch):
         return self.outputAdapter(*self.func(engine,batch))       
+    
+    def func(self,engine,batch):
+        pass
 
 def safeAllocate(arraylike):
     out = None
@@ -295,7 +299,7 @@ def collate_fn(batch,channelFirst = True):
 
 def collate_fn_dict(batch,channelFirst = True):
     nBatch = len(batch)
-    print(len(batch))
+    # print(len(batch))
     outBatch = []
     dimIdxLen = -1
     dimIdxChannel = -1
