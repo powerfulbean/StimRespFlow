@@ -25,9 +25,12 @@ class CStudyPathBase(ABC):
     Used for preparaing necessary data and path
     '''
     
-    def __init__(self,confFile,*args,**kwargs):
+    def __init__(self,confFile,*args,FolderName = None,**kwargs):
         self.oPath = siDM.CPathConfig(confFile,*args,checkFolders = False,**kwargs)
-        self.config(**kwargs)
+        if FolderName:
+            self.config(FolderName)
+        else:
+            self.config()
         
     @abstractmethod
     def config(self,**kwargs):
