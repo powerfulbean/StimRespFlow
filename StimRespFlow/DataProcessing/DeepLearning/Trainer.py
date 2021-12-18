@@ -124,6 +124,10 @@ class CTrainer:
     def recordLr(self,):
         for param_group in self.optimizer.param_groups:
             self.lrRecord.append(param_group['lr'])
+            
+    def getLr(self):
+        for param_group in self.optimizer.param_groups:
+            print(param_group['lr'])
     
     def addEvaluatorExtensions(self,handler):
         # self.evaluator.add_event_handler(Events.COMPLETED, handler)
@@ -179,6 +183,7 @@ class CTrainer:
             
     def step(self):
         self.lrScheduler.step()
+        # self.getLr()
     
     def setWorker(self,model,targetMetric,trainingStep = None,evaluationStep = None):
         ''' used for dowmward compatibility'''
@@ -214,6 +219,10 @@ class CTrainer:
         if isinstance(self.lrScheduler, torch.optim.lr_scheduler.CyclicLR):
             print('CyclicLR')
             self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)
+            
+        if isinstance(self.lrScheduler, torch.optim.lr_scheduler.OneCycleLR):
+            print('OneCycleLR')
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)     
             # self.trainer.add_event_handler(Events.ITERATION_COMPLETED, self._hookIterationComplete)
         # handler = EarlyStopping(patience=5, score_function=self.score_function, trainer=self.trainer)
         # self.addEvaluatorExtensions(handler)

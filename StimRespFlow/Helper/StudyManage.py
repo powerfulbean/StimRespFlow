@@ -147,6 +147,7 @@ class CStudy:
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
+        assert keyNFuncForBest[0] in exprLogKeys
         self.shortcut = studyShortcut
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
@@ -199,14 +200,23 @@ class CStudy:
     def oExprLog(self):
         return self._oExprLog
     
-    def newExpr(self,dataToAppend,keysIncludedInStudyFile:list = None):
+    def newExpr(self,dataToAppend:dict,keysIncludedInStudyFile:list = None):
         assert isinstance(keysIncludedInStudyFile, list)
-        if self.keyNFuncForBest:
-            if keysIncludedInStudyFile is None:
-                keysIncludedInStudyFile = [self.keyNFuncForBest[0]]
-            else:
+        assert self.keyNFuncForBest[0] in dataToAppend
+        # if self.keyNFuncForBest:
+        #     if keysIncludedInStudyFile is None:
+        #         keysIncludedInStudyFile = [self.keyNFuncForBest[0]]
+        #     else:
+        #         keysIncludedInStudyFile.append(self.keyNFuncForBest[0])
+        #         keysIncludedInStudyFile = list(set(keysIncludedInStudyFile))
+        if keysIncludedInStudyFile is None:
+            keysIncludedInStudyFile = list(dataToAppend.keys())
+            if self.keyNFuncForBest:
                 keysIncludedInStudyFile.append(self.keyNFuncForBest[0])
-                keysIncludedInStudyFile = list(set(keysIncludedInStudyFile))
+        else:
+            if self.keyNFuncForBest:
+                keysIncludedInStudyFile.append(self.keyNFuncForBest[0])
+        keysIncludedInStudyFile = list(set(keysIncludedInStudyFile))
         return CExpr(self, self.getNewExprIndex(),dataToAppend,keysIncludedInStudyFile)
     
     @property
