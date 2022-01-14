@@ -147,7 +147,7 @@ class CStudy:
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
-        assert keyNFuncForBest[0] in exprLogKeys
+        assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest is None
         self.shortcut = studyShortcut
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
