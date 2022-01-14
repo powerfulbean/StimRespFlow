@@ -141,13 +141,13 @@ class CStudy:
         else:
             raise
     
-    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = None, studyShortcut = None):
+    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = (None,None), studyShortcut = None):
         studyHostPath = siDM.CPath(studyHostPath)
         studyPath = studyHostPath / studyName
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
-        assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest is None
+        assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest[0] is None
         self.shortcut = studyShortcut
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
