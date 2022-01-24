@@ -60,7 +60,6 @@ class CData(ABC):
     
     @rawdata.setter
     def rawdata(self,data):
-        print(data)
         self._data = self.dataCheck(data)
         
     @property    
