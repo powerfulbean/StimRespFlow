@@ -60,6 +60,7 @@ class CData(ABC):
     
     @rawdata.setter
     def rawdata(self,data):
+        print(data)
         self._data = self.dataCheck(data)
         
     @property    
@@ -337,7 +338,7 @@ class CLabels(CData):
             assert len(self.timestamps) == data.shape[1]
         else:
             assert len(self.timestamps) == len(data[0])
-        return True
+        return data
     
     def append(self,timeStamp,stimuli):
         self.rawdata.append(stimuli)

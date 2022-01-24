@@ -217,7 +217,7 @@ class CAuditoryLabels(CLabels):
                     leftflag = False
                 
                 tempRecord = CTimeIntervalStamp('','','','')
-                tempStimuli = CAuditoryStimuli()
+                tempStimuli = CAuditoryStimulus()
                 
                 i += 1
                 audioStart = buffer[i]
