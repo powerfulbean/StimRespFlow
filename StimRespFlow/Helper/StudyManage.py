@@ -147,7 +147,8 @@ class CStudy:
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
-        assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest[0] is None
+        # print(keyNFuncForBest[0],exprLogKeys)
+        # assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest[0] is None
         self.shortcut = studyShortcut
         if not siDM.checkExists(studyPath / STUDY_FILE_NAME):
             print("required file: .study doesn't exist, create a new one? (y/n)")
@@ -202,7 +203,8 @@ class CStudy:
     
     def newExpr(self,dataToAppend:dict,keysIncludedInStudyFile:list = None):
         assert isinstance(keysIncludedInStudyFile, list)
-        assert self.keyNFuncForBest[0] in dataToAppend
+        # print(self.keyNFuncForBest[0],dataToAppend)
+        # assert self.keyNFuncForBest[0] in dataToAppend
         # if self.keyNFuncForBest:
         #     if keysIncludedInStudyFile is None:
         #         keysIncludedInStudyFile = [self.keyNFuncForBest[0]]
