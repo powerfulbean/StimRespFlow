@@ -5,6 +5,25 @@ Created on Wed Jun  9 00:54:46 2021
 @author: Jin Dou
 """
 
+'''
+Stages Protocol
+
+Output in the previous step, will be used as input for the next step
+The output  = [item1,item2] 
+where item1 is argument list, and item2 is keyword argument dict  
+
+'''
+
+
+_middleOutputCache = []
+
+def addMiddleResult(args,kwargs):
+    _middleOutputCache.append((args,kwargs))
+    
+def fetchMiddleResult():
+    return _middleOutputCache.pop(0)
+
+
 class CStageSeqItem:
     def __init__(self,func,args = [],kwargs = {}):
         self.func = func
@@ -41,7 +60,9 @@ def stage(stage:str,seqId:int):
         def wrapper(*args,**kwargs):
             funcSeqList[stage][seqId].args = args
             funcSeqList[stage][seqId].kwargs = kwargs
-            if paramsLoadFlag:
+            if paramsLoadFlag: 
+                #In this mode, the function will not really run,
+                #but just register its param with the StagesEngine
                 return None
             else:
                 return func(*args,**kwargs)
@@ -58,7 +79,14 @@ def startEngine(stageSeq = None):
             func = item.func
             args = item.args
             kwargs = item.kwargs
-            func(*args,**kwargs)
+            if len(args) > 0 or len(kwargs) > 0:
+                output = func(*args,**kwargs)
+            else:
+                param = fetchMiddleResult()
+                output = func(*param[0],**param[1])
+            if output is not None:
+                addMiddleResult(output[0], output[1])
+            
 
 class CStagesEngine:
     

@@ -141,12 +141,14 @@ class CStudy:
         else:
             raise
     
-    def __init__(self,studyHostPath:str,studyName:str,exprLogKeys:list = [],keyNFuncForBest:tuple = (None,None), studyShortcut = None):
+    def __init__(self,studyHostPath:str,studyName:str,exprLogDict:dict = {},keyNFuncForBest:tuple = (None,None), studyShortcut = None):
         studyHostPath = siDM.CPath(studyHostPath)
         studyPath = studyHostPath / studyName
         siDM.checkFolder(studyPath)
         self.studyPath = studyPath
         self.keyNFuncForBest = keyNFuncForBest
+        self.userExprLogDict = exprLogDict
+        exprLogKeys = list(exprLogDict.keys())
         # print(keyNFuncForBest[0],exprLogKeys)
         # assert keyNFuncForBest[0] in exprLogKeys or keyNFuncForBest[0] is None
         self.shortcut = studyShortcut
@@ -201,7 +203,8 @@ class CStudy:
     def oExprLog(self):
         return self._oExprLog
     
-    def newExpr(self,dataToAppend:dict,keysIncludedInStudyFile:list = None):
+    def newExpr(self,keysIncludedInStudyFile:list = None):
+        dataToAppend = self.userExprLogDict
         assert isinstance(keysIncludedInStudyFile, list)
         # print(self.keyNFuncForBest[0],dataToAppend)
         # assert self.keyNFuncForBest[0] in dataToAppend
