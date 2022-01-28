@@ -53,7 +53,16 @@ class CSignalLabels(CLabels):
             startTime = checkStartTime(i)
             sec_num = int(np.round(startTime * srate)) ## ??? ceil or round
             data[:,sec_num] = oLabel.data[:,idx]
-        return CSignalLabels(oLabel.nFeat, srate, list(timestamps), data)
+        oSignal = CSignalLabels(oLabel.nFeat, srate, list(timestamps), data)
+        oSignal.parentLabel = oLabel
+        return oSignal
+    
+    def resample(self,srate):
+        if hasattr(self, 'parentLabel'):
+            return self.__class__.fromLabel(self.parentLabel,srate)
+        else:
+            #do normal resample
+            pass
     
 
 class CVisualLabels(CLabels):
