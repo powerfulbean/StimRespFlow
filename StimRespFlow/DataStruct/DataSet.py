@@ -30,6 +30,13 @@ class EOperation(Enum):
     BandPass = 'bandPass'
     Transform = "transform"
 
+class CTrialOrganizor:
+    '''
+    Organize the data using key word of trials
+    '''
+    
+    def __init__(self):
+        pass
 class CDataOrganizorLite:
     
     '''

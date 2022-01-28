@@ -293,9 +293,18 @@ class CLabels(CData):
     '''
     def __init__(self,nFeat):
         super().__init__()
-        self.startTime = None
         self._data = CStimuliVectors(nFeat) #list()
         self._nFeat = nFeat
+    
+    @property
+    # @abstractmethod
+    def startTime(self):
+        return self.timestamps[0]
+    
+    @property
+    # @abstractmethod
+    def endTime(self):
+        return self.timestamps[-1]
     
     @property
     def nFeat(self):
