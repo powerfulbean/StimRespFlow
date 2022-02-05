@@ -205,7 +205,7 @@ class CStudy:
     
     def newExpr(self,keysIncludedInStudyFile:list = None):
         dataToAppend = self.userExprLogDict
-        assert isinstance(keysIncludedInStudyFile, list)
+        # assert isinstance(keysIncludedInStudyFile, list)
         # print(self.keyNFuncForBest[0],dataToAppend)
         # assert self.keyNFuncForBest[0] in dataToAppend
         # if self.keyNFuncForBest:
