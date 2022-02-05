@@ -29,12 +29,17 @@ def checkEndTime(timestamp):
 
 class CSignalLabels(CLabels):
     
-    def __init__(self,nFeat,srate,timestamps,data):
+    def __init__(self,nFeat,srate):
         super().__init__(nFeat)
         self.srate = srate
-        self.timestamps = timestamps
-        self.data = data
-        
+    
+    @property
+    def startTime(self):
+        return checkStartTime(super().startTime)
+    
+    @property
+    def endTime(self):
+        return checkEndTime(super().endTime)
     
     @classmethod
     def fromLabel(oLabel:CLabels,srate):
@@ -53,16 +58,38 @@ class CSignalLabels(CLabels):
             startTime = checkStartTime(i)
             sec_num = int(np.round(startTime * srate)) ## ??? ceil or round
             data[:,sec_num] = oLabel.data[:,idx]
-        oSignal = CSignalLabels(oLabel.nFeat, srate, list(timestamps), data)
+        oSignal = CSignalLabels(oLabel.nFeat, srate)
         oSignal.parentLabel = oLabel
+        oSignal.timestamps = list(timestamps)
+        oSignal.data = data
         return oSignal
     
-    def resample(self,srate):
+    def downsample(self,downSmplFctr,antiAliasing = True):
+        srate = self.srate / downSmplFctr
         if hasattr(self, 'parentLabel'):
             return self.__class__.fromLabel(self.parentLabel,srate)
         else:
             #do normal resample
-            pass
+            if antiAliasing:
+                raise NotImplementedError
+            else:
+                data = self.data[:,::downSmplFctr]
+                oSignal = CSignalLabels(self.nFeat, srate)
+                oSignal.timestamps = self.timestamps[::downSmplFctr]
+                oSignal.data = data
+                return oSignal
+        
+    def readFile(self,timestamps,data):
+        pass
+    
+    def loadStimuli(self,data):
+        #this is required when the label itself doesn't contain the real data
+        #of the stimuli
+        pass#self.data = data
+        
+    @classmethod
+    def cat(seqOfSignalLabels:list):
+        raise NotImplementedError
     
 
 class CVisualLabels(CLabels):
