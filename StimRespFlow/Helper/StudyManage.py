@@ -255,7 +255,11 @@ def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
             if any([i in subFolder for i in excludes]):
                 continue
         print(f'{motherFolder}/{subFolder}')
-        filePath = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')[0]
+        filePaths = siDM.getFileList(f'{motherFolder}/{subFolder}','xlsx')
+        if filePaths is None:
+            continue
+        else:
+            filePath = filePaths[0]
 #        print(filePath)
         oExprStudy = CExprFile(filePath)
         df = oExprStudy.df

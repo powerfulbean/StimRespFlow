@@ -335,6 +335,7 @@ class CDataSet:
         self.name = dataSetName
         self.srate = -1
         self.desc = dict()
+        self.stimuliDict = {}
     
     @property
     def records(self,):
@@ -395,6 +396,18 @@ class CDataSet:
     def __del__(self):
         print(f"{self.__class__} dataRecordsList clear")
         self.dataRecordList.clear()
+        
+    def __add__(self,dataset2):
+        assert len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) == 0
+        newDataset = CDataSet()
+        newDataset.name = self.name
+        newDataset.desc = self.desc
+        newDataset.srate = self.srate
+        newDataset.dataRecordList += self.dataRecordList
+        newDataset.dataRecordList += dataset2.dataRecordList
+        newDataset.stimuliDict.update(self.stimuliDict)
+        newDataset.stimuliDict.update(dataset2.stimuliDict)
+        return newDataset
         
         
 class CDataRecord: #base class for data with label
