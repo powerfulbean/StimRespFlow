@@ -47,7 +47,9 @@ paramsLoadFlag = False
 #     return registerFunc
 def clearList():
     global funcSeqList
+    global _middleOutputCache
     funcSeqList.clear()
+    _middleOutputCache.clear()
 
 def stage(stage:str,seqId:int):
     assert type(stage) == str

@@ -27,6 +27,16 @@ def checkEndTime(timestamp):
     else:
         return timestamp
 
+class CEasyLabels(CLabels):
+    #labels that will be created during intermediate process
+    
+    def loadStimuli(self, Folder, extension):
+        pass
+
+    def readFile(self, fileName):
+        pass        
+        
+
 class CSignalLabels(CLabels):
     
     def __init__(self,nFeat,srate):

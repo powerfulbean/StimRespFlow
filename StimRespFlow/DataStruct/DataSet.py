@@ -16,11 +16,18 @@ import numpy as np
 
 class CFlowDict(dict):
     
+    def __new__(cls,*args,**kwargs):
+        obj = super().__new__(cls,*args,**kwargs)
+        obj.fEncode = lambda x:x
+        return obj
+    
     def setInfo(self,inDict:dict):
         if self.__dict__.get('info'):
             self.info.update(inDict)
         else:
             self.info = dict(inDict)
+            
+   
 
 @unique
 class EOperation(Enum):
