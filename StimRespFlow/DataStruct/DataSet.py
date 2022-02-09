@@ -13,7 +13,8 @@ from ..Helper.Protocol import CDataSetProtocol
 from enum import Enum, unique
 import numpy as np
 
-fDummy = lambda x:x
+def fDummy(x):
+    return x
 
 class CFlowDict(dict):
     
