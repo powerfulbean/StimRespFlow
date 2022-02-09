@@ -13,12 +13,13 @@ from ..Helper.Protocol import CDataSetProtocol
 from enum import Enum, unique
 import numpy as np
 
+fDummy = lambda x:x
 
 class CFlowDict(dict):
     
     def __new__(cls,*args,**kwargs):
         obj = super().__new__(cls,*args,**kwargs)
-        obj.fEncode = lambda x:x
+        obj.fEncode = fDummy
         return obj
     
     def setInfo(self,inDict:dict):
