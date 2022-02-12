@@ -89,6 +89,7 @@ class CExpr:
         
     def start(self):
         # self._oLog.Mode = 'fast'
+        self._oLog.ifPrint = False
         self.starttime = datetime.datetime.now()
         self._oLog("start time:",self.starttime)
         
@@ -163,6 +164,7 @@ class CStudy:
                 doc['config'] = dict()
                 doc['config']['study_name'] = studyName
                 doc['experiment_list'] = []
+                doc['test_result'] = {}
                 self._doc = doc
                 self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
                 # self._oExprLog.save()
@@ -233,6 +235,9 @@ class CStudy:
         # self.summary()
         idx = self.doc['best_experiment_indices'][-1]
         return (self.shortcut, idx)
+    
+    def saveTestResult(self,resultDict:dict):
+        self.doc['test_result'] = resultDict
 
 class _CStudy_EasyConfig(CStudy):
 

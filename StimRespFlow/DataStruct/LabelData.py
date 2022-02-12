@@ -14,6 +14,7 @@ from .Abstract import CLabels
 from .StimuliData import CAuditoryStimulus
 import datetime
 import numpy as np
+from scipy.signal import decimate
 
 def checkStartTime(timestamp):
     if isinstance(timestamp, CTimeIntervalStamp):
@@ -81,13 +82,16 @@ class CSignalLabels(CLabels):
         else:
             #do normal resample
             if antiAliasing:
-                raise NotImplementedError
+                data = decimate(self.data, downSmplFctr,axis=-1)
+                oSignal = CSignalLabels(self.nFeat, srate)
+                oSignal.timestamps = self.timestamps[::downSmplFctr]
+                oSignal.data = data
             else:
                 data = self.data[:,::downSmplFctr]
                 oSignal = CSignalLabels(self.nFeat, srate)
                 oSignal.timestamps = self.timestamps[::downSmplFctr]
                 oSignal.data = data
-                return oSignal
+            return oSignal
         
     def readFile(self,timestamps,data):
         pass
