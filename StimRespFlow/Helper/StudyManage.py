@@ -238,6 +238,7 @@ class CStudy:
     
     def saveTestResult(self,resultDict:dict):
         self.doc['test_result'] = resultDict
+        siIO.saveDictJson(self.studyPath / STUDY_FILE_NAME, self._doc)
 
 class _CStudy_EasyConfig(CStudy):
 
