@@ -20,18 +20,68 @@ EXPR_SUM_FILE_PRIMARY_KEY = 'study_tag'
 StudyKeys = ['config','experiment_list']
 ExperimentKeys = [EXPR_LOG_FILE_PRIMARY_KEY,'startTime','endTime']
 
-class CStudyPathBase(ABC):
+class CResearchConfig:
+    def __init__(self,confFile,section):
+        self.oPath = siDM.CPathConfig(confFile,checkFolders = False)[section]
+        self.usedParamsSet = set()
+    
+    def __getitem__(self,key):
+        self.usedParamsSet.add(str(key))
+        return self.oPath[key]
+    
+    def genUsedParamList(self,path = None):
+        sortedSet = sorted(self.usedParamsSet)
+        output = list()
+        for i in sortedSet:
+            output.append([i,self.oPath[i]])
+        if path:
+            siIO.saveDictJson(path, output)
+        return output
+    
+    def genUsedParamTag(self,subset:list = None):
+        outKey = []
+        if subset is None:
+            subset = list(['startTime','endTime','nSplits',
+                                  'addEnvelope','enablePCA','modality',
+                                  'ifAttended'])
+        for i in subset:
+            if i in self.usedParamsSet:
+                outKey.append(i)
+        valueList = []
+        for i in outKey:
+            valueList.append(str(self.oPath[i]))
+        return '_'.join(valueList)
+        
+        
+
+class COutsideParamMixin:
+    
+    def paramMustExist(self,params:list = []):
+        for param in params:
+            if param not in self.dyConf:
+                raise ValueError(f'{param} is not provided in the \
+                                 outsideParam of init function')
+
+class CStudyPathBase(ABC,COutsideParamMixin):
     '''
     Used for preparaing necessary data and path
     '''
     
-    def __init__(self,confFile,*args,FolderName = None,**kwargs):
+    def __init__(self,confFile,*args,FolderName = None,dyConf:dict={},tag = '',**kwargs):
         self.oPath = siDM.CPathConfig(confFile,*args,checkFolders = False,**kwargs)
+        self.tag = tag
+        assert isinstance(dyConf, dict)
+        self._dyConf = dyConf
+        self.studyRoot = None
         if FolderName:
             self.config(FolderName)
         else:
             self.config()
         
+    @property
+    def dyConf(self):
+        return self._dyConf
+     
     @abstractmethod
     def config(self,**kwargs):
         pass
@@ -247,10 +297,10 @@ class _CStudy_EasyConfig(CStudy):
         
 
     
-def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = []):
+def studySummary(motherFolder,keywords = [''],onlyBestKey = None,excludes = [],tag = ''):
     excludeString = lambda excludes: '_exclude-'+ '_'.join(excludes) if len(excludes) > 0 else '' 
     bestString = lambda onlyBestKey: '_best-' + str(onlyBestKey) if onlyBestKey else ''
-    name = motherFolder + '/' + '_'.join(keywords) + excludeString(excludes) + bestString(onlyBestKey) + '_study_summary.xlsx'
+    name = motherFolder + '/' + tag + '_'.join(keywords) + excludeString(excludes) + bestString(onlyBestKey) + '_study_summary.xlsx'
     print(name)
     subfolders = siDM.getSubFolderName(motherFolder)
     oExpr = CStudySummaryExprLogger(name)
