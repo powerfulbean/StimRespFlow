@@ -215,7 +215,9 @@ class CStimuliVectors():
         self._list.clear()
         
     def copy(self):
-        return copy.copy(self)
+        new = copy.deepcopy(self)
+        new._list = self._list.copy()
+        return new
 
     class Iterator:
        ''' Iterator class '''
