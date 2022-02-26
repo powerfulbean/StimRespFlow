@@ -31,6 +31,16 @@ class CFlowDict(dict):
             
     def fEncode(self,x):
         return x
+    
+    def toList(self):
+        keyList = []
+        valueList = []
+        for key in self:
+            keyList.append(key)
+            valueList.append(self.__getitem__(key))
+        return keyList,valueList
+            
+        
    
 
 @unique

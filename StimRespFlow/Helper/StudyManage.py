@@ -19,6 +19,7 @@ EXPR_SUM_FILE_PRIMARY_KEY = 'study_tag'
 
 StudyKeys = ['config','experiment_list']
 ExperimentKeys = [EXPR_LOG_FILE_PRIMARY_KEY,'startTime','endTime']
+fStrBool = lambda x: True if x.lower() == 'True'.lower() else False
 
 class CResearchConfig:
     def __init__(self,confFile,section):
@@ -43,7 +44,8 @@ class CResearchConfig:
         if subset is None:
             subset = list(['startTime','endTime','nSplits',
                                   'addEnvelope','enablePCA','modality',
-                                  'ifAttended'])
+                                  'ifAttended','disVecMode','precedingWords',
+                                  'meaningfulWords'])
         for i in subset:
             if i in self.usedParamsSet:
                 outKey.append(i)
@@ -52,7 +54,11 @@ class CResearchConfig:
             valueList.append(str(self.oPath[i]))
         return '_'.join(valueList)
         
-        
+    def hasParamIsTrue(self,param):
+        if fStrBool(self.oPath[param]) == True:
+            return True
+        else:
+            return False
 
 class COutsideParamMixin:
     

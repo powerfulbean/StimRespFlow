@@ -52,9 +52,9 @@ class CSignalLabels(CLabels):
     def endTime(self):
         return checkEndTime(super().endTime)
     
-    @classmethod
+    @staticmethod
     def fromLabel(oLabel:CLabels,srate):
-        oSignalLabels = CSignalLabels(oLabel.nFeat)
+        oSignalLabels = CSignalLabels(oLabel.nFeat,srate)
         oSignalLabels.srate = srate
         startTime = checkStartTime(oLabel.startTime)
         endTime = checkEndTime(oLabel.endTime)
@@ -101,7 +101,7 @@ class CSignalLabels(CLabels):
         #of the stimuli
         pass#self.data = data
         
-    @classmethod
+    @staticmethod
     def cat(seqOfSignalLabels:list):
         raise NotImplementedError
     
