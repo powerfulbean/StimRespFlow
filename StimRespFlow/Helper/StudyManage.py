@@ -198,7 +198,7 @@ class CStudy:
         else:
             raise
     
-    def __init__(self,studyHostPath:str,studyName:str,exprLogDict:dict = {},keyNFuncForBest:tuple = (None,None), studyShortcut = None):
+    def __init__(self,studyHostPath:str,studyName:str,exprLogDict:dict = {},keyNFuncForBest:list = None, studyShortcut = None):
         studyHostPath = siDM.CPath(studyHostPath)
         studyPath = studyHostPath / studyName
         siDM.checkFolder(studyPath)
@@ -280,6 +280,7 @@ class CStudy:
             if self.keyNFuncForBest:
                 keysIncludedInStudyFile.append(self.keyNFuncForBest[0])
         keysIncludedInStudyFile = list(set(keysIncludedInStudyFile))
+        print(keysIncludedInStudyFile)
         return CExpr(self, self.getNewExprIndex(),dataToAppend,keysIncludedInStudyFile)
     
     @property

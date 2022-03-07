@@ -394,9 +394,9 @@ class CDataSet:
         DataIO.checkFolder(folderName)
 #        print(self.name)
         if(name == None):
-            file = open(folderName + self.name.replace(':','_') + '.bin', 'wb')
+            file = open(folderName + '/' + self.name.replace(':','_') + '.bin', 'wb')
         else:
-            file = open(folderName + name + '.bin', 'wb')
+            file = open(folderName + '/' + name + '.bin', 'wb')
         import pickle
         pickle.dump(self,file)
         file.close()
@@ -414,9 +414,9 @@ class CDataSet:
             self.dataRecordList[index] = None
         
     
-    def __del__(self):
-        print(f"{self.__class__} dataRecordsList clear")
-        self.dataRecordList.clear()
+    # def __del__(self):
+    #     print(f"{self.__class__} dataRecordsList clear")
+    #     self.dataRecordList.clear()
         
     def __add__(self,dataset2):
         assert len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) == 0
@@ -438,7 +438,7 @@ class CDataRecord: #base class for data with label
         self.stimuliDes = stimuliDes #information of the stimuli
         self.srate = srate
         self.filterLog = list()
-        self.descInfo = None
+        self.descInfo = stimuliDes
         
     def errorPrint(self,error):
         print("CDataRecorder error: " + error)
