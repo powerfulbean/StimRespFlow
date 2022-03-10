@@ -162,9 +162,10 @@ class CExpr:
         expr_record[EXPR_LOG_FILE_PRIMARY_KEY] = self.expr_key
         expr_record['startTime'] = str(self.starttime)
         expr_record['endTime'] = str(self.endtime)
-        if self.keysIncludedInStudyFile:
-            for i in self.keysIncludedInStudyFile:
-                expr_record[i] = data[i]
+        if self.keysIncludedInStudyFile is None:
+            self.keysIncludedInStudyFile = list(data.keys())
+        for i in self.keysIncludedInStudyFile:
+            expr_record[i] = data[i]
         self.oParentStudy.doc['experiment_list'].append(expr_record)
         #save to .study file
         self.oParentStudy.save()
