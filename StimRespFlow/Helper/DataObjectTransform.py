@@ -115,6 +115,19 @@ class CDataRecordToTensors(CToTensors):
         
         return xTensor,yTensor
     
+class CNArraysToTensors(CToTensors):
+    
+    def __init__(self):
+        super().__init__()
+    
+    def toTensors(self,*arrays,T = True):
+        if T:
+            output = [self.lib_torch.FloatTensor(i.T) for i in arrays]
+        else:
+            output = [self.lib_torch.FloatTensor(i) for i in arrays]
+        return output
+
+    
     
 class CRawDataToTensors(CToTensors):
     
