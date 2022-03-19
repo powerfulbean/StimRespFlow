@@ -11,7 +11,10 @@ from ignite.engine import Events, create_supervised_trainer, create_supervised_e
 from ignite.contrib.handlers import ProgressBar
 from ignite import handlers as igHandler
 from matplotlib import pyplot as plt
+
+import pandas as pd
 import numpy as np
+import seaborn as sns
 
 # fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
 # fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
@@ -52,6 +55,9 @@ class CTrainer:
         self.criterion = None
         self.device = device
         
+        self.exprFlag = False
+        self._historyFlag = True
+        
         self.trainer = None
         self.evaluator = None
         self.model = None
@@ -60,26 +66,43 @@ class CTrainer:
         self.oLog = None
         self.metrics = dict()
         self.metricsRecord:dict= dict()
+        self.lrRecord:list = list()
+        self._history:dict = {
+            # 'lr':self.lrRecord,
+            }
         
         self.bestEpoch = -1
         self.bestTargetMetricValue = -1
         self.targetMetric:str = None
-        self.lrRecord:list = list()
-        self.fPlotsFunc:list = list()
+        
         
         self.setOptm(criterion,optimizer,lrScheduler)
         self.extList:list = list()
+        self.fPlotsFunc:list = list()
         
-        self.exprFlag = False
+        if self._historyFlag == True:
+           self.enableHistory()
     
-    def addLr(self):
-        # print('cha yan')
-        for param_group in self.optimizer.param_groups:
-            param_group['lr'] += 0.0001
+    # def addLr(self):
+    #     # print('cha yan')
+    #     for param_group in self.optimizer.param_groups:
+    #         param_group['lr'] += 0.0001
     
-    def addExpr(self):
-        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.addLr)
-        
+    # def addExpr(self):
+    #     self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.addLr)
+     
+    def plotHistory(self):
+        # print(self._history)
+        df = pd.DataFrame(self._history)
+        sns.lineplot(data = df)
+        plt.savefig(self.tarFolder + '/' + 'training_history.png')
+    
+    
+    def enableHistory(self):
+        #add plotHistory in self.targetMetric
+        if self.trainer is not None:
+            self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
+        pass
         
     def setDataLoader(self,dtldTrain,dtldTest):
         self.dtldTrain = dtldTrain
@@ -98,6 +121,9 @@ class CTrainer:
     def addMetrics(self,name:str,metric:ignite.metrics.Metric):
         assert isinstance(metric,ignite.metrics.Metric)
         self.metrics[name] = metric
+        if self._historyFlag:
+            self._history['train_' + name] = []
+            self._history['eval_' + name] = []
     
     def score_function(self,engine):
         self.evaluator.run(self.dtldDev)
@@ -106,6 +132,7 @@ class CTrainer:
         val = metrics['corr']
         return val
 
+    
     def addPlotFunc(self,func):
         self.fPlotsFunc.append(func)
     
@@ -122,8 +149,10 @@ class CTrainer:
             plt.close(f)  
     
     def recordLr(self,):
-        for param_group in self.optimizer.param_groups:
-            self.lrRecord.append(param_group['lr'])
+        for idx,param_group in enumerate(self.optimizer.param_groups):
+            if self._history.get(f'lr_{idx}') is None:
+                self._history[f'lr_{idx}'] = list()
+            self._history[f'lr_{idx}'].append(param_group['lr'])
             
     def getLr(self):
         for param_group in self.optimizer.param_groups:
@@ -141,9 +170,11 @@ class CTrainer:
         self.recordLr()
         for i in self.metricsRecord:
             self.metricsRecord[i]['train'].append(metrics[i])
+            if self._historyFlag:
+                self._history['train_' + i].append(metrics[i])
         
         if self.oLog:
-            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
+            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
             print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
@@ -158,6 +189,8 @@ class CTrainer:
         
         for i in self.metricsRecord:
             self.metricsRecord[i]['eval'].append(metrics[i])
+            if self._historyFlag:
+                self._history['eval_' + i].append(metrics[i])
             
         if targetMetric > self.bestTargetMetricValue:
             self.plots(trainer.state.epoch,True)
@@ -215,6 +248,9 @@ class CTrainer:
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
+        
+        if self._historyFlag:
+            self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
         # self.addExpr()
         if isinstance(self.lrScheduler, torch.optim.lr_scheduler.CyclicLR):
             print('CyclicLR')
