@@ -93,6 +93,13 @@ class CTrainer:
      
     def plotHistory(self):
         # print(self._history)
+        fMinMax = lambda inList: \
+            (inList - np.min(inList)) / (np.max(inList) - np.min(inList)) \
+                if (np.max(inList) - np.min(inList)) != 0 \
+                else [0.5] * len(inList)
+        for key in self._history:
+            self._history[key] = fMinMax(self._history[key])
+            
         df = pd.DataFrame(self._history)
         sns.lineplot(data = df)
         plt.savefig(self.tarFolder + '/' + 'training_history.png')
