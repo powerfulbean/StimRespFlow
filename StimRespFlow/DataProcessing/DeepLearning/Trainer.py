@@ -153,6 +153,7 @@ class CTrainer:
             if self._history.get(f'lr_{idx}') is None:
                 self._history[f'lr_{idx}'] = list()
             self._history[f'lr_{idx}'].append(param_group['lr'])
+            self.lrRecord.append(param_group['lr'])
             
     def getLr(self):
         for param_group in self.optimizer.param_groups:
@@ -174,7 +175,7 @@ class CTrainer:
                 self._history['train_' + i].append(metrics[i])
         
         if self.oLog:
-            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
+            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
         else:
             print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
