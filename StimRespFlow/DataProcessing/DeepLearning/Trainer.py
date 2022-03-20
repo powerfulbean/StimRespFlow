@@ -177,9 +177,12 @@ class CTrainer:
         metrics = self.evaluator.state.metrics
         self.recordLr()
         for i in self.metricsRecord:
-            self.metricsRecord[i]['train'].append(metrics[i].detach().cpu())
+            val = metrics[i] 
+            if isinstance(val, torch.Tensor):
+                val = val.detach().cpu()
+            self.metricsRecord[i]['train'].append(val)
             if self._historyFlag:
-                self._history['train_' + i].append(metrics[i].detach().cpu())
+                self._history['train_' + i].append(val)
         
         if self.oLog:
             self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
@@ -196,9 +199,12 @@ class CTrainer:
             self.lrScheduler.step(metrics['corr'])
         
         for i in self.metricsRecord:
-            self.metricsRecord[i]['eval'].append(metrics[i].detach().cpu())
+            val = metrics[i] 
+            if isinstance(val, torch.Tensor):
+                val = val.detach().cpu()
+            self.metricsRecord[i]['eval'].append(val)
             if self._historyFlag:
-                self._history['eval_' + i].append(metrics[i].detach().cpu())
+                self._history['eval_' + i].append(val)
             
         if targetMetric > self.bestTargetMetricValue:
             self.plots(trainer.state.epoch,True)
