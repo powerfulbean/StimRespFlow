@@ -266,8 +266,8 @@ class CTrainer:
         
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
-        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
-        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
+        # self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
+        # self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
         
         if self._historyFlag:
             self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
