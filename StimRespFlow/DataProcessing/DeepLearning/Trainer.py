@@ -217,6 +217,7 @@ class CTrainer:
             self.oLog('Validation','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
             print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
+        torch.cuda.empty_cache()
     
     def setEvalExt(self):
         for i in self.extList:
