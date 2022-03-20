@@ -177,9 +177,9 @@ class CTrainer:
         metrics = self.evaluator.state.metrics
         self.recordLr()
         for i in self.metricsRecord:
-            self.metricsRecord[i]['train'].append(metrics[i])
+            self.metricsRecord[i]['train'].append(metrics[i].detach().cpu())
             if self._historyFlag:
-                self._history['train_' + i].append(metrics[i])
+                self._history['train_' + i].append(metrics[i].detach().cpu())
         
         if self.oLog:
             self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
