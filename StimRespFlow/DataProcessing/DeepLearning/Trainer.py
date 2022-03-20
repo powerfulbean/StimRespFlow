@@ -196,9 +196,9 @@ class CTrainer:
             self.lrScheduler.step(metrics['corr'])
         
         for i in self.metricsRecord:
-            self.metricsRecord[i]['eval'].append(metrics[i])
+            self.metricsRecord[i]['eval'].append(metrics[i].detach().cpu())
             if self._historyFlag:
-                self._history['eval_' + i].append(metrics[i])
+                self._history['eval_' + i].append(metrics[i].detach().cpu())
             
         if targetMetric > self.bestTargetMetricValue:
             self.plots(trainer.state.epoch,True)
@@ -217,6 +217,11 @@ class CTrainer:
             self.oLog('Validation','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
             print(f"Validation Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
+            
+        
+        for i in self.metrics:
+            self.metrics[i].reset()
+        self.evaluator.state.metrics = {}    
         torch.cuda.empty_cache()
     
     def setEvalExt(self):
