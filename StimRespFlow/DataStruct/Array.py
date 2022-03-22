@@ -241,6 +241,7 @@ class CStimulusVector(np.ndarray):
         for i in addedAttr:
            setattr(obj, i, addedAttr[i])
         obj.attrDict = addedAttr
+        obj.info = None
         return obj
     
     @classmethod
@@ -257,6 +258,25 @@ class CStimulusVector(np.ndarray):
         
     def __len__(self):
         return self.shape[0]
+    
+    def __reduce__(self):
+        # Get the parent's __reduce__ tuple
+        pickled_state = super().__reduce__()
+        # Create our own tuple to pass to __setstate__
+        new_state = pickled_state[2] + (self.info,self.attrDict)
+        for i in self.attrDict:
+           val = getattr(self, i, getattr(self,i))
+           self.attrDict[i] = val
+        # Return a tuple that replaces the parent's __setstate__ tuple with our own
+        return (pickled_state[0], pickled_state[1], new_state)
+
+    def __setstate__(self, state):
+        self.info = state[-2]  # Set the info attribute
+        addedAttr = state[-1]
+        for i in addedAttr:
+           setattr(self, i, addedAttr[i]) 
+        # Call the parent's __setstate__ with the other tuple elements.
+        super().__setstate__(state[0:-2])
 
 class CWaveArray(np.ndarray):
     def __new__(cls,nChan,arrLike = None ,*args,**kwargs):
