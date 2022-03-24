@@ -12,7 +12,12 @@ class MixinTraceable:
         
     @property
     def opRecords(self):
-        return list(set(self._opRecords))
+        output = []
+        output.extend(list(set(self._opRecords)))
+        for k,v in self.__dict__.items():
+            if isinstance(v, MixinTraceable):
+                output.extend(v.opRecords)
+        return output
     
     def addOp(self,doc:str):
         doc = str(doc)
