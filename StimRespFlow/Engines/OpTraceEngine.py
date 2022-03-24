@@ -17,6 +17,11 @@ class MixinTraceable:
         for k,v in self.__dict__.items():
             if isinstance(v, MixinTraceable):
                 output.extend(v.opRecords)
+        if getattr(self, 'children',None) is not None:
+            for v in self.children():
+                opRecords = getattr(v, 'opRecords',None)
+                if opRecords is not None:
+                    output.extend(opRecords)
         return output
     
     def addOp(self,doc:str):
