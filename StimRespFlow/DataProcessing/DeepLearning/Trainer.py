@@ -44,7 +44,10 @@ def tfEngineOutput(x, y, y_pred, loss = None):
     if loss:
         out['loss'] = loss
     return out 
-            
+
+class CDummy:
+    pass
+
 class CTrainer:
     
     def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
@@ -266,8 +269,8 @@ class CTrainer:
         
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
-        # self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
-        # self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
+        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
+        self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
         
         if self._historyFlag:
             self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
@@ -298,13 +301,21 @@ class CTrainer:
         return self.bestEpoch, self.bestTargetMetricValue
     
     def test(self,model,dtldTest,device = 'cpu',evaluationStep = None):
-        self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))
+        # self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))
+        model = model.to(device)
+        tester = CDummy()
+        tester.model = model
+        tester.device = device
         if evaluationStep:
-            self.tester = Engine(evaluationStep(self.trainer,outputAdapter=tfEngineOutput))
+            self.tester = Engine(evaluationStep(tester,outputAdapter=tfEngineOutput))
+            metrics = self.metrics or {}
+            for name, metric in metrics.items():
+                metric.attach(self.tester, name)
         else:
             self.tester = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
         self.tester.run(dtldTest)
         metrics = self.tester.state.metrics
+        print('metrics',metrics)
         return metrics
 
 class CTrainerFunc:
