@@ -24,6 +24,20 @@ class MixinTraceable:
                     output.extend(opRecords)
         return output
     
+    @property
+    def opRecordsData(self):
+        output = dict()
+        records = self.opRecords
+        for record in records:
+            params = record.split('-')
+            grpName = params[0]
+            if output.get(grpName,None) is None:
+                output[grpName] = dict()
+            for i in range(1,len(params)):
+                kv = params[i].split('~')
+                output[grpName][kv[0]] = kv[1]
+        return output
+    
     def addOp(self,doc:str):
         doc = str(doc)
         if self.__dict__.get('_opRecords') is None:

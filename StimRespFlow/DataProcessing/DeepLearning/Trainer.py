@@ -44,7 +44,7 @@ def tfEngineOutput(x, y, y_pred, loss = None):
     if loss:
         out['loss'] = loss
     return out 
-            
+
 class CTrainer:
     
     def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
