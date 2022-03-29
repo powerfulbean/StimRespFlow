@@ -419,7 +419,8 @@ class CDataSet:
     #     self.dataRecordList.clear()
         
     def __add__(self,dataset2):
-        assert len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) == 0
+        if len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) != 0:
+            raise Warning('there are overlaps between the stimuliDict of two datasets')
         newDataset = CDataSet()
         newDataset.name = self.name
         newDataset.desc = self.desc
