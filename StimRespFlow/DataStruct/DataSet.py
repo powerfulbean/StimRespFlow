@@ -12,6 +12,7 @@ from .LabelData import CLabelInfo, CLabels
 from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
 import numpy as np
+import warnings
 
 # def fDummy(x):
 #     return x
@@ -420,7 +421,7 @@ class CDataSet:
         
     def __add__(self,dataset2):
         if len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) != 0:
-            raise Warning('there are overlaps between the stimuliDict of two datasets')
+            warnings.warn('there are overlaps between the stimuliDict of two datasets')
         newDataset = CDataSet()
         newDataset.name = self.name
         newDataset.desc = self.desc
