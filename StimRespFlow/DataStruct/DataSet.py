@@ -431,6 +431,16 @@ class CDataSet:
         newDataset.stimuliDict.update(self.stimuliDict)
         newDataset.stimuliDict.update(dataset2.stimuliDict)
         return newDataset
+    
+    
+    def subset(self,indices):
+        newDataset = CDataSet()
+        newDataset.name = self.name
+        newDataset.desc = self.desc
+        newDataset.srate = self.srate
+        newDataset.dataRecordList = [self.dataRecordList[idx] for idx in indices]
+        newDataset.stimuliDict.update(self.stimuliDict)
+        return newDataset
         
         
 class CDataRecord: #base class for data with label
