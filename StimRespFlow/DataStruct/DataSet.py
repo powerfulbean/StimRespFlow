@@ -380,6 +380,13 @@ class CDataSet:
         else:
             raise StopIteration
         
+    def selectByInfo(self,keyWord:list):
+        output = list()
+        for record in self:
+            if all([any([key in info for info in record.descInfo]) for key in keyWord]):
+                output.append(record)
+        return output
+        
     def constructFromFile(self,fileName):
         import pickle
         file = open(fileName, 'rb')
