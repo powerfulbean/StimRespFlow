@@ -430,9 +430,14 @@ class CDataSet:
         if len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) != 0:
             warnings.warn('there are overlaps between the stimuliDict of two datasets')
         newDataset = CDataSet()
-        newDataset.name = self.name
-        newDataset.desc = self.desc
-        newDataset.srate = self.srate
+        if len(self.records) == 0:
+            newDataset.name = dataset2.name
+            newDataset.desc = dataset2.desc
+            newDataset.srate = dataset2.srate
+        else:
+            newDataset.name = self.name
+            newDataset.desc = self.desc
+            newDataset.srate = self.srate
         newDataset.dataRecordList += self.dataRecordList
         newDataset.dataRecordList += dataset2.dataRecordList
         newDataset.stimuliDict.update(self.stimuliDict)
