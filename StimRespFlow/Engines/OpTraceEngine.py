@@ -22,6 +22,7 @@ class MixinTraceable:
                 opRecords = getattr(v, 'opRecords',None)
                 if opRecords is not None:
                     output.extend(opRecords)
+        output.sort()
         return output
     
     @property
