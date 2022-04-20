@@ -358,6 +358,7 @@ class CDataSet:
         self.srate = -1
         self.desc = dict()
         self.stimuliDict = {}
+        self.recordDict = {}
     
     @property
     def records(self,):
@@ -453,6 +454,14 @@ class CDataSet:
         newDataset.dataRecordList = [self.dataRecordList[idx] for idx in indices]
         newDataset.stimuliDict.update(self.stimuliDict)
         return newDataset
+    
+    def buildDict(self):
+        #build record dict using descInfo of each record
+        if getattr(self,'recordDict',None) is None:
+            self.recordDict = {}
+        for i in self:
+            self.recordDict['_'.join(i.descInfo)] = i
+            
         
         
 class CDataRecord: #base class for data with label
