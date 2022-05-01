@@ -154,7 +154,7 @@ class CTrainer:
                 figsList += figs
             for idx, f in enumerate(figsList):
                 if best:
-                    f.savefig(self.tarFolder + '/' + f'_epoch_{epoch}_best_' + str(idx) + '.png')
+                    f.savefig(self.tarFolder + '/' + f'best_' + str(idx) + '.png')
                 else:
                     f.savefig(self.tarFolder + '/' + '_epoch_' + str(epoch) + '_' + str(idx) + '.png')
                 plt.close(f)  
