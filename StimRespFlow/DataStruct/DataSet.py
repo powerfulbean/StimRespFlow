@@ -358,6 +358,7 @@ class CDataSet:
         self.srate = -1
         self.desc = dict()
         self.stimuliDict = {}
+        self.recordDict = {}
     
     @property
     def records(self,):
@@ -379,6 +380,13 @@ class CDataSet:
             return self.records[self.n-1]
         else:
             raise StopIteration
+        
+    def selectByInfo(self,keyWord:list):
+        output = list()
+        for record in self:
+            if all([any([key in info for info in record.descInfo]) for key in keyWord]):
+                output.append(record)
+        return output
         
     def constructFromFile(self,fileName):
         import pickle
@@ -423,9 +431,14 @@ class CDataSet:
         if len(set(self.stimuliDict.keys()) & set(dataset2.stimuliDict.keys())) != 0:
             warnings.warn('there are overlaps between the stimuliDict of two datasets')
         newDataset = CDataSet()
-        newDataset.name = self.name
-        newDataset.desc = self.desc
-        newDataset.srate = self.srate
+        if len(self.records) == 0:
+            newDataset.name = dataset2.name
+            newDataset.desc = dataset2.desc
+            newDataset.srate = dataset2.srate
+        else:
+            newDataset.name = self.name
+            newDataset.desc = self.desc
+            newDataset.srate = self.srate
         newDataset.dataRecordList += self.dataRecordList
         newDataset.dataRecordList += dataset2.dataRecordList
         newDataset.stimuliDict.update(self.stimuliDict)
@@ -441,6 +454,14 @@ class CDataSet:
         newDataset.dataRecordList = [self.dataRecordList[idx] for idx in indices]
         newDataset.stimuliDict.update(self.stimuliDict)
         return newDataset
+    
+    def buildDict(self):
+        #build record dict using descInfo of each record
+        if getattr(self,'recordDict',None) is None:
+            self.recordDict = {}
+        for i in self:
+            self.recordDict['_'.join(i.descInfo)] = i
+            
         
         
 class CDataRecord: #base class for data with label
