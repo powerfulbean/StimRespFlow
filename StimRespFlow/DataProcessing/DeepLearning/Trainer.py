@@ -102,10 +102,10 @@ class CTrainer:
                 else [0.5] * len(inList)
         for key in self._history:
             self._history[key] = fMinMax(self._history[key])
-            
+        fig, ax = plt.subplots()
         df = pd.DataFrame(self._history)
-        sns.lineplot(data = df)
-        plt.savefig(self.tarFolder + '/' + 'training_history.png')
+        sns.lineplot(data = df,ax = ax)
+        fig.savefig(self.tarFolder + '/' + 'training_history.png')
     
     
     def enableHistory(self):
@@ -147,16 +147,17 @@ class CTrainer:
         self.fPlotsFunc.append(func)
     
     def plots(self,epoch,best = False):
-        figsList = list()
-        for func in self.fPlotsFunc:
-            figs = func(self.model)
-            figsList += figs
-        for idx, f in enumerate(figsList):
-            if best:
-                f.savefig(self.tarFolder + '/' + '_epoch_best_' + str(idx) + '.png')
-            else:
-                f.savefig(self.tarFolder + '/' + '_epoch_' + str(epoch) + '_' + str(idx) + '.png')
-            plt.close(f)  
+        if best or epoch % 10 == 0:
+            figsList = list()
+            for func in self.fPlotsFunc:
+                figs = func(self.model)
+                figsList += figs
+            for idx, f in enumerate(figsList):
+                if best:
+                    f.savefig(self.tarFolder + '/' + f'_epoch_{epoch}_best_' + str(idx) + '.png')
+                else:
+                    f.savefig(self.tarFolder + '/' + '_epoch_' + str(epoch) + '_' + str(idx) + '.png')
+                plt.close(f)  
     
     def recordLr(self,):
         for idx,param_group in enumerate(self.optimizer.param_groups):
