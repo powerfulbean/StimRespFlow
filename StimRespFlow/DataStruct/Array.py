@@ -224,10 +224,9 @@ class CStimuliVectors():
        def __init__(self, vector):
            self._vector = vector
            self._index = 0
-           self.len = len(vector._list)
        def __next__(self):
            ''''Returns the next value from team object's lists '''
-           if self._index < self.len:
+           if self._index < len(self._vector._list):
                out = self._vector._list[self._index]
                self._index += 1
                return out
@@ -255,6 +254,7 @@ class CStimulusVector(np.ndarray):
         addedAttr:dict = obj.__class__.configAttr()
         for i in addedAttr:
            setattr(self, i, getattr(obj,i)) 
+        setattr(self, 'attrDict',addedAttr)  
         
     def __len__(self):
         return self.shape[0]
@@ -275,6 +275,7 @@ class CStimulusVector(np.ndarray):
         addedAttr = state[-1]
         for i in addedAttr:
            setattr(self, i, addedAttr[i]) 
+        setattr(self, 'attrDict',addedAttr)  
         # Call the parent's __setstate__ with the other tuple elements.
         super().__setstate__(state[0:-2])
 

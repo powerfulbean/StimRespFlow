@@ -18,6 +18,35 @@ class CWordStimulus(CStimulus):
     def loadStimulus(self,vec):
         assert len(vec) == self.shape[0]
         self.__setitem__(slice(None), vec.reshape(-1,1))
+        
+    def add(self,wordStim):
+        out = CWordStimulus(len(self))
+        word = self.word + wordStim.word
+        out = (self + wordStim)
+        out.word = word
+        return out
+        
+class CWordPhonemesStimulus(CStimulus):
+    def configAttr()->dict:
+        attr = dict()
+        attr['name'] = 'CWordPhonemesStimulus'
+        attr['word'] = ""
+        attr['phs'] = []
+        return attr
+    
+    def loadStimulus(self,vec):
+        assert len(vec) == self.shape[0]
+        self.__setitem__(slice(None), vec.reshape(-1,1))
+        
+    def add(self,wordStim):
+        out = CWordPhonemesStimulus(len(self))
+        word = self.word + wordStim.word
+        phs = self.phs + wordStim.phs
+        out = (self + wordStim)
+        out.word = word 
+        out.phs = phs
+        return out
+        
     # def configAttr():
     #     attr = dict()
     #     attr['word'] = ""

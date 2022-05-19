@@ -506,7 +506,15 @@ class CTimeIntervalStamp:
     
     def __array__(self,type = None):
         return np.array([self.startTime,self.endTime])
+    
+    def __repr__(self):
+        return f'CTimeIntervalStamp(startTime:{self.startTime},endTime:{self.endTime})'
 
+# class CTwoLevelTimeIntervalStamp(CTimeIntervalStamp):
+    
+#     def __init__(self, startTime, endTime, detailsTime):
+#         super().__init__(startTime, endTime)
+#         self.detailsTime = detailsTime        
 
 # class CLabelInfoCoarse:
     # ''' class to store information for a label marker, including:

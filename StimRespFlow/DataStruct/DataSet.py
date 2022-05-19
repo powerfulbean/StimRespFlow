@@ -41,6 +41,12 @@ class CFlowDict(dict):
             valueList.append(self.__getitem__(key))
         return keyList,valueList
             
+    def toDict(self):
+        out = {}
+        out['data'] = {}
+        out['data'].update(self)
+        out['info'] = self.__dict__.get('info')
+        return out
         
    
 
