@@ -223,13 +223,13 @@ class CStudy:
                 doc['experiment_list'] = []
                 doc['test_result'] = {}
                 self._doc = doc
-                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
+                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / EXPR_LOG_FILE_NAME)
                 # self._oExprLog.save()
                 # siIO.saveDictJson(studyPath / '.study', doc) #keep as the last line of this code block
         else:
             try:
                 self._doc = siIO.loadJson(studyPath / '.study')
-                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / studyName + EXPR_LOG_FILE_NAME)
+                self._oExprLog = CStudyExprLogger(self,exprLogKeys, studyPath / EXPR_LOG_FILE_NAME)
             except:
                 raise
             

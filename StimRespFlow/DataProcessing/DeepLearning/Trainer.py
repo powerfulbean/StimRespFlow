@@ -9,6 +9,7 @@ import ignite
 from ignite.metrics import Loss,RunningAverage
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator,Engine
 from ignite.contrib.handlers import ProgressBar
+from ignite.handlers import EarlyStopping
 from ignite import handlers as igHandler
 from matplotlib import pyplot as plt
 
@@ -147,7 +148,7 @@ class CTrainer:
         self.fPlotsFunc.append(func)
     
     def plots(self,epoch,best = False):
-        if best or epoch % 10 == 0:
+        if best:# or epoch % 10 == 0:
             figsList = list()
             for func in self.fPlotsFunc:
                 figs = func(self.model)
@@ -179,6 +180,7 @@ class CTrainer:
         self.plots(trainer.state.epoch)
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
+        metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
         self.recordLr()
         for i in self.metricsRecord:
             val = metrics[i] 
@@ -187,7 +189,7 @@ class CTrainer:
             self.metricsRecord[i]['train'].append(val)
             if self._historyFlag:
                 self._history['train_' + i].append(val)
-        
+
         if self.oLog:
             self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
         else:
@@ -197,6 +199,7 @@ class CTrainer:
         self.evaluator.run(self.dtldDev)
         metrics = self.evaluator.state.metrics
         targetMetric = metrics[self.targetMetric]
+        metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
         
         if isinstance(self.lrScheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
             # print(metrics['corr'])
@@ -210,10 +213,10 @@ class CTrainer:
             if self._historyFlag:
                 self._history['eval_' + i].append(val)
             
-        if targetMetric > self.bestTargetMetricValue:
+        if metrics[self.targetMetric] > self.bestTargetMetricValue:
             self.plots(trainer.state.epoch,True)
             self.bestEpoch = trainer.state.epoch
-            self.bestTargetMetricValue = targetMetric
+            self.bestTargetMetricValue = metrics[self.targetMetric]
             # then save checkpoint
             checkpoint = {
                 'state_dict': self.model.state_dict(),
@@ -233,6 +236,11 @@ class CTrainer:
             self.metrics[i].reset()
         self.evaluator.state.metrics = {}    
         torch.cuda.empty_cache()
+
+        if trainer.state.epoch  - self.bestEpoch > self.patience:
+            self.trainer.terminate()
+            print(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
+        # return metrics[self.targetMetric]
     
     def setEvalExt(self):
         for i in self.extList:
@@ -242,7 +250,7 @@ class CTrainer:
         self.lrScheduler.step()
         # self.getLr()
     
-    def setWorker(self,model,targetMetric,trainingStep = None,evaluationStep = None):
+    def setWorker(self,model,targetMetric,trainingStep = None,evaluationStep = None,patience = 20):
         ''' used for dowmward compatibility'''
         self._setRecording()
         self.targetMetric = targetMetric
@@ -266,13 +274,16 @@ class CTrainer:
                 self.metrics[i].attach(self.trainer,i)
         
         pbar = ProgressBar(persist=True,ncols = 75)
-        pbar.attach(self.trainer, metric_names='all')
+        pbar.attach(self.trainer, metric_names= ['loss'] )
         
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookTrainingResults)
         self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.hookValidationResults)
-        
+        self.patience = patience
+        # handler = EarlyStopping(patience=patience, score_function=self.hookValidationResults, trainer=self.trainer)
+        # Note: the handler is attached to an *Evaluator* (runs one epoch on validation dataset).
+        # self.evaluator.add_event_handler(Events.COMPLETED, handler)
         if self._historyFlag:
             self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
         # self.addExpr()
