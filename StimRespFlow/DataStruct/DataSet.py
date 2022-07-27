@@ -357,15 +357,17 @@ class CDataOrganizor:
         
         return oDataSet
     
-
 class CDataSet:
-    def __init__(self,dataSetName = None):
+    def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True):
         self.dataRecordList = list()
         self.name = dataSetName
         self.srate = -1
         self.desc = dict()
         self.stimuliDict = {}
         self.recordDict = {}
+        self.stimFilterKeys = stimFilterKeys
+        self.respFilterChanIdx = respFilterChanIdx
+        self.ifOldFetchMode = ifOldFetchMode
     
     @property
     def records(self,):
@@ -374,9 +376,43 @@ class CDataSet:
     def append(self,item):
         self.records.append(item)
     
-    def __getitem__(self,idx):
-        return self.records[idx]
+    def _getitem(self,idx):
+        if len(self.stimuliDict) == 0:
+            return self.records[idx].data, self.records[idx].stimuli
+        else:
+            record = self.records[idx]
+            resp = record.data
+            stimKey = record.stimuli['wordVecKey']
+            stimulusDict = self.stimuliDict[stimKey]
+            return stimulusDict,resp
     
+    def __getitem__(self,idx):
+        if self.ifOldFetchMode:
+            return self.records[idx]
+        else:
+            stimDict,resp = self._getitem(idx)
+            if len(self.stimFilterKeys) == 0:
+                self.curStimFilterKeys = tuple(stimDict.keys())
+            else:
+                stimDict = self._filterStim(stimDict)
+            if len(self.respFilterChanIdx) == 0:
+                self.curRespFilterChanIdx = np.arange(resp.shape[0])
+            else:
+                resp = self._filterResp(resp)
+            #filter the resp and stim
+            return stimDict,resp
+        
+    def _filterStim(self,stimDict):
+        newStimDict = {}
+        for i in self.stimFilterKeys:
+            newStimDict[i] = stimDict[i]
+        return newStimDict
+        
+    def _filterResp(self,resp):
+        idxArr = np.array(self.respFilterChanIdx)
+        newResp = resp[idxArr,:]
+        return newResp
+        
     def __len__(self,):
         return len(self.records)
     
@@ -387,7 +423,7 @@ class CDataSet:
     def __next__(self):
         if self.n  < len(self.records):
             self.n += 1
-            return self.records[self.n-1]
+            return self.__getitem__(self.n-1)#self.records[self.n-1]
         else:
             raise StopIteration
         
@@ -479,7 +515,60 @@ class CDataSet:
             record = CDataRecord(resps[idx], stims[idx], str(idx), fs)
             newDataset.append(record)
         return newDataset
+    
+    def splitShuffledDataSubset(self,testSetRatio,ifSplitByStim = False):
+        dataDict = splitShuffledDataSubset(self, testSetRatio,ifSplitByStim=ifSplitByStim)
+        return dataDict
         
+
+def shuffleAndSplit(tarList,testSetRatio):
+    rng = np.random.default_rng(18)
+    rng.shuffle(tarList)
+    length = len(tarList)
+    lenTest = int(np.round(length * testSetRatio))
+    lenDev = int(np.round(length * testSetRatio))
+    lenTrain = length - lenDev - lenTest
+    stimTrainList = tarList[0:lenTrain]
+    stimDevList = tarList[lenTrain:lenTrain + lenDev]
+    stimTestList = tarList[lenTrain + lenDev:length]
+    return stimTrainList,stimDevList,stimTestList
+
+def splitShuffledDataSubset(dataset:CDataSet,testSetRatio,ifSplitByStim = False):
+    
+    if ifSplitByStim:
+        stimNumList = list(set([i.descInfo['stim'] for i in dataset.records]))
+        stimTrainList,stimDevList,stimTestList = shuffleAndSplit(stimNumList,testSetRatio)
+        trainList = []
+        devList = []
+        testList = []
+        for idx,i in enumerate(dataset.records):
+            stimNum = i.descInfo['stim']
+            if stimNum in stimTrainList:
+                trainList.append(idx)
+            elif stimNum in stimDevList:
+                devList.append(idx)
+            elif stimNum in stimTestList:
+                testList.append(idx)
+            else:
+                raise NotImplementedError()
+    else:
+        oriList = np.array(range(len(dataset)),dtype=int).tolist()
+        trainList,devList,testList = shuffleAndSplit(oriList,testSetRatio)
+    assert len(set(trainList) & set(devList)) == 0
+    assert len(set(devList) & set(testList)) == 0
+    trainSet = dataset.subset(trainList)
+    devSet = dataset.subset(devList)
+    testSet = dataset.subset(testList)
+    
+    if ifSplitByStim:
+        s1 = [i.descInfo['stim'] for i in trainSet]
+        s2 = [i.descInfo['stim'] for i in devSet]
+        s3 = [i.descInfo['stim'] for i in testSet]
+        assert len(set(s1) & set(s2)) == 0
+        assert len(set(s1) & set(s3)) == 0
+        print(set(s1), set(s2), set(s3))
+    
+    return {'train':trainSet,'dev':devSet,'test':testSet}
         
 class CDataRecord: #base class for data with label
     def __init__(self,data,stimuli,stimuliDes:list,srate):
