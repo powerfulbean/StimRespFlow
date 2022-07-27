@@ -45,7 +45,7 @@ class CResearchConfig:
             subset = list(['startTime','endTime','nSplits',
                                   'addEnvelope','enablePCA','modality',
                                   'ifAttended','disVecMode','precedingWords',
-                                  'meaningfulWords'])
+                                  'meaningfulWords','ifOnsetOnly'])
         for i in subset:
             if i in self.usedParamsSet:
                 outKey.append(i)

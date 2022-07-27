@@ -13,6 +13,7 @@ from ..Helper.Protocol import CDataSetProtocol
 from enum import Enum, unique
 import numpy as np
 import warnings
+from StellarInfra import siIO
 
 # def fDummy(x):
 #     return x
@@ -370,6 +371,9 @@ class CDataSet:
     def records(self,):
         return self.dataRecordList
     
+    def append(self,item):
+        self.records.append(item)
+    
     def __getitem__(self,idx):
         return self.records[idx]
     
@@ -398,10 +402,6 @@ class CDataSet:
         import pickle
         file = open(fileName, 'rb')
         temp = pickle.load(file)
-        
-#        self.name = temp.name
-#        self.dataRecordList = temp.dataRecordList
-        
         for key in temp.__dict__:
             setattr(self,key,getattr(temp,key))
     
@@ -427,7 +427,6 @@ class CDataSet:
         assert type(indices) == list
         for index in sorted(indices, reverse=True):
             self.dataRecordList[index] = None
-        
     
     # def __del__(self):
     #     print(f"{self.__class__} dataRecordsList clear")
@@ -467,7 +466,19 @@ class CDataSet:
             self.recordDict = {}
         for i in self:
             self.recordDict['_'.join(i.descInfo)] = i
-            
+        
+    @classmethod
+    def fromMatCells(cls,fileName):
+        newDataset = cls(fileName)
+        mat = siIO.loadMatFile(fileName)
+        stims = np.squeeze(mat['stim'])
+        fs = np.squeeze(mat['fs'])
+        resps = np.squeeze(mat['resp'])
+        newDataset.srate = fs
+        for idx,_ in enumerate(stims):
+            record = CDataRecord(resps[idx], stims[idx], str(idx), fs)
+            newDataset.append(record)
+        return newDataset
         
         
 class CDataRecord: #base class for data with label
