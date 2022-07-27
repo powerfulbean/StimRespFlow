@@ -5,6 +5,24 @@ Created on Tue Apr 14 13:27:33 2020
 @author: Jin Dou
 """
 import torch
+from ...DataStruct.DataSet import CDataSet
+
+class CTorchDataset(torch.utils.data.Dataset):
+    
+   def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu')):
+        assert isinstance(dataset,CDataSet)
+        dataset.ifOldFetchMode = False
+        self.dataset = dataset
+        self.forward:bool = forward
+        self.device = device
+        
+   def __getitem__(self, index):
+        stimDict,resp = self.dataset[index]
+        if self.forward:
+            return stimDict,resp
+        else:
+            return resp,stimDict
+
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
         if(Args.get('DatasetArgs') != None):
