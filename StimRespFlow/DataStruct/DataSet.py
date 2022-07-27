@@ -427,12 +427,25 @@ class CDataSet:
         else:
             raise StopIteration
         
-    def selectByInfo(self,keyWord:list):
+    def selectByInfo(self,keyWord):
         output = list()
         for record in self:
-            if all([any([key in info for info in record.descInfo]) for key in keyWord]):
-                output.append(record)
-        return output
+            if isinstance(keyWord, list):
+                if all([any([key in info for info in record.descInfo]) for key in keyWord]):
+                    output.append(record)
+            elif isinstance(keyWord, dict):
+                if all([record.descInfo[k] == v if np.isscalar(v) else record.descInfo[k] in v for k,v in keyWord.items()]):
+                    output.append(record)
+            else:
+                raise NotImplementedError
+                
+        newDataset = CDataSet()
+        newDataset.name = self.name
+        newDataset.desc = self.desc
+        newDataset.srate = self.srate
+        newDataset.dataRecordList = output
+        newDataset.stimuliDict.update(self.stimuliDict)
+        return newDataset
         
     def constructFromFile(self,fileName):
         import pickle
@@ -463,6 +476,21 @@ class CDataSet:
         assert type(indices) == list
         for index in sorted(indices, reverse=True):
             self.dataRecordList[index] = None
+    
+    def addStimFeat(self,featDict,selKey = []):
+        for k,v in self.stimuliDict.items():
+            feats = featDict[k] #feats is also a dict
+            if len(selKey) == 0:
+                realSelKey = feats.keys()
+            else:
+                realSelKey = selKey
+            for i in realSelKey:
+                feat = feats[i]
+                if isinstance(feat, list):
+                    feat = np.array(feat)
+                if feat.ndim == 1:
+                    feat = feat.reshape(1,-1)
+                self.stimuliDict[k][i] = feat
     
     # def __del__(self):
     #     print(f"{self.__class__} dataRecordsList clear")
