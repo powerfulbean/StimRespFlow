@@ -33,6 +33,9 @@ class CTorchDataset(torch.utils.data.Dataset):
             return stimDictOut,resp,info
         else:
             return resp,stimDictOut,info
+        
+   def __len__(self):
+        return len(self.dataset)
 
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
