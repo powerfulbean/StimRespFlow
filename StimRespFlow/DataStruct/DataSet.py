@@ -429,7 +429,7 @@ class CDataSet:
         
     def selectByInfo(self,keyWord):
         output = list()
-        for record in self:
+        for record in self.records:
             if isinstance(keyWord, list):
                 if all([any([key in info for info in record.descInfo]) for key in keyWord]):
                     output.append(record)
