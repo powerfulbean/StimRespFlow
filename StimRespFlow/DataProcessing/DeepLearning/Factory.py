@@ -26,7 +26,7 @@ class CTorchDataset(torch.utils.data.Dataset):
         stimDictOut = {}
         for k,v in stimDict.items():
             if isinstance(v, np.ndarray):
-                stimDictOut[k] = self.oDataTrans(v,T = self.T)[0]
+                stimDictOut[k] = self.oDataTrans(v,T = self.T)[0].to(device)
             else:
                 stimDictOut[k] = v
         if self.forward:
