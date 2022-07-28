@@ -400,7 +400,7 @@ class CDataSet:
             else:
                 resp = self._filterResp(resp)
             #filter the resp and stim
-            return stimDict,resp
+            return stimDict,resp,self.records[idx].descInfo
         
     def _filterStim(self,stimDict):
         newStimDict = {}

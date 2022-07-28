@@ -21,18 +21,18 @@ class CTorchDataset(torch.utils.data.Dataset):
         self.oDataTrans = CNArraysToTensors()
         
    def __getitem__(self, index):
-        stimDict,resp = self.dataset[index]
+        stimDict,resp,info = self.dataset[index]
         resp = self.oDataTrans(resp,T = self.T)[0]
         stimDictOut = {}
         for k,v in stimDict.items():
             if isinstance(v, np.ndarray):
-                stimDictOut[k] = self.oDataTrans(v,T = self.T)[0].to(device)
+                stimDictOut[k] = self.oDataTrans(v,T = self.T)[0].to(self.device)
             else:
                 stimDictOut[k] = v
         if self.forward:
-            return stimDictOut,resp
+            return stimDictOut,resp,info
         else:
-            return resp,stimDictOut
+            return resp,stimDictOut,info
 
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
