@@ -5,23 +5,34 @@ Created on Tue Apr 14 13:27:33 2020
 @author: Jin Dou
 """
 import torch
+import numpy as np
 from ...DataStruct.DataSet import CDataSet
+from ...Helper.DataObjectTransform import CNArraysToTensors
 
 class CTorchDataset(torch.utils.data.Dataset):
     
-   def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu')):
+   def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu'),T = False):
         assert isinstance(dataset,CDataSet)
         dataset.ifOldFetchMode = False
         self.dataset = dataset
         self.forward:bool = forward
         self.device = device
+        self.T = T
+        self.oDataTrans = CNArraysToTensors()
         
    def __getitem__(self, index):
         stimDict,resp = self.dataset[index]
+        resp = self.oDataTrans(resp,T = self.T)[0]
+        stimDictOut = {}
+        for k,v in stimDict.items():
+            if isinstance(v, np.ndarray):
+                stimDictOut[k] = self.oDataTrans(v,T = self.T)[0]
+            else:
+                stimDictOut[k] = v
         if self.forward:
-            return stimDict,resp
+            return stimDictOut,resp
         else:
-            return resp,stimDict
+            return resp,stimDictOut
 
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
