@@ -444,6 +444,8 @@ class CDataSet:
         newDataset.desc = self.desc
         newDataset.srate = self.srate
         newDataset.dataRecordList = output
+        newDataset.stimFilterKeys = self.stimFilterKeys
+        newDataset.respFilterChanIdx = self.respFilterChanIdx
         newDataset.stimuliDict.update(self.stimuliDict)
         return newDataset
         
@@ -522,6 +524,8 @@ class CDataSet:
         newDataset.srate = self.srate
         newDataset.dataRecordList = [self.dataRecordList[idx] for idx in indices]
         newDataset.stimuliDict.update(self.stimuliDict)
+        newDataset.stimFilterKeys = self.stimFilterKeys
+        newDataset.respFilterChanIdx = self.respFilterChanIdx
         return newDataset
     
     def buildDict(self):
