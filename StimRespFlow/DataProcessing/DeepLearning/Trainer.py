@@ -327,7 +327,7 @@ class CTrainer:
             self.tester = create_supervised_evaluator(model, metrics=self.metrics,device=device,output_transform=tfEngineOutput)
         self.tester.run(dtldTest)
         metrics = self.tester.state.metrics
-        print('metrics',metrics)
+        # print('metrics',metrics)
         return metrics
 
 class CTrainerFunc:
