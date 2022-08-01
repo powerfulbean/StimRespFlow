@@ -358,7 +358,7 @@ class CDataOrganizor:
         return oDataSet
     
 class CDataSet:
-    def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True):
+    def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True,cropRespTail_s = 0):
         self.dataRecordList = list()
         self.name = dataSetName
         self.srate = -1
@@ -368,6 +368,7 @@ class CDataSet:
         self.stimFilterKeys = stimFilterKeys
         self.respFilterChanIdx = respFilterChanIdx
         self.ifOldFetchMode = ifOldFetchMode
+        self.cropRespTail_s = cropRespTail_s
     
     @property
     def records(self,):
@@ -399,6 +400,8 @@ class CDataSet:
                 self.curRespFilterChanIdx = np.arange(resp.shape[0])
             else:
                 resp = self._filterResp(resp)
+            if self.cropRespTail_s > 0:
+                resp = resp[...,:-int(np.ceil(self.cropRespTail_s * self.srate))]
             #filter the resp and stim
             return stimDict,resp,self.records[idx].descInfo
         

@@ -36,7 +36,7 @@ class CTorchDataset(torch.utils.data.Dataset):
         
    def __len__(self):
         return len(self.dataset)
-
+    
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
         if(Args.get('DatasetArgs') != None):
