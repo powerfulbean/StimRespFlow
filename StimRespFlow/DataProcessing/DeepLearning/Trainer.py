@@ -204,6 +204,8 @@ class CTrainer:
         if isinstance(self.lrScheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
             # print(metrics['corr'])
             self.lrScheduler.step(metrics['corr'])
+        elif isinstance(self.lrScheduler,torch.optim.lr_scheduler.ExponentialLR):
+            self.lrScheduler.step()
         
         for i in self.metricsRecord:
             val = metrics[i] 
@@ -293,7 +295,11 @@ class CTrainer:
             
         if isinstance(self.lrScheduler, torch.optim.lr_scheduler.OneCycleLR):
             print('OneCycleLR')
-            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)     
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
+
+        if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
+            print('LinearLR')
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
             # self.trainer.add_event_handler(Events.ITERATION_COMPLETED, self._hookIterationComplete)
         # handler = EarlyStopping(patience=5, score_function=self.score_function, trainer=self.trainer)
         # self.addEvaluatorExtensions(handler)
