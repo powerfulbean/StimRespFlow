@@ -51,7 +51,7 @@ class CDummy:
 
 class CTrainer:
     
-    def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None):
+    def __init__(self,epoch,device,criterion,optimizer,lrScheduler = None,historyFlag = True):
         self.curEpoch = 0
         self.nEpoch = epoch
         self.optimizer = None
@@ -60,7 +60,7 @@ class CTrainer:
         self.device = device
         
         self.exprFlag = False
-        self._historyFlag = True
+        self._historyFlag = historyFlag
         
         self.trainer = None
         self.evaluator = None
@@ -69,8 +69,6 @@ class CTrainer:
         self.tarFolder = None
         self.oLog = None
         self.metrics = dict()
-        self.metricsRecord:dict= dict()
-        self.lrRecord:list = list()
         self._history:dict = {
             # 'lr':self.lrRecord,
             }
@@ -84,37 +82,12 @@ class CTrainer:
         self.extList:list = list()
         self.fPlotsFunc:list = list()
         
-        if self._historyFlag == True:
-           self.enableHistory()
+        self._history['iterLoss'] = []
     
-    # def addLr(self):
-    #     # print('cha yan')
-    #     for param_group in self.optimizer.param_groups:
-    #         param_group['lr'] += 0.0001
-    
-    # def addExpr(self):
-    #     self.trainer.add_event_handler(Events.EPOCH_COMPLETED,self.addLr)
+    @property
+    def ifEnableHistory(self):
+        return self._historyFlag
      
-    def plotHistory(self):
-        # print(self._history)
-        fMinMax = lambda inList: \
-            (inList - np.min(inList)) / (np.max(inList) - np.min(inList)) \
-                if (np.max(inList) - np.min(inList)) != 0 \
-                else [0.5] * len(inList)
-        for key in self._history:
-            self._history[key] = fMinMax(self._history[key])
-        fig, ax = plt.subplots()
-        df = pd.DataFrame(self._history)
-        sns.lineplot(data = df,ax = ax)
-        fig.savefig(self.tarFolder + '/' + 'training_history.png')
-    
-    
-    def enableHistory(self):
-        #add plotHistory in self.targetMetric
-        if self.trainer is not None:
-            self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
-        pass
-        
     def setDataLoader(self,dtldTrain,dtldTest):
         self.dtldTrain = dtldTrain
         self.dtldDev = dtldTest
@@ -139,7 +112,6 @@ class CTrainer:
     def score_function(self,engine):
         self.evaluator.run(self.dtldDev)
         metrics = self.evaluator.state.metrics
-        print('a')
         val = metrics['corr']
         return val
 
@@ -160,12 +132,47 @@ class CTrainer:
                     f.savefig(self.tarFolder + '/' + '_epoch_' + str(epoch) + '_' + str(idx) + '.png')
                 plt.close(f)  
     
+    def plotHistory(self):
+        # print(self._history)
+        # fMinMax = lambda inList: \
+        #     (inList - np.min(inList)) / (np.max(inList) - np.min(inList)) \
+        #         if (np.max(inList) - np.min(inList)) != 0 \
+        #         else [0.5] * len(inList)
+        # for key in self._history:
+        #     self._history[key] = fMinMax(self._history[key])
+        for i in self.metrics:
+            fig, ax = plt.subplots()
+            df = pd.DataFrame({n:self._history[n] for n in ['train_' + i, 'eval_' + i]})
+            sns.lineplot(data = df,ax = ax)
+            fig.savefig(self.tarFolder + '/' + f'{i}_history.png')
+            plt.close(fig) 
+        
+        fig, ax = plt.subplots()
+        df = pd.DataFrame({n:self._history[n] for n in self._history if 'lr' in n})
+        sns.lineplot(data = df,ax = ax)
+        fig.savefig(self.tarFolder + '/' + f'lr_history.png')
+        plt.close(fig) 
+        
+        fig, ax = plt.subplots()
+        df = pd.DataFrame({n:self._history[n] for n in ['iterLoss']})
+        sns.lineplot(data = df,ax = ax)
+        fig.savefig(self.tarFolder + '/' + f'iterLoss_history.png')
+        plt.close(fig)
+        
+        fig, ax = plt.subplots()
+        df = pd.DataFrame({n:self._history[n] for n in ['iterLoss']})
+        sns.lineplot(data = df,ax = ax)
+        fig.savefig(self.tarFolder + '/' + f'iterLoss_vs_lr_history.png')
+        plt.close(fig)
+        
+        
+    
     def recordLr(self,):
         for idx,param_group in enumerate(self.optimizer.param_groups):
             if self._history.get(f'lr_{idx}') is None:
                 self._history[f'lr_{idx}'] = list()
             self._history[f'lr_{idx}'].append(param_group['lr'])
-            self.lrRecord.append(param_group['lr'])
+        self._history['iterLoss'].append(self.trainer.state.metrics['loss'])
             
     def getLr(self):
         for param_group in self.optimizer.param_groups:
@@ -181,17 +188,16 @@ class CTrainer:
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
         metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
-        self.recordLr()
-        for i in self.metricsRecord:
-            val = metrics[i] 
-            if isinstance(val, torch.Tensor):
-                val = val.detach().cpu()
-            self.metricsRecord[i]['train'].append(val)
-            if self._historyFlag:
+        
+        if self._historyFlag:
+            for i in self.metrics:
+                val = metrics[i] 
+                if isinstance(val, torch.Tensor):
+                    val = val.detach().cpu()
                 self._history['train_' + i].append(val)
 
         if self.oLog:
-            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,'lr',self.lrRecord[-1],splitChar = '\t')
+            self.oLog('Train','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
             print(f"Training Results - Epoch: {trainer.state.epoch} Metrics: {metrics}")
     
@@ -207,12 +213,11 @@ class CTrainer:
         elif isinstance(self.lrScheduler,torch.optim.lr_scheduler.ExponentialLR):
             self.lrScheduler.step()
         
-        for i in self.metricsRecord:
-            val = metrics[i] 
-            if isinstance(val, torch.Tensor):
-                val = val.detach().cpu()
-            self.metricsRecord[i]['eval'].append(val)
-            if self._historyFlag:
+        if self._historyFlag:
+            for i in self.metrics:
+                val = metrics[i] 
+                if isinstance(val, torch.Tensor):
+                    val = val.detach().cpu()
                 self._history['eval_' + i].append(val)
             
         if metrics[self.targetMetric] > self.bestTargetMetricValue:
@@ -254,7 +259,6 @@ class CTrainer:
     
     def setWorker(self,model,targetMetric,trainingStep = None,evaluationStep = None,patience = 20):
         ''' used for dowmward compatibility'''
-        self._setRecording()
         self.targetMetric = targetMetric
         device = self.device
         self.model = model.to(device)
@@ -286,8 +290,6 @@ class CTrainer:
         # handler = EarlyStopping(patience=patience, score_function=self.hookValidationResults, trainer=self.trainer)
         # Note: the handler is attached to an *Evaluator* (runs one epoch on validation dataset).
         # self.evaluator.add_event_handler(Events.COMPLETED, handler)
-        if self._historyFlag:
-            self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
         # self.addExpr()
         if isinstance(self.lrScheduler, torch.optim.lr_scheduler.CyclicLR):
             print('CyclicLR')
@@ -297,17 +299,17 @@ class CTrainer:
             print('OneCycleLR')
             self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
 
-        if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
-            print('LinearLR')
-            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
+        # if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
+            # print('LinearLR')
+            # self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
             # self.trainer.add_event_handler(Events.ITERATION_COMPLETED, self._hookIterationComplete)
+            
+        if self.ifEnableHistory:
+            self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.recordLr)
         # handler = EarlyStopping(patience=5, score_function=self.score_function, trainer=self.trainer)
         # self.addEvaluatorExtensions(handler)
         # self.setEvalExt()
-        
-    def _setRecording(self):
-        for i in self.metrics:
-            self.metricsRecord[i] = {'train':list(),'eval':list()}
             
     def _hookIterationComplete(self):
         for param_group in self.optimizer.param_groups:

@@ -545,9 +545,10 @@ class CDataSet:
         stims = np.squeeze(mat['stim'])
         fs = np.squeeze(mat['fs'])
         resps = np.squeeze(mat['resp'])
+        info = np.squeeze(mat['info'])
         newDataset.srate = fs
         for idx,_ in enumerate(stims):
-            record = CDataRecord(resps[idx], stims[idx], str(idx), fs)
+            record = CDataRecord(resps[idx], stims[idx], info[idx][0], fs)
             newDataset.append(record)
         return newDataset
     
