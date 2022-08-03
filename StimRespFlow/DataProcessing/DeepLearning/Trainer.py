@@ -159,11 +159,13 @@ class CTrainer:
         fig.savefig(self.tarFolder + '/' + f'iterLoss_history.png')
         plt.close(fig)
         
-        fig, ax = plt.subplots()
-        df = pd.DataFrame({n:self._history[n] for n in ['iterLoss']})
-        sns.lineplot(data = df,ax = ax)
-        fig.savefig(self.tarFolder + '/' + f'iterLoss_vs_lr_history.png')
-        plt.close(fig)
+        if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
+            fig, ax = plt.subplots()
+            lr = self._history['lr_0']
+            g = sns.lineplot(x = 'lr_0', y = 'iterLoss',ax = ax,data = self._history)
+            g.set(xscale="log")
+            fig.savefig(self.tarFolder + '/' + f'iterLoss_vs_lr_history.png')
+            plt.close(fig)
         
         
     
@@ -299,10 +301,9 @@ class CTrainer:
             print('OneCycleLR')
             self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
 
-        # if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
-            # print('LinearLR')
-            # self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
-            # self.trainer.add_event_handler(Events.ITERATION_COMPLETED, self._hookIterationComplete)
+        if isinstance(self.lrScheduler,torch.optim.lr_scheduler.LinearLR):
+            print('LinearLR')
+            self.trainer.add_event_handler(Events.ITERATION_COMPLETED,self.step)  
             
         if self.ifEnableHistory:
             self.trainer.add_event_handler(Events.COMPLETED,self.plotHistory)
