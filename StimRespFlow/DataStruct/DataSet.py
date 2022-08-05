@@ -12,6 +12,7 @@ from .LabelData import CLabelInfo, CLabels
 from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
 import numpy as np
+from sklearn.model_selection import KFold, ShuffleSplit
 import warnings
 from StellarInfra import siIO
 
@@ -542,10 +543,16 @@ class CDataSet:
     def fromMatCells(cls,fileName):
         newDataset = cls(fileName)
         mat = siIO.loadMatFile(fileName)
-        stims = np.squeeze(mat['stim'])
-        fs = np.squeeze(mat['fs'])
-        resps = np.squeeze(mat['resp'])
-        info = np.squeeze(mat['info'])
+        if '__header__' not in mat:
+            stims = [i[0].reshape(-1,1) for i in mat['stim']]
+            resps = [i[0] for i in mat['resp']]
+            info = mat['info']
+            fs = mat['fs']
+        else:
+            stims = np.squeeze(mat['stim'])
+            fs = np.squeeze(mat['fs'])
+            resps = np.squeeze(mat['resp'])
+            info = np.squeeze(mat['info'])
         newDataset.srate = fs
         for idx,_ in enumerate(stims):
             record = CDataRecord(resps[idx], stims[idx], info[idx][0], fs)
@@ -555,7 +562,40 @@ class CDataSet:
     def splitShuffledDataSubset(self,testSetRatio,ifSplitByStim = False):
         dataDict = splitShuffledDataSubset(self, testSetRatio,ifSplitByStim=ifSplitByStim)
         return dataDict
-        
+    
+    def nestedKFold(self,curFold,nFold):
+        return nestedKFold(self, curFold, nFold)
+
+# def OneOfKFoldNestedResample(tarList,curFold,nFold):
+#     ''' curFold starts from zero '''
+#     kf = KFold(nFold)
+#     ss = ShuffleSplit(n_splits=1, test_size=1/9, random_state=22)
+#     kfList = [i for i in kf.split(tarList)]
+#     curTrainDevIdx = kfList[curFold][0]
+#     curTestIdx = kfList[curFold][1]
+#     curTrainDev = [tarList[i] for i in curTrainDevIdx]
+#     curTest = [tarList[i] for i in curTestIdx]
+    
+#     ssList = [i for i in ss.split(curTrainDev)]
+#     curTrainIdx = ssList[0][0]
+#     curDevIdx = ssList[0][1]
+#     curTrain = [curTrainDev[i] for i in curTrainIdx]
+#     curDev = [curTrainDev[i] for i in curDevIdx]
+    
+#     return curTrain,curDev,curTest
+    
+def OneOfKFoldNestedResample(tarList,curFold,nFold):
+    ''' curFold starts from zero '''
+    kf = KFold(nFold)
+    kfList = [i for i in kf.split(tarList)]
+    curTrainDevIdx = kfList[curFold][0]
+    curTestIdx = kfList[curFold][1]
+    curDevIdx = kfList[(curFold + 1) % nFold][1]
+    curTrainIdx = [i for i in curTrainDevIdx if i not in curDevIdx]
+    curTrain = [tarList[i] for i in curTrainIdx]
+    curDev = [tarList[i] for i in curDevIdx]
+    curTest = [tarList[i] for i in curTestIdx]
+    return curTrain,curDev,curTest   
 
 def shuffleAndSplit(tarList,testSetRatio):
     rng = np.random.default_rng(18)
@@ -569,42 +609,79 @@ def shuffleAndSplit(tarList,testSetRatio):
     stimTestList = tarList[lenTrain + lenDev:length]
     return stimTrainList,stimDevList,stimTestList
 
+def nestedKFold(dataset,curFold,nFold):
+    stimTrainList,stimDevList,stimTestList = getStimList(dataset,OneOfKFoldNestedResample,curFold,nFold)
+    trainList,devList,testList = getDataIdxByStimSet(dataset,stimTrainList,stimDevList,stimTestList)
+    trainSet,devSet,testSet = splitDatasetByIdxList(dataset, trainList, devList, testList)
+    checkSplitStim(trainSet,devSet,testSet)
+    return {'train':trainSet,'dev':devSet,'test':testSet}
+    
+
 def splitShuffledDataSubset(dataset:CDataSet,testSetRatio,ifSplitByStim = False):
     
     if ifSplitByStim:
-        stimNumList = list(set([i.descInfo['stim'] for i in dataset.records]))
-        stimTrainList,stimDevList,stimTestList = shuffleAndSplit(stimNumList,testSetRatio)
-        trainList = []
-        devList = []
-        testList = []
-        for idx,i in enumerate(dataset.records):
-            stimNum = i.descInfo['stim']
-            if stimNum in stimTrainList:
-                trainList.append(idx)
-            elif stimNum in stimDevList:
-                devList.append(idx)
-            elif stimNum in stimTestList:
-                testList.append(idx)
-            else:
-                raise NotImplementedError()
+        stimTrainList,stimDevList,stimTestList = getStimList(dataset,shuffleAndSplit,testSetRatio)
+        trainList,devList,testList = getDataIdxByStimSet(dataset,stimTrainList,stimDevList,stimTestList)
     else:
         oriList = np.array(range(len(dataset)),dtype=int).tolist()
         trainList,devList,testList = shuffleAndSplit(oriList,testSetRatio)
+    
+    trainSet,devSet,testSet = splitDatasetByIdxList(dataset, trainList, devList, testList)
+    
+    if ifSplitByStim:
+        checkSplitStim(trainSet,devSet,testSet)
+    
+    return {'train':trainSet,'dev':devSet,'test':testSet}
+
+def checkSplitStim(trainSet,devSet,testSet):
+    s1 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in trainSet]
+    s2 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in devSet]
+    s3 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in testSet]
+    assert len(set(s1) & set(s2)) == 0
+    assert len(set(s1) & set(s3)) == 0
+    print(set(s1),'\n' ,set(s2),'\n' ,set(s3))
+
+def getDataIdxByStimSet(dataset,stimTrainList,stimDevList,stimTestList):
+    trainList = []
+    devList = []
+    testList = []
+    for idx,i in enumerate(dataset.records):
+        stimNum = (i.descInfo['stim'],i.descInfo['datasetName'])
+        if stimNum in stimTrainList:
+            trainList.append(idx)
+        elif stimNum in stimDevList:
+            devList.append(idx)
+        elif stimNum in stimTestList:
+            testList.append(idx)
+        else:
+            raise NotImplementedError()
+    return trainList,devList,testList
+
+def getStimList(dataset,func,*funcArg,**funcKwargs):
+    #get set of dataset name
+    dsNameSet = set([i.descInfo['datasetName'] for i in dataset.records])
+    stimNumTupleList = list(set([(i.descInfo['stim'],i.descInfo['datasetName']) for i in dataset.records]))
+    stimNumTupleList = sorted(stimNumTupleList)
+    dsStimNumDict = {k:[] for k in dsNameSet}
+    for i in stimNumTupleList:
+        dsStimNumDict[i[1]].append(i)
+    stimTrainList,stimDevList,stimTestList = [],[],[]
+        
+    for k,v in dsStimNumDict.items():
+        curStimTrainList,curStimDevList,curStimTestList = func(v,*funcArg,**funcKwargs)
+        stimTrainList.extend(curStimTrainList)
+        stimDevList.extend(curStimDevList)
+        stimTestList.extend(curStimTestList)
+    
+    return stimTrainList,stimDevList,stimTestList
+        
+def splitDatasetByIdxList(dataset,trainList,devList,testList):
     assert len(set(trainList) & set(devList)) == 0
     assert len(set(devList) & set(testList)) == 0
     trainSet = dataset.subset(trainList)
     devSet = dataset.subset(devList)
     testSet = dataset.subset(testList)
-    
-    if ifSplitByStim:
-        s1 = [i.descInfo['stim'] for i in trainSet]
-        s2 = [i.descInfo['stim'] for i in devSet]
-        s3 = [i.descInfo['stim'] for i in testSet]
-        assert len(set(s1) & set(s2)) == 0
-        assert len(set(s1) & set(s3)) == 0
-        print(set(s1), set(s2), set(s3))
-    
-    return {'train':trainSet,'dev':devSet,'test':testSet}
+    return trainSet,devSet,testSet
         
 class CDataRecord: #base class for data with label
     def __init__(self,data,stimuli,stimuliDes:list,srate):
