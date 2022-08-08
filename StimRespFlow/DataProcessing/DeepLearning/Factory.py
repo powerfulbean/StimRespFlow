@@ -9,9 +9,37 @@ import numpy as np
 from ...DataStruct.DataSet import CDataSet
 from ...Helper.DataObjectTransform import CNArraysToTensors
 
+def unPackDict(inDict:dict,*keys):
+    out = tuple()
+    for key in keys:
+        out += (inDict.get(key,None),)
+    return out
+
+class CStimDataset(torch.utils.data.Dataset):
+    
+    def __init__(self,data):
+        self._data = data #list of word dict
+        self.oDataTrans = CNArraysToTensors()
+        self.debug = None
+    
+    def __getitem__(self, index):
+        tempDict = self._data[index]
+        r1,r2,r3,r4,r5,r6 = unPackDict(tempDict, 'vector','tIntvl','words','info','timeShiftCE','timeShiftSCE')
+        r1,r2 = self.oDataTrans(r1,r2,T = False)
+        if r5:
+            r5 = np.array(r5)
+            r5 = self.oDataTrans(r5,T = False)[0]
+        output = [r1,r2,r3,r4]
+        output += [r5] if r5 is not None else []
+        output += [r6] if r6 is not None else []
+        return output
+    
+    def __len__(self):
+        return len(self._data)
+
 class CTorchDataset(torch.utils.data.Dataset):
     
-   def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu'),T = False):
+    def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu'),T = False):
         assert isinstance(dataset,CDataSet)
         dataset.ifOldFetchMode = False
         self.dataset = dataset
@@ -20,7 +48,7 @@ class CTorchDataset(torch.utils.data.Dataset):
         self.T = T
         self.oDataTrans = CNArraysToTensors()
         
-   def __getitem__(self, index):
+    def __getitem__(self, index):
         stimDict,resp,info = self.dataset[index]
         resp = self.oDataTrans(resp,T = self.T)[0]
         stimDictOut = {}
@@ -34,8 +62,17 @@ class CTorchDataset(torch.utils.data.Dataset):
         else:
             return resp,stimDictOut,info
         
-   def __len__(self):
+    def __len__(self):
         return len(self.dataset)
+
+    def exportStimDataset(self):
+        stimKeys = list(set([i.stimuli['wordVecKey'] for i in self.dataset.records]))
+        # print(stimKeys)
+        stimList = []
+        for i in stimKeys:
+            self.dataset.stimuliDict[i]['info'] = i
+            stimList.append(self.dataset.stimuliDict[i])
+        return CStimDataset(stimList)
     
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):
