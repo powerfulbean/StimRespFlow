@@ -451,6 +451,8 @@ class CDataSet:
         newDataset.stimFilterKeys = self.stimFilterKeys
         newDataset.respFilterChanIdx = self.respFilterChanIdx
         newDataset.stimuliDict.update(self.stimuliDict)
+        newDataset.ifOldFetchMode = self.ifOldFetchMode
+        newDataset.cropRespTail_s = self.cropRespTail_s
         return newDataset
         
     def constructFromFile(self,fileName):
@@ -518,6 +520,8 @@ class CDataSet:
         newDataset.dataRecordList += dataset2.dataRecordList
         newDataset.stimuliDict.update(self.stimuliDict)
         newDataset.stimuliDict.update(dataset2.stimuliDict)
+        newDataset.ifOldFetchMode = dataset2.ifOldFetchMode
+        newDataset.cropRespTail_s = dataset2.cropRespTail_s
         return newDataset
     
     
@@ -530,6 +534,8 @@ class CDataSet:
         newDataset.stimuliDict.update(self.stimuliDict)
         newDataset.stimFilterKeys = self.stimFilterKeys
         newDataset.respFilterChanIdx = self.respFilterChanIdx
+        newDataset.ifOldFetchMode = self.ifOldFetchMode
+        newDataset.cropRespTail_s = self.cropRespTail_s
         return newDataset
     
     def buildDict(self):
@@ -634,9 +640,9 @@ def splitShuffledDataSubset(dataset:CDataSet,testSetRatio,ifSplitByStim = False)
     return {'train':trainSet,'dev':devSet,'test':testSet}
 
 def checkSplitStim(trainSet,devSet,testSet):
-    s1 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in trainSet]
-    s2 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in devSet]
-    s3 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in testSet]
+    s1 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in trainSet.records]
+    s2 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in devSet.records]
+    s3 = [(i.descInfo['stim'],i.descInfo['datasetName']) for i in testSet.records]
     assert len(set(s1) & set(s2)) == 0
     assert len(set(s1) & set(s3)) == 0
     print(set(s1),'\n' ,set(s2),'\n' ,set(s3))
