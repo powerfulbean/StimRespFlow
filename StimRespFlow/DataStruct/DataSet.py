@@ -571,6 +571,9 @@ class CDataSet:
     
     def nestedKFold(self,curFold,nFold):
         return nestedKFold(self, curFold, nFold)
+    
+    def kFold(self,curFold,nFold):
+        return kFold(self, curFold, nFold)
 
 # def OneOfKFoldNestedResample(tarList,curFold,nFold):
 #     ''' curFold starts from zero '''
@@ -603,6 +606,16 @@ def OneOfKFoldNestedResample(tarList,curFold,nFold):
     curTest = [tarList[i] for i in curTestIdx]
     return curTrain,curDev,curTest   
 
+def OneOfKFold(tarList,curFold,nFold):
+    ''' curFold starts from zero '''
+    kf = KFold(nFold)
+    kfList = [i for i in kf.split(tarList)]
+    curTrainDevIdx = kfList[curFold][0]
+    curTestIdx = kfList[curFold][1]
+    curTrainDev = [tarList[i] for i in curTrainDevIdx]
+    curTest = [tarList[i] for i in curTestIdx]
+    return curTrainDev,[],curTest   
+
 def shuffleAndSplit(tarList,testSetRatio):
     rng = np.random.default_rng(18)
     rng.shuffle(tarList)
@@ -614,6 +627,13 @@ def shuffleAndSplit(tarList,testSetRatio):
     stimDevList = tarList[lenTrain:lenTrain + lenDev]
     stimTestList = tarList[lenTrain + lenDev:length]
     return stimTrainList,stimDevList,stimTestList
+
+def kFold(dataset,curFold,nFold):
+    stimTrainDevList,_,stimTestList = getStimList(dataset,OneOfKFold,curFold,nFold)
+    trainDevList,_,testList = getDataIdxByStimSet(dataset,stimTrainDevList,[],stimTestList)
+    trainDevSet,devSet,testSet = splitDatasetByIdxList(dataset, trainDevList, [], testList)
+    checkSplitStim(trainDevSet,devSet,testSet)
+    return {'train':trainDevSet,'test':testSet}
 
 def nestedKFold(dataset,curFold,nFold):
     stimTrainList,stimDevList,stimTestList = getStimList(dataset,OneOfKFoldNestedResample,curFold,nFold)
