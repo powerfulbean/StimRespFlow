@@ -357,6 +357,7 @@ class CDataOrganizor:
                     oDataSet.dataRecordList.append(recordTemp)
         
         return oDataSet
+
     
 class CDataSet:
     def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True,cropRespTail_s = 0):
@@ -574,6 +575,16 @@ class CDataSet:
     
     def kFold(self,curFold,nFold):
         return kFold(self, curFold, nFold)
+    
+    ## class method
+    def combineDatasets(datasets:list):
+        if len(datasets) == 0:
+            return None
+        else:
+            dataset0 = datasets[0]
+            for i in range(1,len(datasets)):
+                dataset0 = dataset0 + datasets[i]
+        return dataset0
 
 # def OneOfKFoldNestedResample(tarList,curFold,nFold):
 #     ''' curFold starts from zero '''

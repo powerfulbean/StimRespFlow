@@ -138,6 +138,7 @@ class CRun:
         self.endtime = None
         self.configs = configs
         self._oLog = CLog(self.parent.folder / str(key),'/' + RUN_FILE_NAME,'')
+        self.folder = self._oLog.folder
         
     def start(self):
         # self._oLog.Mode = 'fast'

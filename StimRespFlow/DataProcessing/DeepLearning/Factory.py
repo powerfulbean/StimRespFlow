@@ -26,7 +26,7 @@ class CStimDataset(torch.utils.data.Dataset):
         tempDict = self._data[index]
         r1,r2,r3,r4,r5,r6 = unPackDict(tempDict, 'vector','tIntvl','words','info','timeShiftCE','timeShiftSCE')
         r1,r2 = self.oDataTrans(r1,r2,T = False)
-        if r5:
+        if r5 is not None:
             r5 = np.array(r5)
             r5 = self.oDataTrans(r5,T = False)[0]
         output = [r1,r2,r3,r4]
