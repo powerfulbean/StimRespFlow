@@ -6,6 +6,7 @@ Created on Tue Apr 14 13:27:33 2020
 """
 import torch
 import numpy as np
+from scipy.stats import zscore
 from ...DataStruct.DataSet import CDataSet
 from ...Helper.DataObjectTransform import CNArraysToTensors
 
@@ -17,7 +18,7 @@ def unPackDict(inDict:dict,*keys):
 
 class CStimDataset(torch.utils.data.Dataset):
     
-    def __init__(self,data):
+    def __init__(self,data):#,zscore = False
         self._data = data #list of word dict
         self.oDataTrans = CNArraysToTensors()
         self.debug = None
@@ -25,8 +26,13 @@ class CStimDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         tempDict = self._data[index]
         r1,r2,r3,r4,r5,r6 = unPackDict(tempDict, 'vector','tIntvl','words','info','timeShiftCE','timeShiftSCE')
+        # if self.zscore:
+            # r1 = zscore(r1,axis=1)               
+        
         r1,r2 = self.oDataTrans(r1,r2,T = False)
         if r5 is not None:
+            # if self.zscore:
+                # r5 = zscore(r5,axis=1)
             r5 = np.array(r5)
             r5 = self.oDataTrans(r5,T = False)[0]
         output = [r1,r2,r3,r4]
@@ -39,7 +45,7 @@ class CStimDataset(torch.utils.data.Dataset):
 
 class CTorchDataset(torch.utils.data.Dataset):
     
-    def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu'),T = False):
+    def __init__(self,dataset:CDataSet,forward:bool = True,device = torch.device('cpu'),T = False):#,zscore = False
         assert isinstance(dataset,CDataSet)
         dataset.ifOldFetchMode = False
         self.dataset = dataset
@@ -47,6 +53,7 @@ class CTorchDataset(torch.utils.data.Dataset):
         self.device = device
         self.T = T
         self.oDataTrans = CNArraysToTensors()
+        # self.zscore = zscore
         
     def __getitem__(self, index):
         stimDict,resp,info = self.dataset[index]
@@ -54,6 +61,9 @@ class CTorchDataset(torch.utils.data.Dataset):
         stimDictOut = {}
         for k,v in stimDict.items():
             if isinstance(v, np.ndarray):
+                # if self.zscore and k != 'tIntvl':
+                    # v = zscore(v,axis=1)
+                    #print(k,v.shape,v.mean(),v.std())
                 stimDictOut[k] = self.oDataTrans(v,T = self.T)[0]#.to(self.device)
             else:
                 stimDictOut[k] = v
