@@ -28,7 +28,7 @@ class CEEGLabToMNE(CTransformBase):
             pass
         oTemp = temp()
         oTemp.chanlocs = locs
-        chNames, montage = eeglab._get_eeg_montage_information(oTemp, True)
+        chNames,montage = eeglab._get_eeg_montage_information(oTemp, True)
         return chNames, montage
     
     @staticmethod
