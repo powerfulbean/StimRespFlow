@@ -9,12 +9,98 @@ import datetime
 from StellarInfra import DirManage as siDM
 from StellarInfra import IO as siIO
 from StellarInfra.Logger import CLog
+import yaml
 
 STUDY_FILE_NAME = 'STUDY.txt'
 EXPR_FILE_NAME = 'EXPR.txt'
 RUN_FILE_NAME = 'RUN.txt'
 RUN_FILE_PRIMARY_KEY = 'run_index'
 
+class CVecs(yaml.YAMLObject):
+    yaml_tag = u'!vecs'
+    
+    def __init__(self, wordvecDict):
+        self._data = wordvecDict
+        
+    def __getitem__(self,k):
+        return self._data[k]
+    
+    @classmethod
+    def from_yaml(cls, loader, node):
+        value = node.value
+        dicts = {}
+        root = None
+        for i in value:
+            if i[0].value == 'root':
+                root = i[1].value
+        assert root is not None
+        for i in value:
+            if i[0].value != 'root':
+                dicts[i[0].value] = root + i[1].value
+        return CVecs(dicts)
+
+    def keys(self):
+        return self._data.keys()
+    
+    
+    def __iter__(self):
+        for i in self.keys():
+            yield i
+
+    # @classmethod
+    # def to_yaml(cls, dumper, data):
+    #     return dumper.represent_scalar(cls.yaml_tag, data.env_var)
+
+class Config:
+    
+    def __new__(cls,path,*args,**kwargs):
+        #https://docs.python.org/3/reference/datamodel.html#object.__new__
+        #if doesn't return an instance of the cls, need to manually init it
+        if path.endswith('.conf'):
+            return super().__new__(siDM.CPathConfigPyConfig)
+        elif path.endswith('.yaml') or path.endswith('.yml'):
+            obj =  super().__new__(ConfigYaml)
+            obj.__init__(path)
+            return obj
+        else:
+            raise ValueError("endswith .conf | .yml | .yaml")
+
+class ConfigYaml:
+    def __init__(self,confFile):
+        self._doc = self._load(confFile)
+    
+    def _load(self,file):
+        with open(file, 'r') as stream:
+            try:
+                return yaml.load(stream,Loader=yaml.FullLoader)
+            except yaml.YAMLError as exc:
+                raise
+                
+    @property
+    def doc(self):
+        return self._doc
+
+
+    def __getitem__(self,key):
+        return self.doc[key]
+        
+    def keys(self):
+        return self.doc.keys()
+    
+    @classmethod
+    def getConfigs(cls,configs):
+        output = {}
+        if isinstance(configs, ConfigYaml):
+            configs = configs.doc
+        for k in configs:
+            if not isinstance(configs[k],yaml.YAMLObject):
+                if getattr(configs[k], 'keys', None) is None:
+                    output[k] = configs[k]
+                else:
+                    output[k] = cls.getConfigs(configs[k])
+                
+        return output
+    
 class CResearch:
     pass
     
