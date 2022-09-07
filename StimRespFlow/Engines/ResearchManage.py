@@ -169,7 +169,7 @@ class CExpr:
         print(exprFolder / EXPR_FILE_NAME)
         if not siDM.checkExists(exprFolder / EXPR_FILE_NAME):
             assert configs is not None
-            doc = dict.fromkeys(configs.keys())
+            doc = {}#dict.fromkeys(configs.keys())
             doc['config'] = dict()
             doc['config']['expr_name'] = self.name
             if configsUsedByHost is not None:
