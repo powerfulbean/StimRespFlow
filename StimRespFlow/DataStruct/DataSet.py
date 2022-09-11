@@ -12,10 +12,10 @@ from .LabelData import CLabelInfo, CLabels
 from ..Helper.Protocol import CDataSetProtocol 
 from enum import Enum, unique
 import numpy as np
-from sklearn.model_selection import KFold, ShuffleSplit
+from sklearn.model_selection import KFold#, ShuffleSplit
+from sklearn.preprocessing import StandardScaler
 import warnings
 from StellarInfra import siIO
-
 # def fDummy(x):
 #     return x
 
@@ -360,6 +360,7 @@ class CDataOrganizor:
 
     
 class CDataSet:
+    #the shape of data and stimFeat must be [nSample, nChan]
     def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True,cropRespTail_s = 0):
         self.dataRecordList = list()
         self.name = dataSetName
@@ -371,7 +372,22 @@ class CDataSet:
         self.respFilterChanIdx = respFilterChanIdx
         self.ifOldFetchMode = ifOldFetchMode
         self.cropRespTail_s = cropRespTail_s
+        self.oZscoreStim = None #{'resp':None,'stim':None} 
     
+    
+    def fitZscoreStim(self,featKeys):
+        # oZscore_resp = StandardScaler()
+        oZscore_stim = {k:StandardScaler() for k in featKeys}
+        # resp = np.concatenate([i.data.T for i in self.records],axis = 0)
+        # oZscore_resp.fit(resp)
+        # print(oZscore_resp.n_features_in_,oZscore_resp.n_samples_seen_)
+        for featKey in featKeys:
+            stimTemp = np.concatenate([v[featKey].T for k,v in self.stimuliDict.items()],axis = 0)
+            oZscore_stim[featKey].fit(stimTemp)
+            print(oZscore_stim[featKey].n_features_in_,oZscore_stim[featKey].n_samples_seen_)
+        # self.oZscore['resp'] = oZscore_resp
+        self.oZscoreStim = oZscore_stim
+        
     @property
     def records(self,):
         return self.dataRecordList
@@ -385,7 +401,7 @@ class CDataSet:
         else:
             record = self.records[idx]
             resp = record.data
-            stimKey = record.stimuli['wordVecKey']
+            stimKey = record.stimuli['stimKey']
             stimulusDict = self.stimuliDict[stimKey]
             return stimulusDict,resp
     
@@ -445,15 +461,18 @@ class CDataSet:
                 raise NotImplementedError
                 
         newDataset = CDataSet()
-        newDataset.name = self.name
-        newDataset.desc = self.desc
-        newDataset.srate = self.srate
+        # newDataset.name = self.name
+        # newDataset.desc = self.desc
+        # newDataset.srate = self.srate
+        # newDataset.dataRecordList = output
+        # newDataset.stimFilterKeys = self.stimFilterKeys
+        # newDataset.respFilterChanIdx = self.respFilterChanIdx
+        # newDataset.stimuliDict.update(self.stimuliDict)
+        # newDataset.ifOldFetchMode = self.ifOldFetchMode
+        # newDataset.cropRespTail_s = self.cropRespTail_s
+        self.__class__._copyDatasetParam(newDataset, self)
         newDataset.dataRecordList = output
-        newDataset.stimFilterKeys = self.stimFilterKeys
-        newDataset.respFilterChanIdx = self.respFilterChanIdx
-        newDataset.stimuliDict.update(self.stimuliDict)
-        newDataset.ifOldFetchMode = self.ifOldFetchMode
-        newDataset.cropRespTail_s = self.cropRespTail_s
+        self.__class__._fetchNeededStim(newDataset, self.stimuliDict)        
         return newDataset
         
     def constructFromFile(self,fileName):
@@ -528,15 +547,16 @@ class CDataSet:
     
     def subset(self,indices):
         newDataset = CDataSet()
-        newDataset.name = self.name
-        newDataset.desc = self.desc
-        newDataset.srate = self.srate
+        # newDataset.name = self.name
+        # newDataset.desc = self.desc
+        # newDataset.srate = self.srate
+        # newDataset.stimFilterKeys = self.stimFilterKeys
+        # newDataset.respFilterChanIdx = self.respFilterChanIdx
+        # newDataset.ifOldFetchMode = self.ifOldFetchMode
+        # newDataset.cropRespTail_s = self.cropRespTail_s
+        self.__class__._copyDatasetParam(newDataset, self)        
         newDataset.dataRecordList = [self.dataRecordList[idx] for idx in indices]
-        newDataset.stimuliDict.update(self.stimuliDict)
-        newDataset.stimFilterKeys = self.stimFilterKeys
-        newDataset.respFilterChanIdx = self.respFilterChanIdx
-        newDataset.ifOldFetchMode = self.ifOldFetchMode
-        newDataset.cropRespTail_s = self.cropRespTail_s
+        self.__class__._fetchNeededStim(newDataset, self.stimuliDict)
         return newDataset
     
     def buildDict(self):
@@ -576,8 +596,17 @@ class CDataSet:
     def kFold(self,curFold,nFold):
         return kFold(self, curFold, nFold)
     
+    @classmethod
+    def _fetchNeededStim(cls,tarDataset,srcStimDict):
+        stimKeySet = set([i.stimuli['stimKey'] for i in tarDataset.records])
+        # newDataset.stimuliDict.update(self.stimuliDict)
+        for k in stimKeySet:
+            tarDataset.stimuliDict[k] = srcStimDict[k]
+        return tarDataset
+    
     ## class method
-    def combineDatasets(datasets:list):
+    @classmethod
+    def combineDatasets(cls,datasets:list):
         if len(datasets) == 0:
             return None
         else:
@@ -585,6 +614,20 @@ class CDataSet:
             for i in range(1,len(datasets)):
                 dataset0 = dataset0 + datasets[i]
         return dataset0
+    
+    @classmethod
+    def _copyDatasetParam(cls,tar,src):
+        #shallow copy
+        #note that this function doesn't copy the recordList and stimDict
+        tar.name = src.name
+        tar.desc = src.desc
+        tar.srate = src.srate
+        tar.stimFilterKeys = src.stimFilterKeys
+        tar.respFilterChanIdx = src.respFilterChanIdx
+        tar.ifOldFetchMode = src.ifOldFetchMode
+        tar.cropRespTail_s = src.cropRespTail_s
+        return tar
+        # pass
 
 # def OneOfKFoldNestedResample(tarList,curFold,nFold):
 #     ''' curFold starts from zero '''
