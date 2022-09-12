@@ -77,7 +77,7 @@ class CTorchDataset(torch.utils.data.Dataset):
 
     def exportStimDataset(self):
         dsNameSet = set([i.descInfo['datasetName'] for i in self.dataset.records])
-        stimNumTupleList = list(set([(i.stimuli['wordVecKey'],i.descInfo['datasetName']) for i in self.dataset.records]))
+        stimNumTupleList = list(set([(i.stimuli['stimKey'],i.descInfo['datasetName']) for i in self.dataset.records]))
         stimNumTupleList = sorted(stimNumTupleList)
         dsStimNumDict = {k:[] for k in dsNameSet}
         for i in stimNumTupleList:
