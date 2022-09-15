@@ -166,6 +166,7 @@ class CExpr:
         self.configs = configs
         self.name = os.path.basename(exprFolder)
         self.folder = exprFolder
+        self.oNameConfig = siDM.CNameByConfig(includeNone=False)
         print(exprFolder / EXPR_FILE_NAME)
         if not siDM.checkExists(exprFolder / EXPR_FILE_NAME):
             assert configs is not None
