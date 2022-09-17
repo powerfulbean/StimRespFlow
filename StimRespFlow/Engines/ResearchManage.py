@@ -36,7 +36,15 @@ class CVecs(yaml.YAMLObject):
         assert root is not None
         for i in value:
             if i[0].value != 'root':
-                dicts[i[0].value] = root + i[1].value
+                if type(i[1].value) == str:
+                    dicts[i[0].value] = root + i[1].value
+                elif type(i[1].value) == list:
+                    outDict = {}
+                    newValue = i[1].value
+                    for j in newValue:
+                        outDict[j[0].value] = root + j[1].value
+                    dicts[i[0].value] = outDict
+                
         return CVecs(dicts)
 
     def keys(self):
@@ -202,7 +210,7 @@ class CExpr:
     
     def save(self):
         self.summary()
-        siIO.saveDictJson(self.folder / EXPR_FILE_NAME, self._doc)
+        siIO.saveDictJson(self.folder / EXPR_FILE_NAME, self._doc.copy())
        
     def __setitem__(self,key,value):
         self.doc[key] = value

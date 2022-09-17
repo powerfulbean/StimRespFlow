@@ -544,6 +544,11 @@ class CDataSet:
         newDataset.cropRespTail_s = dataset2.cropRespTail_s
         return newDataset
     
+    def copy(self):
+        newDataset = CDataSet()
+        self.__class__._copyDatasetParam(newDataset, self)        
+        newDataset.dataRecordList = [i.copy() for i in self.dataRecordList]
+        return newDataset
     
     def subset(self,indices):
         newDataset = CDataSet()
@@ -571,18 +576,35 @@ class CDataSet:
         newDataset = cls(fileName)
         mat = siIO.loadMatFile(fileName)
         if '__header__' not in mat:
-            stims = [i[0].reshape(-1,1) for i in mat['stim']]
-            resps = [i[0] for i in mat['resp']]
-            info = mat['info']
+            resps = []
+            for i in mat['resp']:
+                if type(i) == list:
+                    resps.append(i[0])
+                elif i.ndim == 2:
+                    resps.append(i)
+                    
+            if 'stim' in mat:
+                stims = [i[0].reshape(-1,1) for i in mat['stim']]
+            else:
+                stims = [None] * len(resps)
+            infos = mat['info']
             fs = mat['fs']
         else:
-            stims = np.squeeze(mat['stim'])
+            
             fs = np.squeeze(mat['fs'])
             resps = np.squeeze(mat['resp'])
-            info = np.squeeze(mat['info'])
+            if 'stim' in mat: 
+                stims = np.squeeze(mat['stim'])
+            else:
+                stims = [None] * len(resps)
+            infos = mat['info']
         newDataset.srate = fs
         for idx,_ in enumerate(stims):
-            record = CDataRecord(resps[idx], stims[idx], info[idx][0], fs)
+            info = infos[idx]
+            if type(info) == list:
+                assert len(info) == 1
+                info = info[0]
+            record = CDataRecord(resps[idx], stims[idx], info , fs)
             newDataset.append(record)
         return newDataset
     
@@ -598,10 +620,11 @@ class CDataSet:
     
     @classmethod
     def _fetchNeededStim(cls,tarDataset,srcStimDict):
-        stimKeySet = set([i.stimuli['stimKey'] for i in tarDataset.records])
-        # newDataset.stimuliDict.update(self.stimuliDict)
-        for k in stimKeySet:
-            tarDataset.stimuliDict[k] = srcStimDict[k]
+        if len(srcStimDict) > 0:
+            stimKeySet = set([i.stimuli['stimKey'] for i in tarDataset.records])
+            # newDataset.stimuliDict.update(self.stimuliDict)
+            for k in stimKeySet:
+                tarDataset.stimuliDict[k] = srcStimDict[k]
         return tarDataset
     
     ## class method
@@ -774,6 +797,15 @@ class CDataRecord: #base class for data with label
         
     def errorPrint(self,error):
         print("CDataRecorder error: " + error)
+        
+    def copy(self):
+        new = CDataRecord(self.data.copy(),
+                          self.stimuli.copy(),
+                          self.stimuliDes,
+                          self.srate)
+        new.descInfo = self.descInfo.copy()
+        new.filterLog = self.filterLog.copy()
+        return new 
         
 class CDataDict:
     ''' assume the first dimension is channel'''
