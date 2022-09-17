@@ -548,6 +548,7 @@ class CDataSet:
         newDataset = CDataSet()
         self.__class__._copyDatasetParam(newDataset, self)        
         newDataset.dataRecordList = [i.copy() for i in self.dataRecordList]
+        self.__class__._fetchNeededStim(newDataset, self.stimuliDict)
         return newDataset
     
     def subset(self,indices):
