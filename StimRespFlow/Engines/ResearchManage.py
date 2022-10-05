@@ -146,6 +146,10 @@ class CStudy:
                 self.folderLevels.append(i)
         self.oNameConfig = siDM.CNameByConfig(includeNone=False)
     
+    @property
+    def studyRoot(self):
+        return self.root + '/' + self.name
+    
     def genExprFolder(self,configs):
         exprFolder = self.root + '/' + self.name
         configsUsedByHost = {}
