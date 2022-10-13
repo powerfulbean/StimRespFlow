@@ -235,6 +235,7 @@ class CTrainer:
         # if self.lrScheduler:
             # print(metrics['corr'])
             # self.lrScheduler.step(metrics['corr'])
+        self.getLr()
         if self.oLog:
             self.oLog('Validation','Epoch:',trainer.state.epoch,'Metrics',metrics,splitChar = '\t')
         else:
