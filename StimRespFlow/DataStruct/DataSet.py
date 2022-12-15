@@ -616,8 +616,8 @@ class CDataSet:
     def nestedKFold(self,curFold,nFold):
         return nestedKFold(self, curFold, nFold)
     
-    def kFold(self,curFold,nFold):
-        return kFold(self, curFold, nFold)
+    def kFold(self,curFold,nFold,ifSplitByStim = True):
+        return kFold(self, curFold, nFold,ifSplitByStim)
     
     @classmethod
     def _fetchNeededStim(cls,tarDataset,srcStimDict):
@@ -706,11 +706,15 @@ def shuffleAndSplit(tarList,testSetRatio):
     stimTestList = tarList[lenTrain + lenDev:length]
     return stimTrainList,stimDevList,stimTestList
 
-def kFold(dataset,curFold,nFold):
-    stimTrainDevList,_,stimTestList = getStimList(dataset,OneOfKFold,curFold,nFold)
-    trainDevList,_,testList = getDataIdxByStimSet(dataset,stimTrainDevList,[],stimTestList)
+def kFold(dataset,curFold,nFold,ifSplitByStim = True):
+    if ifSplitByStim:
+        stimTrainDevList,_,stimTestList = getStimList(dataset,OneOfKFold,curFold,nFold)
+        trainDevList,_,testList = getDataIdxByStimSet(dataset,stimTrainDevList,[],stimTestList)
+    else:
+        trainDevList,_,testList = OneOfKFold([idx for idx,_ in enumerate(dataset.records)], curFold, nFold)
     trainDevSet,devSet,testSet = splitDatasetByIdxList(dataset, trainDevList, [], testList)
-    checkSplitStim(trainDevSet,devSet,testSet)
+    if ifSplitByStim:
+        checkSplitStim(trainDevSet,devSet,testSet)
     return {'train':trainDevSet,'test':testSet}
 
 def nestedKFold(dataset,curFold,nFold):
@@ -764,6 +768,8 @@ def getDataIdxByStimSet(dataset,stimTrainList,stimDevList,stimTestList):
 def getStimList(dataset,func,*funcArg,**funcKwargs):
     #get set of dataset name
     dsNameSet = set([i.descInfo['datasetName'] for i in dataset.records])
+    
+    #build dataset (name, stimnum) tuple
     stimNumTupleList = list(set([(i.descInfo['stim'],i.descInfo['datasetName']) for i in dataset.records]))
     stimNumTupleList = sorted(stimNumTupleList)
     dsStimNumDict = {k:[] for k in dsNameSet}
