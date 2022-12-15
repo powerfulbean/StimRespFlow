@@ -76,6 +76,7 @@ class CTrainer:
         self.bestEpoch = -1
         self.bestTargetMetricValue = -1
         self.targetMetric:str = None
+        self.bestMetrics = None
         
         
         self.setOptm(criterion,optimizer,lrScheduler)
@@ -205,6 +206,7 @@ class CTrainer:
     
     def hookValidationResults(self,trainer):
         self.evaluator.run(self.dtldDev)
+        oriMetrics = self.evaluator.state.metrics.copy()
         metrics = self.evaluator.state.metrics
         targetMetric = metrics[self.targetMetric]
         metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
@@ -231,6 +233,7 @@ class CTrainer:
                 'state_dict': self.model.state_dict(),
                 'targetMetric': targetMetric,
             }
+            self.bestMetrics = oriMetrics
             torch.save(checkpoint,self.tarFolder + '/savedModel_feedForward_best.pt')
         # if self.lrScheduler:
             # print(metrics['corr'])
@@ -320,7 +323,7 @@ class CTrainer:
     def train(self,model,targetMetric,device = 'cpu',**kwargs):
         self.setWorker(model,targetMetric,**kwargs)
         self.trainer.run(self.dtldTrain, max_epochs=self.nEpoch)
-        return self.bestEpoch, self.bestTargetMetricValue
+        return self.bestEpoch, self.bestMetrics
     
     def test(self,model,dtldTest,device = 'cpu',evaluationStep = None):
         # self.addMetrics('loss', Loss(self.criterion,output_transform=fPickPredTrueFromOutput))

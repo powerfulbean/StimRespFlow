@@ -238,6 +238,7 @@ class CRun:
         self.configs = configs
         self._oLog = CLog(self.parent.folder / str(key),'/' + RUN_FILE_NAME,'')
         self.folder = self._oLog.folder
+        self.expr_record = None
         
     def start(self):
         # self._oLog.Mode = 'fast'
@@ -261,7 +262,15 @@ class CRun:
         self.parent.doc['run_list'].append(expr_record)
         self.parent.save()
         self._oLog('CRun Append Finish')
-        
+        self.expr_record = expr_record
+
+    def update(self):
+        if self.expr_record is None:
+            raise ValueError("Must append first")
+        self.expr_record.update(self.configs)
+        self.parent.save()
+        self._oLog('CRun Updated Finish')
+
     def __setitem__(self,k,v):
         self.configs[k] = v
     
