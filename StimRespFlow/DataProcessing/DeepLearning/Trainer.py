@@ -190,7 +190,9 @@ class CTrainer:
         self.plots(trainer.state.epoch)
         self.evaluator.run(self.dtldTrain)
         metrics = self.evaluator.state.metrics
-        metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
+        # metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
+        for i in metrics:
+            metrics[i] = np.mean(metrics[i])
         
         if self._historyFlag:
             for i in self.metrics:
