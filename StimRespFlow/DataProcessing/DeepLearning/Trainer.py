@@ -223,8 +223,15 @@ class CTrainer:
                 if isinstance(val, torch.Tensor):
                     val = val.detach().cpu()
                 self._history['eval_' + i].append(val)
-            
-        if metrics[self.targetMetric] > self.bestTargetMetricValue:
+        
+        if self.targetMetric == 'corr':
+            fBetter = lambda cur,history: cur > history
+        elif self.targetMetric == 'loss':
+            fBetter = lambda cur,history: cur < history
+        else:
+            raise NotImplementedError()
+        
+        if fBetter(metrics[self.targetMetric],self.bestTargetMetricValue):
             self.plots(trainer.state.epoch,True)
             self.bestEpoch = trainer.state.epoch
             self.bestTargetMetricValue = metrics[self.targetMetric]
