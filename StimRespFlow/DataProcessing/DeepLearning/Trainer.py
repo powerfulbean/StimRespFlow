@@ -209,7 +209,8 @@ class CTrainer:
         oriMetrics = self.evaluator.state.metrics.copy()
         metrics = self.evaluator.state.metrics
         targetMetric = metrics[self.targetMetric]
-        metrics[self.targetMetric] = np.mean(metrics[self.targetMetric])
+        for i in metrics:
+            metrics[i] = np.mean(metrics[i])
         
         if isinstance(self.lrScheduler,torch.optim.lr_scheduler.ReduceLROnPlateau):
             # print(metrics['corr'])
