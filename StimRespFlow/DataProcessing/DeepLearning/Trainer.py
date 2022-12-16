@@ -74,7 +74,7 @@ class CTrainer:
             }
         
         self.bestEpoch = -1
-        self.bestTargetMetricValue = -1
+        self.bestTargetMetricValue = None
         self.targetMetric:str = None
         self.bestMetrics = None
         
@@ -228,11 +228,14 @@ class CTrainer:
                 self._history['eval_' + i].append(val)
         
         if self.targetMetric == 'corr':
-            fBetter = lambda cur,history: cur > history
+            fBetter = lambda cur,history: cur >= history
         elif self.targetMetric == 'loss':
-            fBetter = lambda cur,history: cur < history
+            fBetter = lambda cur,history: cur <= history
         else:
             raise NotImplementedError()
+        
+        if self.bestTargetMetricValue is None:
+            self.bestTargetMetricValue = metrics[self.targetMetric]
         
         if fBetter(metrics[self.targetMetric],self.bestTargetMetricValue):
             self.plots(trainer.state.epoch,True)
