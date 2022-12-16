@@ -260,6 +260,7 @@ class CTrainer:
         if trainer.state.epoch  - self.bestEpoch > self.patience:
             self.trainer.terminate()
             print(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
+            self.oLog(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
         # return metrics[self.targetMetric]
     
     def setEvalExt(self):
