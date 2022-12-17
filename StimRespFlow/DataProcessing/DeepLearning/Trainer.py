@@ -4,6 +4,12 @@ Created on Thu May  6 17:25:27 2021
 
 @author: ShiningStone
 """
+try:
+    from ray.air import session
+    from ray.air.checkpoint import Checkpoint
+except:
+    session = None
+
 import torch
 import ignite
 from ignite.metrics import Loss,RunningAverage
@@ -268,6 +274,12 @@ class CTrainer:
             print(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
             self.oLog(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
         # return metrics[self.targetMetric]
+        
+        if session is not None:
+            torch.save(
+                (self.model.state_dict(), self.optimizer.state_dict()), self.tarFolder + "/checkpoint.pt")
+            checkpointRay = Checkpoint.from_directory(self.tarFolder)
+            session.report(loss = metrics['loss'], accuracy = metrics['corr'],checkpoint=checkpointRay)
     
     def setEvalExt(self):
         for i in self.extList:
