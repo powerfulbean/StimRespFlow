@@ -4,11 +4,12 @@ Created on Thu May  6 17:25:27 2021
 
 @author: ShiningStone
 """
-try:
-    from ray.air import session
-    from ray.air.checkpoint import Checkpoint
-except:
-    session = None
+# try:
+#     # from ray.air import session
+#     # from ray.air.checkpoint import Checkpoint
+#     from ray import tune
+# except:
+tune = None
 
 import torch
 import ignite
@@ -275,11 +276,15 @@ class CTrainer:
             self.oLog(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
         # return metrics[self.targetMetric]
         
-        if session is not None:
-            torch.save(
-                (self.model.state_dict(), self.optimizer.state_dict()), self.tarFolder + "/checkpoint.pt")
-            checkpointRay = Checkpoint.from_directory(self.tarFolder)
-            session.report(loss = metrics['loss'], accuracy = metrics['corr'],checkpoint=checkpointRay)
+        if tune is not None:
+            # torch.save(
+            #     (self.model.state_dict(), self.optimizer.state_dict()), self.tarFolder + "/checkpoint.pt")
+            # checkpointRay = Checkpoint.from_directory(self.tarFolder)
+            # session.report(loss = metrics['loss'], accuracy = metrics['corr'],checkpoint=checkpointRay)
+            with tune.checkpoint_dir(trainer.state.epoch) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save((self.model.state_dict(), self.optimizer.state_dict()), path)
+            tune.report(loss = metrics['loss'], accuracy = metrics['corr'])
     
     def setEvalExt(self):
         for i in self.extList:
