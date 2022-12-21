@@ -236,7 +236,8 @@ class CRun:
         self.starttime = None
         self.endtime = None
         self.configs = configs
-        self._oLog = CLog(self.parent.folder / str(key),'/' + RUN_FILE_NAME,'')
+        self.logFileName = (self.parent.folder / str(key),'/' + RUN_FILE_NAME)
+        self._oLog = CLog(self.logFileName[0],self.logFileName[1],'')
         self.folder = self._oLog.folder
         self.expr_record = None
         

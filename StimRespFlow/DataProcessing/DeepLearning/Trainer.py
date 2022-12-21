@@ -24,10 +24,21 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 
+
 # fTruePredLossOutput = lambda x, y, y_pred, loss: {'true':y,'pred':y_pred,'loss':loss}
 # fTruePredOutput = lambda x, y, y_pred: {'true':y,'pred':y_pred}
-fPickLossFromOutput = lambda output: output['loss']
-fPickPredTrueFromOutput = lambda output: (output['y_pred'],output['y'])
+
+def fPickLossFromOutput(output):
+    return output['loss']
+
+def fPickPredTrueFromOutput(output):
+    return (output['y_pred'],output['y'])
+
+def fIdentity(x):
+    return x
+
+# fPickLossFromOutput = lambda output: output['loss']
+# fPickPredTrueFromOutput = lambda output: (output['y_pred'],output['y'])
 
 def fPickPredTrueFromOutputT(output):
     pred,true = output['y_pred'],output['y']
@@ -253,7 +264,7 @@ class CTrainer:
                 'state_dict': self.model.state_dict(),
                 'targetMetric': targetMetric,
             }
-            self.bestMetrics = oriMetrics
+            self.bestMetrics = oriMetrics#{i:oriMetrics[i].detach() for i in oriMetrics}
             torch.save(checkpoint,self.tarFolder + '/savedModel_feedForward_best.pt')
         # if self.lrScheduler:
             # print(metrics['corr'])
@@ -376,7 +387,7 @@ class CTrainer:
 
 class CTrainerFunc:
     
-    def __init__(self,trainer:CTrainer,outputAdapter:callable = lambda x: x):
+    def __init__(self,trainer:CTrainer,outputAdapter:callable = fIdentity):
         self.trainer = trainer
         self.outputAdapter = outputAdapter
         self.model = trainer.model
