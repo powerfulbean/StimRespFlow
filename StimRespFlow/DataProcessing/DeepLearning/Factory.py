@@ -25,7 +25,7 @@ class CStimDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, index):
         tempDict = self._data[index]
-        r1,r2,r3,r4,r5,r6 = unPackDict(tempDict, 'vector','tIntvl','words','info','timeShiftCE','timeShiftSCE')
+        r1,r2,r3,r4,r7,r5,r6 = unPackDict(tempDict, 'vector','tIntvl','words','info','stimId','timeShiftCE','timeShiftSCE')
         # if self.zscore:
             # r1 = zscore(r1,axis=1)               
         
@@ -35,7 +35,7 @@ class CStimDataset(torch.utils.data.Dataset):
                 # r5 = zscore(r5,axis=1)
             r5 = np.array(r5)
             r5 = self.oDataTrans(r5,T = False)[0]
-        output = [r1,r2,r3,r4]
+        output = [r1,r2,r3,r4,r7]
         output += [r5] if r5 is not None else []
         output += [r6] if r6 is not None else []
         return output
@@ -88,6 +88,7 @@ class CTorchDataset(torch.utils.data.Dataset):
         for dsKey in dsStimNumDict:
             for i in dsStimNumDict[dsKey]:
                 self.dataset.stimuliDict[i[0]]['info'] = dsKey
+                self.dataset.stimuliDict[i[0]]['stimId'] = i[0]
                 stimList.append(self.dataset.stimuliDict[i[0]])
         return CStimDataset(stimList)
     
