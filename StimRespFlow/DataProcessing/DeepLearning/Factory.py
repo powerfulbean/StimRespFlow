@@ -18,10 +18,11 @@ def unPackDict(inDict:dict,*keys):
 
 class CStimDataset(torch.utils.data.Dataset):
     
-    def __init__(self,data):#,zscore = False
+    def __init__(self,data,device = torch.device('cpu')):#,zscore = False
         self._data = data #list of word dict
         self.oDataTrans = CNArraysToTensors()
         self.debug = None
+        self.device = device
     
     def __getitem__(self, index):
         tempDict = self._data[index]
@@ -30,11 +31,14 @@ class CStimDataset(torch.utils.data.Dataset):
             # r1 = zscore(r1,axis=1)               
         
         r1,r2 = self.oDataTrans(r1,r2,T = False)
+        r1 = r1.to(self.device)
+        r2 = r2.to(self.device)
         if r5 is not None:
             # if self.zscore:
                 # r5 = zscore(r5,axis=1)
             r5 = np.array(r5)
             r5 = self.oDataTrans(r5,T = False)[0]
+            r5 = r5.to(self.device)
         output = [r1,r2,r3,r4]
         output += [r5] if r5 is not None else []
         output += [r6] if r6 is not None else []
@@ -89,7 +93,7 @@ class CTorchDataset(torch.utils.data.Dataset):
             for i in dsStimNumDict[dsKey]:
                 self.dataset.stimuliDict[i[0]]['info'] = dsKey
                 stimList.append(self.dataset.stimuliDict[i[0]])
-        return CStimDataset(stimList)
+        return CStimDataset(stimList,device = self.device)
     
 
 def buildDataLoader(*tensors,TorchDataSetType,oSamplerType=None,**Args):

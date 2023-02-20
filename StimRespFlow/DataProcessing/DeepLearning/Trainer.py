@@ -284,7 +284,8 @@ class CTrainer:
         if trainer.state.epoch  - self.bestEpoch > self.patience:
             self.trainer.terminate()
             print(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
-            self.oLog(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
+            if self.oLog:
+                self.oLog(f"Early stop - Epoch: {trainer.state.epoch} Metrics: {metrics} Patience: {self.patience}")
         # return metrics[self.targetMetric]
         
         if tune is not None:
@@ -327,8 +328,8 @@ class CTrainer:
             if i != 'loss':
                 self.metrics[i].attach(self.trainer,i)
         
-        pbar = ProgressBar(persist=True,ncols = 75)
-        pbar.attach(self.trainer, metric_names= ['loss'] )
+        # pbar = ProgressBar(persist=True,ncols = 75)
+        # pbar.attach(self.trainer, metric_names= ['loss'] )
         
         # scheduler = LRScheduler(self.lrScheduler)
         # self.trainer.add_event_handler(Events.EPOCH_COMPLETED, self.reduct_step)
