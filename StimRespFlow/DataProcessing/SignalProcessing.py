@@ -72,7 +72,6 @@ def plotFrequencySpectrumHeatMap(datas, fs):
     nperseg = 1024
     flist,Ss = [],[]
     datas = np.array(datas)
-    print(datas.shape)
     if datas.ndim == 1:
         datas = datas.reshape(-1,1)
     mat = np.zeros((datas.shape[1], nperseg // 2 + 1))
