@@ -47,7 +47,7 @@ class CPreprocess:
 #        print("Transform finish")
         ans = np.abs(trans)
         return ans
-    
+
 def plotFrequencySpectrum(data,srate):
     
     from scipy.fftpack import rfft, irfft, rfftfreq
@@ -65,6 +65,37 @@ def plotFrequencySpectrum(data,srate):
     plt.subplot(2,1,2)
     plt.plot(W,f_signal)
     plt.show()
+
+import scipy
+from matplotlib import pyplot as plt
+def plotFrequencySpectrumHeatMap(datas, fs):
+    nperseg = 1024
+    flist,Ss = [],[]
+    datas = np.array(datas)
+    print(datas.shape)
+    if datas.ndim == 1:
+        datas = datas.reshape(-1,1)
+    mat = np.zeros((datas.shape[1], nperseg // 2 + 1))
+    for idx,data in enumerate(datas.T):
+        (f, S)= scipy.signal.welch(data, fs, nperseg = nperseg, scaling = 'spectrum')
+        # print(f)
+        mat[idx,:] = S
+        flist.append(f)
+    assert all([np.array_equal(flist[0], flist[i]) for i in range(1,len(flist))])
+    
+    # plt.semilogy(f, S)
+    # plt.xlim([0, fs/2])
+    # plt.xlabel('frequency [Hz]')
+    # plt.ylabel('PSD [V**2/Hz]')
+    # plt.show()
+    fig, ax = plt.subplots()
+    ax.imshow(mat)
+    xticks =  [ 0, 100, 200, 300, 400, 500]
+    ax.set_xticks(xticks)
+    x_label_list = [flist[0][i] for i in xticks]
+    ax.set_xticklabels(x_label_list)
+    ax.set_xlabel('frequency / HZ')
+    ax.set_ylabel('channels')
 
 def audioStimPreprocessing(stimuli,filterHigh,epochLen_s,downSample):
 #    if(stimuli == None):
