@@ -83,17 +83,8 @@ def plotFrequencySpectrumHeatMap(datas, fs):
         flist.append(f)
     assert all([np.array_equal(flist[0], flist[i]) for i in range(1,len(flist))])
     
-    # plt.semilogy(f, S)
-    # plt.xlim([0, fs/2])
-    # plt.xlabel('frequency [Hz]')
-    # plt.ylabel('PSD [V**2/Hz]')
-    # plt.show()
     fig, ax = plt.subplots()
-    ax.imshow(mat)
-    xticks =  [ 0, 100, 200, 300, 400, 500]
-    ax.set_xticks(xticks)
-    x_label_list = [flist[0][i] for i in xticks]
-    ax.set_xticklabels(x_label_list)
+    ax.imshow(mat, aspect='auto', extent = [0, fs//2, datas.shape[1],1], interpolation="none")
     ax.set_xlabel('frequency / HZ')
     ax.set_ylabel('channels')
 
