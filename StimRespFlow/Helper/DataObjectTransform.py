@@ -7,6 +7,7 @@ Created on Tue Apr 14 23:11:54 2020
 import numpy as np
 from abc import ABC,abstractmethod
 import mne
+from packaging import version
 # from typing import Tuple
 
 class CTransformBase(ABC):
@@ -28,8 +29,13 @@ class CEEGLabToMNE(CTransformBase):
             pass
         oTemp = temp()
         oTemp.chanlocs = locs
-        chNames,montage = eeglab._get_eeg_montage_information(oTemp, True)
-        return chNames, montage
+        
+        if version.parse(mne.__version__) < version.parse("0.20.0"):
+            chNames,montage = eeglab._get_eeg_montage_information(oTemp, True)
+            return chNames, montage
+        else:
+            chNames,ch_types,montage = eeglab._get_montage_information(oTemp, True)
+            return chNames,montage,ch_types
     
     @staticmethod
     def readFormalFile(path):
