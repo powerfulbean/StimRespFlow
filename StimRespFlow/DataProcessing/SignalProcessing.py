@@ -86,6 +86,7 @@ def plotFrequencySpectrumHeatMap(datas, fs):
     ax.imshow(mat, aspect='auto', extent = [0, fs//2, datas.shape[1],1], interpolation="none")
     ax.set_xlabel('frequency / HZ')
     ax.set_ylabel('channels')
+    return fig
 
 def audioStimPreprocessing(stimuli,filterHigh,epochLen_s,downSample):
 #    if(stimuli == None):
