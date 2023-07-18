@@ -83,7 +83,7 @@ def plotFrequencySpectrumHeatMap(datas, fs):
     assert all([np.array_equal(flist[0], flist[i]) for i in range(1,len(flist))])
     
     fig, ax = plt.subplots()
-    ax.imshow(mat, aspect='auto', extent = [0, fs//2, datas.shape[1],1], interpolation="none")
+    ax.imshow(mat, aspect='auto', extent = [0, fs//2, datas.shape[1],0], interpolation="none")
     ax.set_xlabel('frequency / HZ')
     ax.set_ylabel('channels')
     return fig
