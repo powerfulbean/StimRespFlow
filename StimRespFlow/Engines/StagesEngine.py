@@ -14,6 +14,27 @@ where item1 is argument list, and item2 is keyword argument dict
 
 '''
 
+from abc import ABC, abstractmethod
+
+
+class CComponentInterface(ABC):
+    
+    def __init__(self, name, returnDict):
+        self.returnDict = returnDict
+        self.name = name
+   
+    @abstractmethod
+    def do(self,):
+        return None
+    
+    def __call__(self,*args, **kwargs):
+        out = self.do(*args, **kwargs)
+        assert all([i in out for i in self.returnDict])
+        return out
+    
+    def log(self,):
+        #will use the logging interface
+        pass
 
 _middleOutputCache = []
 
