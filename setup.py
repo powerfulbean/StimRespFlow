@@ -19,7 +19,7 @@ with open("StimRespFlow/__init__.py") as file:
 
 setuptools.setup(
   name="StimRespFlow",
-  version="2.1",
+  version=version,
   author="Powerfulbean",
   author_email="powerfulbean@gmail.com",
   long_description=long_description,
