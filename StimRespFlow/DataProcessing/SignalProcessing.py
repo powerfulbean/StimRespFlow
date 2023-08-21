@@ -68,7 +68,7 @@ def plotFrequencySpectrum(data,srate):
 
 import scipy
 from matplotlib import pyplot as plt
-def plotFrequencySpectrumHeatMap(datas, fs):
+def plotFrequencySpectrumHeatMap(datas, fs, mode = 'original'):
     nperseg = 1024
     flist,Ss = [],[]
     datas = np.array(datas)
@@ -78,7 +78,13 @@ def plotFrequencySpectrumHeatMap(datas, fs):
     for idx,data in enumerate(datas.T):
         (f, S)= scipy.signal.welch(data, fs, nperseg = nperseg, scaling = 'spectrum')
         # print(f)
-        mat[idx,:] = S
+        if mode == 'original':
+            mat[idx,:] = S
+        elif mode == 'relative':
+            srel = (S - min(S)) / (max(S) - min(S))
+            mat[idx,:] = srel
+        else:
+            raise ValueError
         flist.append(f)
     assert all([np.array_equal(flist[0], flist[i]) for i in range(1,len(flist))])
     
