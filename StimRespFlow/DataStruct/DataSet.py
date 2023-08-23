@@ -4,6 +4,7 @@ Created on Wed Oct  9 15:15:34 2019
 
 @author: Jin Dou
 """
+import itertools
 
 from .. import outsideLibInterfaces as outLib
 from .. import DataIO
@@ -14,6 +15,7 @@ from enum import Enum, unique
 import numpy as np
 from sklearn.model_selection import KFold#, ShuffleSplit
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import zscore
 import warnings
 from StellarInfra import siIO
 # def fDummy(x):
@@ -652,6 +654,118 @@ class CDataSet:
         tar.cropRespTail_s = src.cropRespTail_s
         return tar
         # pass
+
+def dataset_to_pairs_by_filter(
+        dataset:CDataSet, 
+        stimRespKeys: list,
+        T = True,
+        ifZscore = True
+        ):
+    def wrapper(subfilter):
+        datasetSub:CDataSet = dataset.selectByInfo(subfilter)
+        datasetSub.ifOldFetchMode = False
+        
+        item = []
+        cnt = 0
+        for j,infoPair in enumerate(stimRespKeys):
+            stimKey, respSelDict = infoPair
+            stimDict, resp = None, None
+            if respSelDict is None:
+                # assert len(datasetSub) == 1
+                dataset_ = datasetSub
+            else:
+                dataset_ = datasetSub.selectByInfo(respSelDict)
+                # assert len(dataset_) == 1
+            
+            if len(dataset_) == 1:
+                cnt = cnt + 1
+                stimDict, resp, _ = dataset_[0]
+                if stimKey is not None:
+                    stim = [stimDict[i] for i in stimKey]
+                    stim = alignData(stim)
+                    stim = np.concatenate(
+                            stim, axis = 0
+                            )
+                    item.append(stim)
+                item.append(resp)
+        
+        if cnt == len(stimRespKeys):
+            item = alignData(item)
+            newItem = []
+            for it in item:
+                if ifZscore:
+                    it = zscore(it, axis = 1)
+                if T:
+                    it = it.T
+                newItem.append(it)
+            return newItem
+        else:
+            print(f"jump {subfilter}")
+    return wrapper
+
+def nestedKeys(filterKeyValues,
+              fGetData):
+    idxFirstList = None
+    for idx,i in enumerate(filterKeyValues):
+        if not np.isscalar(i[1]):
+            idxFirstList = idx
+            break
+    if idxFirstList is None:
+        output = fGetData(dict(filterKeyValues))
+    else:
+        values = filterKeyValues[idxFirstList][1]
+        nIter = len(values)
+        newFilterKeyValues = [None] * nIter
+        for idx,i in enumerate(values):
+            newFilterKeyValues[idx] = [list(j) for j in filterKeyValues]
+            newFilterKeyValues[idx][idxFirstList][1] = i
+        
+        output = swapFirstTwoDim([i for i in \
+                  map(nestedKeys, newFilterKeyValues, [fGetData] * nIter) \
+                  if i is not None])
+        print(type(output[0]),len(output[0]),len(output))
+    return output
+
+def dataset_to_pairs(
+    dataset:CDataSet, 
+    filterKeyValues:list, 
+    stimRespKeys: list,
+    T = True,
+    ifZscore = True
+    ):
+    """
+    returned pairs of stim and response selected by different stimRespKeys
+    Parameters
+    ----------
+    dataset : CDataSet
+        The dataset to extract data from
+    filterDict : list of key-values pair
+        The info that used to select sub-dataset
+    stimRespKeys : list(((stimKey),dict)))
+        The info - list of stimKey and resp feature dict, to further 
+            select corresponding data to return as a list. 
+            len(returned) == len(stimRespKeys)
+    
+    Returns
+    -------
+    (stim1, resp1, ....)
+    """
+    assert isinstance(filterKeyValues, list)
+    fGetData = dataset_to_pairs_by_filter(dataset, stimRespKeys,T, ifZscore)
+    return nestedKeys(filterKeyValues, fGetData)
+
+def swapFirstTwoDim(data):
+    #if not use map(list, ...), each item in the output will be a tuple
+    #of what zip returned
+    return list(map(list,zip(*data))) 
+    
+
+def alignData(arrs):
+    #assume arr have shape [nChannel, nSamples]
+    minLen  = min([arr.shape[1] for arr in arrs])
+    for i, arr in enumerate(arrs):
+        arrs[i] = arr[:, :minLen]
+    return arrs
 
 # def OneOfKFoldNestedResample(tarList,curFold,nFold):
 #     ''' curFold starts from zero '''
