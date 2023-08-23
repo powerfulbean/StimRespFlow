@@ -723,7 +723,6 @@ def nestedKeys(filterKeyValues,
         output = swapFirstTwoDim([i for i in \
                   map(nestedKeys, newFilterKeyValues, [fGetData] * nIter) \
                   if i is not None])
-        print(type(output[0]),len(output[0]),len(output))
     return output
 
 def dataset_to_pairs(
