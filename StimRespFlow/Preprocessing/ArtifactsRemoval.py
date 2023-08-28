@@ -49,13 +49,13 @@ def lalorlabDetectEEGBadChannels(eegarray,verbose = True):
     
     return badChansIdx
 
-def mneWrapLalorlabDetectEEGBadChannels(mneraw:mne.io.RawArray, montage = None):
+def mneWrapLalorlabDetectEEGBadChannels(mneraw:mne.io.RawArray, montage = None, nNearest = 10):
     oRaw = mneraw.copy()
     data = oRaw.get_data()
     if montage is None:
         badChansIdx = lalorlabDetectEEGBadChannels(data,False)
     else:
-        badChansIdx = lalorlabDetectBadChannelsByCovVarNear(data,montage)
+        badChansIdx = lalorlabDetectBadChannelsByCovVarNear(data,montage, nNearest = nNearest)
     oRaw.info['bads'] = [oRaw.info['ch_names'][i] for i in badChansIdx]
     print(f'bad channels: {",".join(oRaw.info["bads"])}')
     return oRaw
