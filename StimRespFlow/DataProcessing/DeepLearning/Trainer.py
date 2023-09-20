@@ -197,7 +197,8 @@ class CTrainer:
             
     def getLr(self):
         for param_group in self.optimizer.param_groups:
-            print(param_group['lr'])
+            # print(param_group['lr'])
+            pass
     
     def addEvaluatorExtensions(self,handler):
         # self.evaluator.add_event_handler(Events.COMPLETED, handler)
