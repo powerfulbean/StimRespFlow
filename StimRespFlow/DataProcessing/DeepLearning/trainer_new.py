@@ -18,6 +18,8 @@ class Event(Enum):
     TRAIN_END = 5
     TEST_BEGIN = 6
     TEST_END = 7
+    EPOCH_TRAIN_INFER = 8
+    EPOCH_EVAL_INFER = 9
     
 class Handler(Enum):
     COMMON = 0
@@ -65,6 +67,52 @@ class TrainingState:
         self.iteration = 0
         self.stage = Stage.IDLE
 
+class AddOn:
+
+    default_event = Event.EPOCH_EVAL_INFER
+
+    def __call__(self, oTrainer:'TorchTrainer'):
+        return self.step(oTrainer)
+
+    def step(self,oTrainer:'TorchTrainer'):
+        pass
+
+
+class SaveBest(AddOn):
+    def __init__(self, metricName,ifLarger,tol = None):
+        self.metricName = metricName
+        self.bestEpoch = -1
+        self.bestMetric = None
+        self.ifLarger = ifLarger
+        self.tol = tol
+
+    def step(self, oTrainer):
+        t_metric = oTrainer.train_state.metrics[self.metricName]
+        t_epoch = oTrainer.train_state.epoch
+        ifUpdate = False
+        if self.bestMetric is None:
+            ifUpdate = True
+        else:
+            if self.ifLarger:
+                ifUpdate = t_metric > self.bestMetric
+            else:
+                ifUpdate = t_metric < self.bestMetric
+        if ifUpdate:
+            self.bestMetric = t_metric
+            self.bestEpoch = t_epoch
+            checkpoint = {
+                'state_dict': oTrainer.model.state_dict(),
+                'targetMetric': self.bestMetric,
+                'epoch': self.bestEpoch
+            }
+            print('saveBest --- epoch: ', self.bestEpoch, 'metric: ', self.bestMetric)
+            torch.save(checkpoint, f'{oTrainer.folder}/saved_model.pt')
+        
+        if self.tol is not None:
+            if oTrainer.train_state.epoch - self.bestEpoch > self.tol:
+                oTrainer.engine_state = EngineState.STOP
+                print('early stop --- epoch: ', self.bestEpoch, 'metric: ', self.bestMetric)
+
 class TorchTrainer:
     
     #design philosophy, organize stats into a dictionary
@@ -78,7 +126,7 @@ class TorchTrainer:
         backward_step,
         epoch = 100, 
         device = torch.device('cpu'), 
-        homedir = None
+        folder = None
      ):
         self.loss = loss
         self.optim = optim
@@ -87,7 +135,7 @@ class TorchTrainer:
         
         self.epoch = epoch
         self.device = device
-        self.homedir = homedir
+        self.folder = folder
         
         self.model:torch.nn.Module = None
         self.metrics = {'loss':loss}
@@ -96,14 +144,17 @@ class TorchTrainer:
         self.evalDataloader = None
         self.testDataloader = None
         
-        self.events = {i:[] for i in Event._member_names_}
+        self.events = {i:[] for i in list(Event)}
         self.add_metric('loss', self.loss, Event.EPOCH_END)
         self.engine_state = EngineState.IDLE
         self.train_state:TrainingState = TrainingState({},{})
         
-    def add_scheduler(self, event, scheduler):
-        self.events[event].append((Handler.COMMON, scheduler))
+    def add_scheduler(self, eventType, scheduler):
+        self.add_event(eventType, Handler.COMMON, scheduler)
     
+    def add_event(self, eventType:Event,handlerType:Handler, func):
+         self.events[eventType].append((handlerType, func))
+
     def add_metric(self, name, metric, event = Event.EPOCH_END):
         self.metrics[name] = metric
         # self.events[event].append((Handler.METRICS, name))
@@ -119,7 +170,7 @@ class TorchTrainer:
             raise ValueError()
     
     def _parseEventType(self,eventType):
-        for event in self.events[eventType.name]:
+        for event in self.events[eventType]:
             self._parseEvent(event)
     
     def _enterEngine(self):
@@ -153,7 +204,13 @@ class TorchTrainer:
     def _enterEpoch(self):
         self._parseEventType(Event.EPOCH_BEGIN) #exe epoch begin
         self.train_state.epoch += 1
-        
+
+    def _exitEpochTrainVal(self):
+        self._parseEventType(Event.EPOCH_TRAIN_INFER)
+
+    def _exitEpochEvalVal(self):
+        self._parseEventType(Event.EPOCH_EVAL_INFER)
+
     def _exitEpoch(self):
         ''' similar as the exitIter'''
         self._parseEventType(Event.EPOCH_END)
@@ -219,8 +276,10 @@ class TorchTrainer:
                 if self.evalDataloader is not None:
                     self.inference(self.trainDataloader)
                     print(f'train metrics {self.train_state.metrics}')
+                    self._exitEpochTrainVal()
                     self.inference(self.evalDataloader)
                     print(f'evaluate metrics {self.train_state.metrics}')
+                    self._exitEpochEvalVal()
                 flag = self._exitEpoch()
                 if flag == True:
                     break
@@ -251,8 +310,14 @@ class TorchTrainer:
         self.testDataloader = testDataloader
         
         self._engine()
-        self._engine(Stage.INFER)
+        if testDataloader is not None:
+            self._engine(Stage.INFER)
         print(f'test metrics {self.train_state.metrics}')
         
-    
+    def addOn(self, addon:AddOn, event = None):
+        assert isinstance(addon, AddOn)
+        if event is None:
+            event = addon.default_event
+        self.add_event(event, Handler.COMMON, addon)
+
     

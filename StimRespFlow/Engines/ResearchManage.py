@@ -174,6 +174,7 @@ class CExpr:
             raise NotImplementedError
         
         exprFolder = siDM.CPath(hostFolder)
+        siDM.checkFolder(exprFolder)
         self.fMetric = fMetric
         self.configs = configs
         self.name = os.path.basename(exprFolder)
