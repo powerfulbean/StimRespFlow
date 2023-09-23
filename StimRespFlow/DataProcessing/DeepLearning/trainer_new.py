@@ -23,8 +23,7 @@ class Event(Enum):
     
 class Handler(Enum):
     COMMON = 0
-    METRICS = 1
-
+    
 class Stage(Enum):
     IDLE = -1
     TRAIN = 0
@@ -56,7 +55,7 @@ class RunningStage:
 class TrainingState:
     
     metrics: dict #
-    forward_output: dict
+    # forward_output: dict
     epoch: int = 0#current epoch    
     iteration: int = 0#current iteration
     batch:tuple = (None,)
@@ -67,9 +66,7 @@ class TrainingState:
         self.iteration = 0
         self.stage = Stage.IDLE
 
-class AddOn:
-
-    default_event = Event.EPOCH_EVAL_INFER
+class FuncHandler:
 
     def __call__(self, oTrainer:'TorchTrainer'):
         return self.step(oTrainer)
@@ -77,6 +74,9 @@ class AddOn:
     def step(self,oTrainer:'TorchTrainer'):
         pass
 
+class AddOn(FuncHandler):
+
+    default_event = Event.EPOCH_EVAL_INFER
 
 class SaveBest(AddOn):
     def __init__(self, metricName,ifLarger,tol = None):
@@ -147,7 +147,7 @@ class TorchTrainer:
         self.events = {i:[] for i in list(Event)}
         self.add_metric('loss', self.loss, Event.EPOCH_END)
         self.engine_state = EngineState.IDLE
-        self.train_state:TrainingState = TrainingState({},{})
+        self.train_state:TrainingState = TrainingState({})
         
     def add_scheduler(self, eventType, scheduler):
         self.add_event(eventType, Handler.COMMON, scheduler)
@@ -160,11 +160,7 @@ class TorchTrainer:
         # self.events[event].append((Handler.METRICS, name))
 
     def _parseEvent(self, event):
-        if event[0] == Handler.METRICS:
-            name = event[1]
-            metric = self.metrics[name](**self.train_state.forward_output)
-            self.train_state.metrics.update({name:metric})
-        elif event[0] == Handler.COMMON:
+        if event[0] == Handler.COMMON:
             event[1](self)
         else:
             raise ValueError()
@@ -248,11 +244,11 @@ class TorchTrainer:
         meanMetrics = {i:metrics[i]/cnt for i in metrics}
         self.train_state.metrics.update(meanMetrics)
         self.model.train()
-        newOutput = {i:[] for i in output[0]}
-        for o in output:
-            for k in o:
-                newOutput[k].append(o[k])
-        self.train_state.forward_output.update(newOutput)
+        # newOutput = {i:[] for i in output[0]}
+        # for o in output:
+        #     for k in o:
+        #         newOutput[k].append(o[k])
+        # self.train_state.forward_output.update(newOutput)
         return output
             
     
@@ -267,7 +263,7 @@ class TorchTrainer:
                 for batch in self.trainDataloader:
                     self._enterIter()
                     outputDict = self.forward_step(self, batch)
-                    self.train_state.forward_output.update(outputDict)
+                    # self.train_state.forward_output.update(outputDict)
                     self.backward_step(self, outputDict)
                     if self._exitIter():
                         break
