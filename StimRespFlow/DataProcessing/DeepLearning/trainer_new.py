@@ -139,6 +139,7 @@ class TorchTrainer:
         
         self.model:torch.nn.Module = None
         self.metrics = {'loss':loss}
+        self.metricToLog:set = set()
         self.scheduler = None
         self.trainDataloader = None
         self.evalDataloader = None
@@ -155,8 +156,10 @@ class TorchTrainer:
     def add_event(self, eventType:Event,handlerType:Handler, func):
          self.events[eventType].append((handlerType, func))
 
-    def add_metric(self, name, metric, event = Event.EPOCH_END):
+    def add_metric(self, name, metric,ifPrint = True):
         self.metrics[name] = metric
+        if ifPrint:
+            self.metricToLog.add(name)
         # self.events[event].append((Handler.METRICS, name))
 
     def _parseEvent(self, event):
@@ -230,18 +233,27 @@ class TorchTrainer:
         else:
             return False
     
+    def detachOutput(self,outputdict):
+        for k in outputdict:
+            outputdict[k] = outputdict[k].detach()
+
     def inference(self, dataloader):
         self.model.eval()
         metrics = {i:0 for i in self.metrics}
-        output = []
+        # output = []
         cnt = 0
         for batch in dataloader:
             cnt += 1
             outputDict = self.forward_step(self, batch)
-            output.append(outputDict)
+            self.detachOutput(outputDict)
+            # output.append(outputDict)
             for i in metrics:
-                metrics[i] += self.metrics[i](**outputDict).item()
-        meanMetrics = {i:metrics[i]/cnt for i in metrics}
+                metrics[i] += self.metrics[i](**outputDict)
+        meanMetrics = {i:(metrics[i]/cnt).cpu().numpy() for i in metrics}
+        for k in meanMetrics:
+            if meanMetrics[k].shape == (1,) or \
+                meanMetrics[k].ndim == 0:
+                meanMetrics[k] = meanMetrics[k].item()
         self.train_state.metrics.update(meanMetrics)
         self.model.train()
         # newOutput = {i:[] for i in output[0]}
@@ -249,8 +261,14 @@ class TorchTrainer:
         #     for k in o:
         #         newOutput[k].append(o[k])
         # self.train_state.forward_output.update(newOutput)
-        return output
+        # return output
             
+    def logMetric(self,tag = ''):
+        output = {}
+        for metric in self.metricToLog:
+            output[metric] = self.train_state.metrics[metric]
+        print(f'{tag} - {output}')
+
     
     def _engine(self, mode = Stage.TRAIN):
         #train first
@@ -271,10 +289,10 @@ class TorchTrainer:
                         pass
                 if self.evalDataloader is not None:
                     self.inference(self.trainDataloader)
-                    print(f'train metrics {self.train_state.metrics}')
+                    self.logMetric('train metrics ')
                     self._exitEpochTrainVal()
                     self.inference(self.evalDataloader)
-                    print(f'evaluate metrics {self.train_state.metrics}')
+                    self.logMetric('evaluate metrics ')
                     self._exitEpochEvalVal()
                 flag = self._exitEpoch()
                 if flag == True:
