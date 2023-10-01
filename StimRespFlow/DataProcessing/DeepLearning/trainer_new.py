@@ -8,6 +8,7 @@ Created on Wed Sep 13 16:37:47 2023
 from enum import Enum
 from dataclasses import dataclass
 import torch
+import logging
 
 class Event(Enum):
     EPOCH_BEGIN = 0
@@ -150,6 +151,20 @@ class TorchTrainer:
         self.engine_state = EngineState.IDLE
         self.train_state:TrainingState = TrainingState({})
         
+        logger = logging.getLogger('trainer')
+        logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        if folder is not None:
+            ch = logging.FileHandler(f'{folder}/log.txt')
+            ch.setLevel(logging.DEBUG)
+            ch.setFormatter(formatter)
+            logger.addHandler(ch)
+        self.logger = logger
+        
     def add_scheduler(self, eventType, scheduler):
         self.add_event(eventType, Handler.COMMON, scheduler)
     
@@ -267,7 +282,7 @@ class TorchTrainer:
         output = {}
         for metric in self.metricToLog:
             output[metric] = self.train_state.metrics[metric]
-        print(f'{tag} - {output}')
+        self.logger.info(f'{tag} - {output}')
 
     
     def _engine(self, mode = Stage.TRAIN):
@@ -326,7 +341,7 @@ class TorchTrainer:
         self._engine()
         if testDataloader is not None:
             self._engine(Stage.INFER)
-        print(f'test metrics {self.train_state.metrics}')
+        self.logger.info(f'test metrics {self.train_state.metrics}')
         
     def addOn(self, addon:AddOn, event = None):
         assert isinstance(addon, AddOn)
