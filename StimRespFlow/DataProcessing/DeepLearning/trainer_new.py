@@ -106,13 +106,13 @@ class SaveBest(AddOn):
                 'targetMetric': self.bestMetric,
                 'epoch': self.bestEpoch
             }
-            print('saveBest --- epoch: ', self.bestEpoch, 'metric: ', self.bestMetric)
+            oTrainer.logger.info(f'saveBest --- epoch: {self.bestEpoch}, metric: {self.bestMetric}')
             torch.save(checkpoint, f'{oTrainer.folder}/saved_model.pt')
         
         if self.tol is not None:
             if oTrainer.train_state.epoch - self.bestEpoch > self.tol:
                 oTrainer.engine_state = EngineState.STOP
-                print('early stop --- epoch: ', self.bestEpoch, 'metric: ', self.bestMetric)
+                oTrainer.logger.info('early stop --- epoch: {self.bestEpoch}, metric: {self.bestMetric}')
 
 class TorchTrainer:
     
