@@ -682,15 +682,20 @@ def dataset_to_pairs_by_filter(
                 stimDict, resp, _ = dataset_[0]
                 if stimKey is not None:
                     stim = [stimDict[i] for i in stimKey]
-                    stim = alignData(stim)
-                    stim = np.concatenate(
-                            stim, axis = 0
-                            )
+                    if any([isinstance(s, dict) for s in stim]):
+                        assert len(stim) == 1
+                        stim = stim[0]
+                    else:
+                        stim = alignData(stim)
+                        stim = np.concatenate(
+                                stim, axis = 0
+                                )
                     item.append(stim)
                 item.append(resp)
         
         if cnt == len(stimRespKeys):
-            item = alignData(item)
+            if not any([isinstance(it, dict) for it in item]):
+                item = alignData(item)
             newItem = []
             for it in item:
                 if ifZscore:
