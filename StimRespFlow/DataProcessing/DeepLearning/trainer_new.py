@@ -112,7 +112,7 @@ class SaveBest(AddOn):
         if self.tol is not None:
             if oTrainer.train_state.epoch - self.bestEpoch > self.tol:
                 oTrainer.engine_state = EngineState.STOP
-                oTrainer.logger.info('early stop --- epoch: {self.bestEpoch}, metric: {self.bestMetric}')
+                oTrainer.logger.info(f'early stop --- epoch: {self.bestEpoch}, metric: {self.bestMetric}')
 
 class TorchTrainer:
     
