@@ -152,6 +152,9 @@ class TorchTrainer:
         self.train_state:TrainingState = TrainingState({})
         
         logger = logging.getLogger('trainer')
+        for h in logger.handlers:
+            logger.removeHandler(h)
+        
         logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch = logging.StreamHandler()
@@ -337,7 +340,8 @@ class TorchTrainer:
         self.evalDataloader = evalDataloader
         self.testDataloader = testDataloader
         
-        self._engine()
+        if trainDataloader is not None:
+            self._engine()
         if testDataloader is not None:
             self._engine(Stage.INFER)
         self.logger.info(f'test metrics {self.train_state.metrics}')
