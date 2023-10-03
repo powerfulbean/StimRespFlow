@@ -696,9 +696,14 @@ def dataset_to_pairs_by_filter(
         if cnt == len(stimRespKeys):
             if not any([isinstance(it, dict) for it in item]):
                 item = alignData(item)
+            if isinstance(ifZscore, bool):
+                ifZscoreList = len(item) * [ifZscore]
+            else:
+                assert len(ifZscore) == len(item)
+                ifZscoreList = ifZscore
             newItem = []
-            for it in item:
-                if ifZscore:
+            for it_i, it in enumerate(item):
+                if ifZscoreList[it_i]:
                     it = zscore(it, axis = 1)
                 if T:
                     it = it.T
