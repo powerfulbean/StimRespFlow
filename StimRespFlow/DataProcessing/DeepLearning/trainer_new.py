@@ -256,22 +256,23 @@ class TorchTrainer:
 
     def inference(self, dataloader):
         self.model.eval()
-        metrics = {i:0 for i in self.metrics}
-        # output = []
-        cnt = 0
-        for batch in dataloader:
-            cnt += 1
-            outputDict = self.forward_step(self, batch)
-            self.detachOutput(outputDict)
-            # output.append(outputDict)
-            for i in metrics:
-                metrics[i] += self.metrics[i](**outputDict)
-        meanMetrics = {i:(metrics[i]/cnt).cpu().numpy() for i in metrics}
-        for k in meanMetrics:
-            if meanMetrics[k].shape == (1,) or \
-                meanMetrics[k].ndim == 0:
-                meanMetrics[k] = meanMetrics[k].item()
-        self.train_state.metrics.update(meanMetrics)
+        with torch.no_grad():
+            metrics = {i:0 for i in self.metrics}
+            # output = []
+            cnt = 0
+            for batch in dataloader:
+                cnt += 1
+                outputDict = self.forward_step(self, batch)
+                self.detachOutput(outputDict)
+                # output.append(outputDict)
+                for i in metrics:
+                    metrics[i] += self.metrics[i](**outputDict)
+            meanMetrics = {i:(metrics[i]/cnt).cpu().numpy() for i in metrics}
+            for k in meanMetrics:
+                if meanMetrics[k].shape == (1,) or \
+                    meanMetrics[k].ndim == 0:
+                    meanMetrics[k] = meanMetrics[k].item()
+            self.train_state.metrics.update(meanMetrics)
         self.model.train()
         # newOutput = {i:[] for i in output[0]}
         # for o in output:
