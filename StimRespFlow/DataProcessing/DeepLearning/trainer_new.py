@@ -261,12 +261,13 @@ class TorchTrainer:
             # output = []
             cnt = 0
             for batch in dataloader:
-                cnt += 1
                 outputDict = self.forward_step(self, batch)
+                nBatch = list(outputDict.values())[0].shape[0]
                 self.detachOutput(outputDict)
                 # output.append(outputDict)
                 for i in metrics:
                     metrics[i] += self.metrics[i](**outputDict)
+                cnt += nBatch
             meanMetrics = {i:(metrics[i]/cnt).cpu().numpy() for i in metrics}
             for k in meanMetrics:
                 if meanMetrics[k].shape == (1,) or \
