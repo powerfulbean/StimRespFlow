@@ -266,7 +266,7 @@ class TorchTrainer:
                 self.detachOutput(outputDict)
                 # output.append(outputDict)
                 for i in metrics:
-                    metrics[i] += self.metrics[i](**outputDict)
+                    metrics[i] += self.metrics[i](**outputDict) * nBatch
                 cnt += nBatch
             meanMetrics = {i:(metrics[i]/cnt).cpu().numpy() for i in metrics}
             for k in meanMetrics:
