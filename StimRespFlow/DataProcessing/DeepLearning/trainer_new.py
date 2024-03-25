@@ -24,6 +24,7 @@ class Event(Enum):
     
 class Handler(Enum):
     COMMON = 0
+    SCHEDULER = 1
     
 class Stage(Enum):
     IDLE = -1
@@ -168,7 +169,7 @@ class TorchTrainer:
         self.logger = logger
         
     def add_scheduler(self, eventType, scheduler):
-        self.add_event(eventType, Handler.COMMON, scheduler)
+        self.add_event(eventType, Handler.SCHEDULER, scheduler)
     
     def add_event(self, eventType:Event,handlerType:Handler, func):
          self.events[eventType].append((handlerType, func))
@@ -182,6 +183,8 @@ class TorchTrainer:
     def _parseEvent(self, event):
         if event[0] == Handler.COMMON:
             event[1](self)
+        elif event[0] == Handler.SCHEDULER:
+            event[1].step()
         else:
             raise ValueError()
     
