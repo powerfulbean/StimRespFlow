@@ -399,7 +399,7 @@ class CDataSet:
     
     def _getitem(self,idx):
         if len(self.stimuliDict) == 0:
-            return self.records[idx].data, self.records[idx].stimuli
+            return self.records[idx].stimuli, self.records[idx].data
         else:
             record = self.records[idx]
             resp = record.data
@@ -917,7 +917,7 @@ def splitDatasetByIdxList(dataset,trainList,devList,testList):
     return trainSet,devSet,testSet
         
 class CDataRecord: #base class for data with label
-    def __init__(self,data,stimuli,stimuliDes:list,srate):
+    def __init__(self,data,stimuli,stimuliDes:dict,srate):
         self.data = data #real data Segment
         self.stimuli = stimuli #segmented "auditoryStimuli" object
         self.stimuliDes = stimuliDes #information of the stimuli
