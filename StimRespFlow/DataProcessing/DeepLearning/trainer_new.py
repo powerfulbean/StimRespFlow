@@ -257,6 +257,21 @@ class TorchTrainer:
         for k in outputdict:
             outputdict[k] = outputdict[k].detach()
 
+
+    def customInference(self, dataloader, forward_step):
+        self.model.eval()
+        with torch.no_grad():
+            outputDicts = []
+            for batch in dataloader:
+                outputDict = forward_step(self, batch)
+                outputDicts.append(outputDict)
+            keys = list(outputDicts[0].keys())
+            output = {k:[] for k in keys}
+            for o in outputDicts:
+                for k in keys:
+                    output[k].append(o[k])
+        return output
+
     def inference(self, dataloader):
         self.model.eval()
         with torch.no_grad():
