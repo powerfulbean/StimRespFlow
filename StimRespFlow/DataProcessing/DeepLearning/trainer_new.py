@@ -299,7 +299,7 @@ class TorchTrainer:
         #         newOutput[k].append(o[k])
         # self.train_state.forward_output.update(newOutput)
         # return output
-        return metrics
+        return meanMetrics
             
     def logMetric(self,tag = ''):
         output = {}
