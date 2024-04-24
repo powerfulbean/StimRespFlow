@@ -226,6 +226,9 @@ class CExpr:
         
         return CRun(self, self.getNewExprIndex(),self.configs)
     
+    def lastRun(self,):
+        return CRun(self, self.getNewExprIndex()-1,self.configs)
+    
     
 class CRun:
     #record the results of one run, the average of several runs provide result 
