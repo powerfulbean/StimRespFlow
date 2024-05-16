@@ -53,3 +53,11 @@ def featDictProcess(func):
         return stimDict
     return wrapper
 
+
+def selectFeatByName(data, featlist, tarFeats):
+    #data: nRepition * nRuns * (nSamples, nFeat)
+    tarFeatIdx = np.array([featlist.index(f) for f in tarFeats])
+    data = list(
+        map(lambda d: [d_[:, tarFeatIdx] for d_ in d], data)
+    )
+    return data
