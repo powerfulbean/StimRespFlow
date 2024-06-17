@@ -491,16 +491,16 @@ class CDataSet:
         for key in temp.__dict__:
             setattr(self,key,getattr(temp,key))
     
-    def save(self,folderName,name = None):
-        DataIO.checkFolder(folderName)
-#        print(self.name)
-        if(name == None):
-            file = open(folderName + '/' + self.name.replace(':','_') + '.bin', 'wb')
-        else:
-            file = open(folderName + '/' + name + '.bin', 'wb')
-        import pickle
-        pickle.dump(self,file)
-        file.close()
+#     def save(self,folderName,name = None):
+#         DataIO.checkFolder(folderName)
+# #        print(self.name)
+#         if(name == None):
+#             file = open(folderName + '/' + self.name.replace(':','_') + '.bin', 'wb')
+#         else:
+#             file = open(folderName + '/' + name + '.bin', 'wb')
+#         import pickle
+#         pickle.dump(self,file)
+#         file.close()
         
     def sort(self,keyFunc):
         self.dataRecordList.sort(key = keyFunc)
@@ -685,6 +685,24 @@ class CDataSet:
             resps_subj.append(resps)
 
         return stims_subj, resps_subj
+    
+    def dump(self):
+        output = {}
+        output['dataRecordList'] = [l.dump() for l in self.dataRecordList]
+        for k in self.__dict__:
+            if k != 'dataRecordList':
+                output[k] = self.__dict__[k]
+        return output
+
+    @classmethod
+    def load(cls, state):
+        output = cls()
+        for k in state:
+            if k == 'dataRecordList':
+                output.__dict__['dataRecordList'] = [CDataRecord.load(l) for l in state[k]]
+            else:
+                output.__dict__[k] = state[k]
+        return output
 
 def dataset_to_pairs_by_filter(
         dataset:CDataSet, 
@@ -960,6 +978,20 @@ class CDataRecord: #base class for data with label
         new.descInfo = self.descInfo.copy()
         new.filterLog = self.filterLog.copy()
         return new 
+    
+    def dump(self):
+        output = {}
+        for key in self.__dict__:
+            output[key] = self.__dict__[key]
+        return output
+    
+    @classmethod
+    def load(cls, state):
+        obj = cls(None, None, None, None)
+        for key in state:
+            obj.__dict__[key] = state[key]
+        return obj
+
         
 class CDataDict:
     ''' assume the first dimension is channel'''
