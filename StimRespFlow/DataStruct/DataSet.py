@@ -360,7 +360,14 @@ class CDataOrganizor:
         
         return oDataSet
 
-    
+def alignData(*arrs):
+    arrs = list(arrs)
+    #assume arr have shape [nChannel, nSamples]
+    minLen  = min([arr.shape[1] for arr in arrs])
+    for i, arr in enumerate(arrs):
+        arrs[i] = arr[:, :minLen]
+    return arrs
+
 class CDataSet:
     #the shape of data and stimFeat must be [nSample, nChan]
     def __init__(self,dataSetName = None,stimFilterKeys = {},respFilterChanIdx = [],ifOldFetchMode = True,cropRespTail_s = 0):
@@ -654,6 +661,30 @@ class CDataSet:
         tar.cropRespTail_s = src.cropRespTail_s
         return tar
         # pass
+    
+    def to_pairs(self, ifT = False):
+        self.ifOldFetchMode = False
+        allSubj = set([i.descInfo['subj'] for i in self.records])
+        filterKey = lambda x: x[2]['subj']
+        
+        transpose = lambda *arrs: [arr.T for arr in arrs]
+        def catstimarr(stim:dict):
+            keys = stim.keys()
+            stim = [stim[k] for k in keys if isinstance(stim[k], np.ndarray)]
+            stim = np.concatenate(stim, axis = 1)
+            return stim
+
+        stims_subj = []
+        resps_subj = []
+        for k, grp in itertools.groupby(self, filterKey):
+            stims, resps, infos = list(zip(*grp))
+            stims = list(map(catstimarr, stims))
+            stims, resps = list(zip(*map(alignData, stims, resps)))
+            stims, resps = list(zip(*map(transpose, stims, resps)))
+            stims_subj.append(stims)
+            resps_subj.append(resps)
+
+        return stims_subj, resps_subj
 
 def dataset_to_pairs_by_filter(
         dataset:CDataSet, 
@@ -750,7 +781,7 @@ def dataset_to_pairs(
         The dataset to extract data from
     filterDict : list of key-values pair
         The info that used to select sub-dataset
-    stimRespKeys : list(((stimKey),dict)))
+    stimRespKeys : [((stimKey),dict),...]
         The info - list of stimKey and resp feature dict, to further 
             select corresponding data to return as a list. 
             len(returned) == len(stimRespKeys)
@@ -767,14 +798,7 @@ def swapFirstTwoDim(data):
     #if not use map(list, ...), each item in the output will be a tuple
     #of what zip returned
     return list(map(list,zip(*data))) 
-    
 
-def alignData(arrs):
-    #assume arr have shape [nChannel, nSamples]
-    minLen  = min([arr.shape[1] for arr in arrs])
-    for i, arr in enumerate(arrs):
-        arrs[i] = arr[:, :minLen]
-    return arrs
 
 # def OneOfKFoldNestedResample(tarList,curFold,nFold):
 #     ''' curFold starts from zero '''
