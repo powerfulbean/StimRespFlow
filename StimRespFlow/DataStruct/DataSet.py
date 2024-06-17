@@ -381,7 +381,7 @@ class CDataSet:
         self.respFilterChanIdx = respFilterChanIdx
         self.ifOldFetchMode = ifOldFetchMode
         self.cropRespTail_s = cropRespTail_s
-        self.oZscoreStim = None #{'resp':None,'stim':None} 
+        self.oZscoreStim = 'None' #{'resp':None,'stim':None} 
     
     
     def fitZscoreStim(self,featKeys):
