@@ -662,7 +662,7 @@ class CDataSet:
         return tar
         # pass
     
-    def to_pairs(self, ifT = False):
+    def to_pairs(self, ifT = True):
         self.ifOldFetchMode = False
         allSubj = set([i.descInfo['subj'] for i in self.records])
         filterKey = lambda x: x[2]['subj']
@@ -680,7 +680,8 @@ class CDataSet:
             stims, resps, infos = list(zip(*grp))
             stims = list(map(catstimarr, stims))
             stims, resps = list(zip(*map(alignData, stims, resps)))
-            stims, resps = list(zip(*map(transpose, stims, resps)))
+            if ifT:
+                stims, resps = list(zip(*map(transpose, stims, resps)))
             stims_subj.append(stims)
             resps_subj.append(resps)
 
