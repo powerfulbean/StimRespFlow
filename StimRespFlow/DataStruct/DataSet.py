@@ -669,6 +669,8 @@ class CDataSet:
         self.ifOldFetchMode = False
         allSubj = set([i.descInfo['subj'] for i in self.records])
         filterKey = lambda x: x[2]['subj']
+        sortKey = lambda x: (x.descInfo['subj'], x.descInfo['stim'])
+        self.dataRecordList = sorted(self.records, key = sortKey)
         
         transpose = lambda *arrs: [arr.T for arr in arrs]
         def catstimarr(stim:dict):
@@ -681,6 +683,7 @@ class CDataSet:
         resps_subj = []
         for k, grp in itertools.groupby(self, filterKey):
             stims, resps, infos = list(zip(*grp))
+            print(infos)
             stims = list(map(catstimarr, stims))
             stims, resps = list(zip(*map(alignData, stims, resps)))
             if ifT:
