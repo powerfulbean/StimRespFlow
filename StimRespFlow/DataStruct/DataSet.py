@@ -410,7 +410,10 @@ class CDataSet:
         else:
             record = self.records[idx]
             resp = record.data
-            stimKey = record.stimuli['stimKey']
+            try:
+                stimKey = record.stimuli['stimKey']
+            except:
+                stimKey = record.stimuli
             stimulusDict = self.stimuliDict[stimKey]
             return stimulusDict,resp
     
