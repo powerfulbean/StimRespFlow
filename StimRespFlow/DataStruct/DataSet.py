@@ -675,6 +675,7 @@ class CDataSet:
         transpose = lambda *arrs: [arr.T for arr in arrs]
         def catstimarr(stim:dict):
             keys = stim.keys()
+            # print(stim)
             stim = [stim[k] for k in keys if isinstance(stim[k], np.ndarray)]
             stim = np.concatenate(stim, axis = 1)
             return stim
@@ -683,7 +684,7 @@ class CDataSet:
         resps_subj = []
         for k, grp in itertools.groupby(self, filterKey):
             stims, resps, infos = list(zip(*grp))
-            print(infos)
+            # print(infos)
             stims = list(map(catstimarr, stims))
             stims, resps = list(zip(*map(alignData, stims, resps)))
             if ifT:
