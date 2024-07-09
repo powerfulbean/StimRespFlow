@@ -682,6 +682,8 @@ class CDataSet:
 
         stims_subj = []
         resps_subj = []
+        infoss = []
+        ks = []
         for k, grp in itertools.groupby(self, filterKey):
             stims, resps, infos = list(zip(*grp))
             # print(infos)
@@ -691,8 +693,10 @@ class CDataSet:
                 stims, resps = list(zip(*map(transpose, stims, resps)))
             stims_subj.append(stims)
             resps_subj.append(resps)
+            infoss.append(infos)
+            ks.append(k)
 
-        return stims_subj, resps_subj
+        return stims_subj, resps_subj, ks, infoss
     
     def dump(self):
         output = {}
