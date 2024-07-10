@@ -1,4 +1,5 @@
 import torch
+import os
 
 class MetricsLog:
 
@@ -13,11 +14,15 @@ class Context:
     def __init__(
         self,
         model,
+        optim,
         metricsNames,
         folder,
         configs = {}
     ):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         self.model = model
+        self.optim = optim
         self.metricslog = MetricsLog(metricsNames)
         self.folder = folder
         self.configs = configs
@@ -56,6 +61,7 @@ class SaveBest:
             self.bestCnt = t_cnt
             checkpoint = {
                 'state_dict': self.ctx.model.state_dict(),
+                'optim_state_dict': self.ctx.optim.state_dict(),
                 'metricName': self.metricName,
                 'metric': self.bestMetric,
                 'cnt': self.bestCnt
@@ -70,4 +76,4 @@ class SaveBest:
                 print(f'early stop --- epoch: {self.bestCnt}, metric: {self.bestMetric}')
         
         self.cnt += 1
-        return ifStop
+        return ifUpdate, ifStop
