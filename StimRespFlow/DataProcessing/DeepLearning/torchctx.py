@@ -10,6 +10,9 @@ class MetricsLog:
         for k in metricDict:
             self.data[k].append(metricDict[k])
 
+    def __getitem__(self,key):
+        return self.data[key]
+
 class Context:
     def __init__(
         self,
