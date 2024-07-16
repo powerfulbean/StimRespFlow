@@ -1,5 +1,8 @@
 import torch
 
+def pearsonr_loss(x, y):
+    return -Pearsonr(x,y)
+
 def Pearsonr(x,y):
     nObs = len(x)
     sumX = torch.sum(x,0)
