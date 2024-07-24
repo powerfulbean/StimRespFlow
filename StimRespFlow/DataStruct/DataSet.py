@@ -747,7 +747,8 @@ def dataset_to_pairs_by_filter(
                         assert len(stim) == 1
                         stim = stim[0]
                     else:
-                        stim = alignData(stim)
+                        # print(stim)
+                        stim = alignData(*stim)
                         stim = np.concatenate(
                                 stim, axis = 0
                                 )
@@ -756,7 +757,7 @@ def dataset_to_pairs_by_filter(
         
         if cnt == len(stimRespKeys):
             if not any([isinstance(it, dict) for it in item]):
-                item = alignData(item)
+                item = alignData(*item)
             if isinstance(ifZscore, bool):
                 ifZscoreList = len(item) * [ifZscore]
             else:
