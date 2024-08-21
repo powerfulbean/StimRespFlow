@@ -972,13 +972,13 @@ def splitDatasetByIdxList(dataset,trainList,devList,testList):
     return trainSet,devSet,testSet
         
 class CDataRecord: #base class for data with label
-    def __init__(self,data,stimuli,stimuliDes:dict,srate):
+    def __init__(self,data,stimuli,descInfo:dict,srate):
         self.data = data #real data Segment
         self.stimuli = stimuli #segmented "auditoryStimuli" object
-        self.stimuliDes = stimuliDes #information of the stimuli
+        self.stimuliDes = descInfo #information of the stimuli
         self.srate = srate
         self.filterLog = list()
-        self.descInfo = stimuliDes
+        self.descInfo = descInfo
         
     def errorPrint(self,error):
         print("CDataRecorder error: " + error)
