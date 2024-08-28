@@ -1,8 +1,42 @@
 import torch
 import os
+import numpy as np
+import itertools
 
 def dummy_transform(x):
     return x
+
+fSelectTrials = lambda data, iTrials: [[r[i] for i in iTrials] for r in data]
+fSelectSubjs = lambda data, iSubjs: [data[i] for i in iSubjs]
+fFlatten = lambda data: list(itertools.chain.from_iterable(data))
+
+def get_datasets_subjectCV(
+        data,
+        prepare_dataset,
+        iFold, 
+        nFolds, 
+        iTrialsForTrain, 
+        iTrialsForVal,
+        CDataset: torch.utils.data.dataset.Dataset
+    ):
+    #prepare_dataset: #output shape [nSubjs, nTrials] list of numpy array
+    data = prepare_dataset(data)
+    split_iFold =  np.array_split(np.arange(nFolds), nFolds)
+    iFold = iFold
+    iSubjs_trainVal = np.concatenate(split_iFold[:iFold] + split_iFold[iFold + 1:])
+    iSubjs_test = split_iFold[iFold]
+    
+    trainValData = fSelectSubjs(data, iSubjs_trainVal)
+    trainData = fFlatten(fSelectTrials(trainValData, iTrialsForTrain))
+    valData = fFlatten(fSelectTrials(trainValData, iTrialsForVal))
+
+    testData = fFlatten(fSelectSubjs(data, iSubjs_test))
+
+    return (
+        torch.utils.data.DataLoader(CDataset(trainData)), 
+        torch.utils.data.DataLoader(CDataset(valData)), 
+        torch.utils.data.DataLoader(CDataset(testData))
+    )
 
 class MetricsLog:
 
