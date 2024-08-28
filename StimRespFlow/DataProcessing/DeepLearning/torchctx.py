@@ -1,44 +1,58 @@
 import torch
 import os
 
+def dummy_transform(x):
+    return x
+
 class MetricsLog:
 
-    def __init__(self, names):
-        self.data = {n: [] for n in names}
+    def __init__(self, nEpoch, agg_func = dummy_transform):
+        self._data = [{} for i in range(nEpoch)]
+        self._nEpoch = nEpoch
+        self.agg_func = agg_func
 
-    def append(self, metricDict:dict):
+    def append(self, iEpoch, metricDict:dict):
+        data = self._data[iEpoch]
         for k in metricDict:
-            self.data[k].append(metricDict[k])
+            if k not in data:
+                data[k] = []
+            data[k].append(metricDict[k])
 
-    def __getitem__(self,key):
-        return self.data[key]
+    def __getitem__(self,key, index):
+        return self.agg_func(self.data[index][key])
 
 def result_default_transform(data):
     return torch.stack(data, 0).mean(0)
-
-class Result:
-
-    def __init__(self, transform = result_default_transform):
-        self.data = {}
-        self.transform = transform
     
-    def log(self, metricDict):
-        for k in metricDict:
-            if k not in self.data:
-                self.data[k] = []
-            self.data[k].append(metricDict[k])
-    
-    def __getitem__(self, key):
-        return self.transform(self.data[key])
-    
+class FuncForward:
 
+    def __init__(self, model, func):
+        self._model = model
+        self._func = func
+    
+    def __call__(self, batch):
+        return self._func(self._model, batch)
+
+class Metrics:
+
+    def __init__(self, func):
+        self._func = func
+
+    def __call__(self, output, tag = '') -> dict:
+        metrics =  self._func(output)
+        assert isinstance(metrics, dict)
+        if len(tag) > 0:
+            new_metrics = {f'{tag}_k':metrics[k] for k in metrics}
+        else:
+            new_metrics = metrics
+        return new_metrics
 
 class Context:
     def __init__(
         self,
+        nEpoch,
         model,
         optim,
-        metricsNames,
         folder,
         configs = {}
     ):
@@ -46,76 +60,40 @@ class Context:
             os.makedirs(folder)
         self.model = model
         self.optim = optim
-        self.metricslog = MetricsLog(metricsNames)
+        self.metricslog = MetricsLog(nEpoch)
         self.folder = folder
         self.configs = configs
         
-    def iter_dataloader(
+    def model_infer_dataloader(
         self, 
         dataloader,
         func_forward,
     ):
-        for batch in dataloader_train:
-            
-
-            #loss = []
-            self.optim.zero_grad()
+        with torch.no_grad():
             model = self.model
-            for batch in dataloader_train:
-                model.train()
-                # print('batch shape', batch[0].shape, batch[1].shape)
-                # outputs = model(batch[0][0], batch[1][0])
+            for batch in dataloader:
+                model.eval()
                 outputs = func_forward(batch)
-                
-                # tempLoss = pearsonr_loss(outputs[0], outputs[1])
-                # tempLoss = tempLoss.sum()
-                # tempLoss.backward()
-                # optim.step()
-                func_backward(outputs)
-            
-            train_cache = Result(
-                lambda x: torch.stack(x, dim = 0).to('cpu').mean(0).detach()
-            )
-            
-            
-            with torch.no_grad():
-                for batch in dataloader:
-                    model.eval()
-                    outputs2 = model(batch[0][0], batch[1][0])
-                    # print(outputs[0].shape)
-                    tempR = Pearsonr(outputs2[0], outputs2[1])
-                    tempLoss = pearsonr_loss(outputs2[0], outputs2[1])
-                    # print(tempR, tempLoss)
-                    train_cache.log(
-                        {
-                            'train_loss': tempLoss,
-                            'train_r': tempR
-                        }
-                    )
+                yield outputs
 
-            val_cache = Result(
-                ['val_loss', 'val_r'], 
-                lambda x: torch.stack(x, dim = 0).to('cpu').mean(0).detach()
-            )
-            with torch.no_grad():
-                for batch in test_dataloader:
-                    model.eval()
-                    outputs2 = model(batch[0][0], batch[1][0])
-                    tempR = Pearsonr(outputs2[0], outputs2[1])
-                    tempLoss = pearsonr_loss(outputs2[0], outputs2[1])
-                    # print(tempR, tempLoss)
-                    val_cache.log(
-                        {
-                            'val_loss': tempLoss, 
-                            'val_r': tempR
-                        }
-                    )
+    def decorator_model_op(self,func):
+        def wrapper(*args, **kwargs):
+            return func(self.model, *args, **kwargs)
+        return wrapper
     
+    def create_forward_func(self, func) -> FuncForward:
+        return FuncForward(self.model, func)
+    
+    def create_metrics_func(self, func) -> Metrics:
+        return Metrics(func)
+
+
 class SaveBest:
     def __init__(
         self, 
         ctx:Context, 
         metricName,
+        func_reduce = dummy_transform,
         op = lambda old, new: new > old, 
         tol = None, 
     ):
@@ -124,15 +102,17 @@ class SaveBest:
         self.bestCnt = -1
         self.metricName = metricName
         self.bestMetric = None
+        self.func_reduce = func_reduce
         self.op = op
         self.tol = tol
+
 
     @property
     def targetPath(self):
         return f'{self.ctx.folder}/saved_model.pt'
 
     def step(self,):
-        t_metric = self.ctx.metricslog[self.metricName][-1]
+        t_metric = self.func_reduce(self.ctx.metricslog[self.metricName,-1])
         t_cnt = self.cnt
         ifUpdate = False
         ifStop = False
