@@ -40,33 +40,27 @@ def get_datasets_subjectCV(
 
 class MetricsLog:
 
-    def __init__(self, nEpoch, agg_func = dummy_transform):
-        self._data = [{} for i in range(nEpoch)]
-        self._nEpoch = nEpoch
+    def __init__(self, agg_func = dummy_transform):
+        self._data = []
         self.agg_func = agg_func
 
-    def append(self, iEpoch, metricDict:dict):
-        data = self._data[iEpoch]
+    def append(self, metricDict:dict):
+        data = self._data[-1]
         for k in metricDict:
             if k not in data:
                 data[k] = []
-            data[k].append(metricDict[k])
+            data[k].append(metricDict[k].detach().to('cpu'))
 
-    def __getitem__(self,key, index):
-        return self.agg_func(self.data[index][key])
+    def newEpoch(self):
+        self._data.append({})
+
+    def __getitem__(self, idx):
+        key, index = idx
+        return self.agg_func(self._data[index][key])
 
 def result_default_transform(data):
     return torch.stack(data, 0).mean(0)
     
-class FuncForward:
-
-    def __init__(self, model, func):
-        self._model = model
-        self._func = func
-    
-    def __call__(self, batch):
-        return self._func(self._model, batch)
-
 class Metrics:
 
     def __init__(self, func):
@@ -76,7 +70,7 @@ class Metrics:
         metrics =  self._func(output)
         assert isinstance(metrics, dict)
         if len(tag) > 0:
-            new_metrics = {f'{tag}_k':metrics[k] for k in metrics}
+            new_metrics = {f'{tag}_{k}':metrics[k] for k in metrics}
         else:
             new_metrics = metrics
         return new_metrics
@@ -84,39 +78,45 @@ class Metrics:
 class Context:
     def __init__(
         self,
-        nEpoch,
         model,
         optim,
         folder,
         configs = {}
     ):
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+        if folder:
+            if not os.path.exists(folder):
+                os.makedirs(folder)
         self.model = model
         self.optim = optim
-        self.metricslog = MetricsLog(nEpoch)
+        self.metricslog = MetricsLog()
         self.folder = folder
         self.configs = configs
-        
+        self._curEpoch = -1
+    
+    @property
+    def nEpoch(self):
+        return len(self.metricslog._data)
+
     def model_infer_dataloader(
         self, 
         dataloader,
         func_forward,
+        curEpoch = 0
     ):
         with torch.no_grad():
             model = self.model
+            if curEpoch != self._curEpoch:
+                self.metricslog.newEpoch()
+                self._curEpoch = curEpoch
             for batch in dataloader:
                 model.eval()
-                outputs = func_forward(batch)
-                yield outputs
+                outputs = func_forward(model, batch)
+                yield outputs, self.metricslog
 
     def decorator_model_op(self,func):
         def wrapper(*args, **kwargs):
             return func(self.model, *args, **kwargs)
         return wrapper
-    
-    def create_forward_func(self, func) -> FuncForward:
-        return FuncForward(self.model, func)
     
     def create_metrics_func(self, func) -> Metrics:
         return Metrics(func)
@@ -139,7 +139,6 @@ class SaveBest:
         self.func_reduce = func_reduce
         self.op = op
         self.tol = tol
-
 
     @property
     def targetPath(self):
