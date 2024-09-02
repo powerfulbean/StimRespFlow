@@ -2,6 +2,7 @@ import torch
 import os
 import numpy as np
 import itertools
+from tqdm import tqdm
 
 def dummy_transform(x):
     return x
@@ -17,7 +18,8 @@ def get_datasets_subjectCV(
         nFolds, 
         iTrialsForTrain, 
         iTrialsForVal,
-        CDataset: torch.utils.data.dataset.Dataset
+        CDataset: torch.utils.data.dataset.Dataset,
+        iTrialsForTest = None
     ):
     #prepare_dataset: #output shape [nSubjs, nTrials] list of numpy array
     data = prepare_dataset(data)
@@ -30,8 +32,12 @@ def get_datasets_subjectCV(
     trainData = fFlatten(fSelectTrials(trainValData, iTrialsForTrain))
     valData = fFlatten(fSelectTrials(trainValData, iTrialsForVal))
 
-    testData = fFlatten(fSelectSubjs(data, iSubjs_test))
-
+    testData = fSelectSubjs(data, iSubjs_test)
+    if iTrialsForTest is not None:
+        testData = fFlatten(fSelectTrials(testData, iTrialsForTest))
+    else:
+        testData = fFlatten(testData)
+            
     return (
         torch.utils.data.DataLoader(CDataset(trainData)), 
         torch.utils.data.DataLoader(CDataset(valData)), 
@@ -79,8 +85,8 @@ class Context:
     def __init__(
         self,
         model,
-        optim,
-        folder,
+        optim = None,
+        folder = None,
         configs = {}
     ):
         if folder:
@@ -112,6 +118,18 @@ class Context:
                 model.eval()
                 outputs = func_forward(model, batch)
                 yield outputs, self.metricslog
+                
+    def model_dataloader_input_output(
+        self,
+        dataloader,
+        func_forward
+    ):
+        with torch.no_grad():
+            model = self.model
+            for batch in tqdm(dataloader):
+                model.eval()
+                output = func_forward(model, batch)
+                yield batch, output
 
     def decorator_model_op(self,func):
         def wrapper(*args, **kwargs):
