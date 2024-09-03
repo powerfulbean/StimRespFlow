@@ -49,7 +49,7 @@ class MetricsLog:
         for k in metricDict:
             if k not in data:
                 data[k] = []
-            data[k].append(metricDict[k].detach().to('cpu'))
+            data[k].append(metricDict[k])
 
     def newEpoch(self):
         self._data.append({})
