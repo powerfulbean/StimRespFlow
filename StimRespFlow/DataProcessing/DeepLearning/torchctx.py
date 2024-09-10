@@ -55,7 +55,10 @@ class MetricsLog:
         for k in metricDict:
             if k not in data:
                 data[k] = []
-            data[k].append(metricDict[k])
+            if isinstance(metricDict[k], list):
+                data[k].extend(metricDict[k])
+            else:
+                data[k].append(metricDict[k])
 
     def newEpoch(self):
         self._data.append({})
