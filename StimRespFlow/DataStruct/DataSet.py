@@ -675,9 +675,12 @@ class CDataSet:
         transpose = lambda *arrs: [arr.T for arr in arrs]
         def catstimarr(stim:dict):
             keys = stim.keys()
-            # print(stim)
+            # print(keys)
+            assert all([stim[k].shape[0]==1 for k in keys if isinstance(stim[k], np.ndarray)])
             stim = [stim[k] for k in keys if isinstance(stim[k], np.ndarray)]
-            stim = np.concatenate(stim, axis = 1)
+            stim = alignData(*stim)
+            stim = np.concatenate(stim, axis = 0)
+            # print(stim.shape)
             return stim
 
         stims_subj = []

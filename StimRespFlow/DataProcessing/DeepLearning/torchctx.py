@@ -47,7 +47,7 @@ def get_datasets_subjectCV(
 class MetricsLog:
 
     def __init__(self, agg_func = dummy_transform):
-        self._data = []
+        self._data = [{}]
         self.agg_func = agg_func
 
     def append(self, metricDict:dict):
@@ -61,7 +61,7 @@ class MetricsLog:
                 data[k].append(metricDict[k])
 
     def newEpoch(self):
-        self._data.append({})
+        self._data[-1] = {}
 
     def __getitem__(self, idx):
         key, index = idx
@@ -125,14 +125,18 @@ class Context:
     def model_dataloader_input_output(
         self,
         dataloader,
-        func_forward
+        func_forward,
+        curEpoch = 0,
     ):
         with torch.no_grad():
             model = self.model
+            if curEpoch != self._curEpoch:
+                self.metricslog.newEpoch()
+                self._curEpoch = curEpoch
             for batch in tqdm(dataloader):
                 model.eval()
                 output = func_forward(model, batch)
-                yield batch, output
+                yield batch, output, self.metricslog
 
     def decorator_model_op(self,func):
         def wrapper(*args, **kwargs):
