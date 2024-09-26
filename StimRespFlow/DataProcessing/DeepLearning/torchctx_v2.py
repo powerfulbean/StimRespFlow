@@ -35,6 +35,12 @@ class MetricsRecord:
     
     def __iter__(self):
         return iter(self._data.keys())
+    
+    def reduce(self, fReduce):
+        output = {}
+        for k in self._data:
+            output[k] = fReduce(self._data[k])
+        return output
 
 def result_default_transform(data):
     return torch.stack(data, 0).mean(0)
@@ -59,6 +65,18 @@ class Context:
     def new_metrics_record(self,):
         self.metrics_record_cache = MetricsRecord()
         return self.metrics_record_cache
+
+
+def evaluate_dataloader(model, process_batch, dtldr, fMetric, metricsLog, metric_tag = ''):
+    with torch.no_grad():
+        for batch in dtldr:
+            model.eval()
+            output = process_batch(model, batch)
+            metrics:dict = fMetric(batch, output)
+            if len(metric_tag) > 0:
+                metrics = {f'{metric_tag}_{k}':metrics[k] for k in metrics}
+            metricsLog.append(metrics)
+    return metricsLog
 
 def load_savedBest_model(saveBest:'SaveBest', fGetModel):
     model:torch.nn.Module = fGetModel()
