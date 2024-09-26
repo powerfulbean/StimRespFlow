@@ -23,7 +23,7 @@ class MetricsRecord:
                 data[k].append(metricDict[k])
 
     def newEpoch(self):
-        self._data[-1] = {}
+        self._data = {}
 
     def __getitem__(self, idx):
         if isinstance(idx, tuple):
@@ -32,6 +32,9 @@ class MetricsRecord:
             key = idx
             agg_func = dummy_transform
         return agg_func(self._data[key])
+    
+    def __iter__(self):
+        return iter(self._data.keys())
 
 def result_default_transform(data):
     return torch.stack(data, 0).mean(0)
@@ -57,6 +60,11 @@ class Context:
         self.metrics_record_cache = MetricsRecord()
         return self.metrics_record_cache
 
+def load_savedBest_model(saveBest:'SaveBest', fGetModel):
+    model:torch.nn.Module = fGetModel()
+    model.load_state_dict(saveBest.saved_checkpoint['state_dict'])
+    return model
+
 class SaveBest:
     def __init__(
         self, 
@@ -65,6 +73,7 @@ class SaveBest:
         func_reduce = dummy_transform,
         op = lambda old, new: new > old, 
         tol = None, 
+        ifLog = True
     ):
         self.ctx = ctx
         self.cnt = 0
@@ -74,6 +83,8 @@ class SaveBest:
         self.func_reduce = func_reduce
         self.op = op
         self.tol = tol
+        self.saved_checkpoint= None
+        self.ifLog = ifLog
 
     @property
     def targetPath(self):
@@ -99,8 +110,10 @@ class SaveBest:
                 'cnt': self.bestCnt
             }
             checkpoint.update(self.ctx.configs)
-            print(f'saveBest --- cnt: {self.bestCnt}, {self.metricName}: {self.bestMetric}')
+            if self.ifLog:
+                print(f'saveBest --- cnt: {self.bestCnt}, {self.metricName}: {self.bestMetric}')
             torch.save(checkpoint, self.targetPath)
+            self.saved_checkpoint = checkpoint
         
         if self.tol is not None:
             if self.cnt - self.bestCnt > self.tol:
