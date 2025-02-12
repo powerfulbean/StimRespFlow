@@ -3,6 +3,12 @@ import os
 import numpy as np
 import itertools
 from tqdm import tqdm
+import pickle
+from typing import Callable
+from typing import Protocol
+from torch.nn import Module as TorchModule
+from torch import Tensor as TorchTensor
+from torch.optim import Optimizer as TorchOptim
 
 def dummy_transform(x):
     return x
@@ -41,9 +47,47 @@ class MetricsRecord:
         for k in self._data:
             output[k] = fReduce(self._data[k])
         return output
+    
+    def save(self, filepath):
+        with open(filepath, "wb") as file:
+            pickle.dump(self._data, file)
+
+    @classmethod
+    def load(cls, filepath):
+        with open(filepath, 'rb') as file:
+            loaded_object = pickle.load(file)
+            output = cls()
+            output._data = loaded_object
+            return output
+
 
 def result_default_transform(data):
     return torch.stack(data, 0).mean(0)
+
+class ForwardFunc(Protocol):
+    def __call__(self, model: TorchModule, batch: tuple) -> None:
+        raise NotImplementedError
+
+class BackwardFunc(Protocol):
+    def __call__(
+        self, 
+        model: TorchModule, 
+        batch: tuple,
+        loss: Callable[[TorchTensor, TorchTensor], TorchTensor],
+        optim: TorchOptim
+    ) -> MetricsRecord:
+        raise NotImplementedError
+
+# ForwardFunc = Callable[[TorchModule, tuple], None]
+# BackwardFunc = Callable[
+#     [
+#         TorchModule, 
+#         tuple, 
+#         Callable[[TorchTensor, TorchTensor], TorchTensor],
+#         TorchOptim
+#     ], 
+#     MetricsRecord
+# ]
     
 class Context:
     def __init__(
@@ -51,20 +95,67 @@ class Context:
         model,
         optim = None,
         folder = None,
-        configs = {}
+        configs = {},
+        loss = None,
+        n_epochs = 100
     ):
         if folder:
             if not os.path.exists(folder):
                 os.makedirs(folder)
         self.model = model
         self.optim = optim
+        self.loss = loss
         self.metrics_record_cache = None
         self.folder = folder
         self.configs = configs
+        configs['n_epochs'] = n_epochs
     
     def new_metrics_record(self,):
         self.metrics_record_cache = MetricsRecord()
         return self.metrics_record_cache
+
+    def fit(
+        self, 
+        f_forward:ForwardFunc, 
+        f_backward:BackwardFunc, 
+        dataloader_train, 
+        dataloader_val
+    ):
+        n_epochs = self.n_epochs
+        optim = self.optim
+        loss = self.loss
+        for iEpoch in range(n_epochs):
+            for batch in dataloader_train:
+                model = self.model.train()
+                optim.zero_grad()
+                f_backward(model, batch, loss, optim)
+                
+            metricsLog = self.new_metrics_record()
+
+            with torch.no_grad():
+                for batch in dataloader_train:
+                    model = self.model.eval()
+                    metrics = f_forward(model, batch)
+                    metrics_new = {'train_' + k: metrics[k] for k in metrics}
+                    metricsLog.append(metrics_new)
+
+            with torch.no_grad():
+                for batch in dataloader_val:
+                    model = self.model.eval()
+                    metrics = f_forward(model, batch)
+                    metrics_new = {'val_' + k: metrics[k] for k in metrics}
+                    metricsLog.append(metrics_new)
+
+            yield metricsLog
+
+    def evaluate(self, f_forward: ForwardFunc, dataloader):
+        metricsLog = MetricsRecord()
+        with torch.no_grad():
+            for batch in dataloader:
+                model = self.model.eval()
+                metrics = f_forward(model, batch)
+                metricsLog.append(metrics)
+        return metricsLog
 
 
 def evaluate_dataloader(model, process_batch, dtldr, fMetric, metricsLog, metric_tag = ''):
