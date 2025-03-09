@@ -658,8 +658,8 @@ class CDataSet:
         tar.name = src.name
         tar.desc = src.desc
         tar.srate = src.srate
-        tar.stimFilterKeys = src.stimFilterKeys
-        tar.respFilterChanIdx = src.respFilterChanIdx
+        tar.stimFilterKeys = src.stimFilterKeys.copy()
+        tar.respFilterChanIdx = src.respFilterChanIdx.copy()
         tar.ifOldFetchMode = src.ifOldFetchMode
         tar.cropRespTail_s = src.cropRespTail_s
         return tar
