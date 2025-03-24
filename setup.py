@@ -32,7 +32,7 @@ setuptools.setup(
       "Operating System :: OS Independent",
   ],
   install_requires=[
-      "pytorch-ignite==0.4.5",
+      # "pytorch-ignite==0.4.5",
       "matplotlib",
       "mne==0.19.1",
       "numpy",
