@@ -43,7 +43,7 @@ setuptools.setup(
       "scipy",
       "seaborn",
       "StellarInfra",
-      "torch",
+     # "torch",
       "tqdm",
   ],
 )
