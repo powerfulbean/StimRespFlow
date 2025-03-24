@@ -34,7 +34,7 @@ setuptools.setup(
   install_requires=[
       "pytorch-ignite==0.4.5",
       "matplotlib",
-      "mne==0.19.1",
+      "mne",
       "numpy",
       "packaging",
       "pandas",
