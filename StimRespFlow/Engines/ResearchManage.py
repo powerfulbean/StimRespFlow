@@ -220,11 +220,15 @@ class CExpr:
     def __setitem__(self,key,value):
         self.doc[key] = value
         
-    def newRun(self,updatedConfigs):
+    def newRun(self,updatedConfigs, config_as_foldername = False):
         for k,v in updatedConfigs.items():
             self.configs[k] = v
         
-        return CRun(self, self.getNewExprIndex(),self.configs)
+        if config_as_foldername:
+            foler_name = siDM.CNameByConfig(includeNone=False)(updatedConfigs)
+        else:
+            foler_name = self.getNewExprIndex()
+        return CRun(self, foler_name,self.configs)
     
     def lastRun(self,):
         return CRun(self, self.doc['run_list'][-1]["run_index"],self.configs)
