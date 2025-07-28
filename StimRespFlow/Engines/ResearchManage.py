@@ -227,7 +227,7 @@ class CExpr:
         return CRun(self, self.getNewExprIndex(),self.configs)
     
     def lastRun(self,):
-        return CRun(self, self.getNewExprIndex()-1,self.configs)
+        return CRun(self, self.doc['run_list'][-1]["run_index"],self.configs)
     
     
 class CRun:

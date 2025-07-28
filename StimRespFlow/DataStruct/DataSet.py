@@ -676,7 +676,8 @@ class CDataSet:
         def catstimarr(stim:dict):
             keys = stim.keys()
             # print(keys)
-            assert all([stim[k].shape[0]==1 for k in keys if isinstance(stim[k], np.ndarray)])
+            # assert all([stim[k].shape[0]==1 for k in keys if isinstance(stim[k], np.ndarray)])
+            assert all([stim[k].ndim==2 for k in keys if isinstance(stim[k], np.ndarray)])
             stim = [stim[k] for k in keys if isinstance(stim[k], np.ndarray)]
             stim = alignData(*stim)
             stim = np.concatenate(stim, axis = 0)
