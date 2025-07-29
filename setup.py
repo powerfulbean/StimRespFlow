@@ -11,7 +11,7 @@ import re
 with open("./README.md", "r") as fh:
   long_description = fh.read()
 
-with open("StimRespFlow/__init__.py") as file:
+with open("tray/__init__.py") as file:
     for line in file.readlines():
         m = re.match("__version__ *= *['\"](.*)['\"]", line)
         if m:
