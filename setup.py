@@ -18,13 +18,13 @@ with open("StimRespFlow/__init__.py") as file:
             version = m.group(1)
 
 setuptools.setup(
-  name="StimRespFlow",
+  name="tray",
   version=version,
   author="Powerfulbean",
   author_email="powerfulbean@gmail.com",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://github.com/powerfulbean/StimRespFlow",
+  url="https://github.com/powerfulbean/tray",
   packages=setuptools.find_packages(),
   classifiers=[
       "Programming Language :: Python :: 3",
@@ -32,18 +32,9 @@ setuptools.setup(
       "Operating System :: OS Independent",
   ],
   install_requires=[
-      # "pytorch-ignite==0.4.5",
-      "matplotlib",
       "mne",
       "numpy",
-      "packaging",
-      "pandas",
-      "Pillow",
-      "scikit_learn",
       "scipy",
-      "seaborn",
-      "StellarInfra",
-     # "torch",
-      "tqdm",
+      "matplotlib",
   ],
 )
