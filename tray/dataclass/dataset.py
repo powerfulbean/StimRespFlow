@@ -12,7 +12,9 @@ import itertools
 from typing import List
 import numpy as np
 
-META_INFO_FORCED_FIELD = ['trial_id', 'subj_id', 'dataset_name']
+#Note: please don't change the order, it matters for some functions using it
+META_INFO_FORCED_FIELD = ['dataset_name', 'subj_id', 'trial_id'] 
+
 
 def flatten_list_of_lists(list_of_lists:List[List]):
     return list(itertools.chain.from_iterable(list_of_lists))
@@ -42,6 +44,8 @@ def _validate_stimuli_dict(stimuli_dict:dict):
 
 def _validate_meta_info(info:dict):
     assert all([k in info for k in META_INFO_FORCED_FIELD])
+    for v in info.values():
+        assert isinstance(v, ((str, int, float, np.ndarray)))
     return info
 
 def align_data(*arrs):
@@ -127,8 +131,15 @@ class DataRecord:
         self.stim_id = stim_id
         self.meta_info = _validate_meta_info(meta_info)
 
-    def dump(self):
+    def dump_to_dict(self):
         return dump_dict_contains_nparray(self.__dict__)
+    
+    def dump(self):
+        record_key = "-".join(
+            [self.meta_info[k] for k in META_INFO_FORCED_FIELD]
+        )
+        
+
 
     @classmethod
     def load(cls, state:dict):
