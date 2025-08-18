@@ -4,7 +4,7 @@ import h5py
 import json
 import numpy as np
 from collections import OrderedDict
-
+from StellarInfra import siIO
 from tray.dataclass.io import (
     mne_montage_to_h5py_group,
     mne_montage_from_h5py_group
@@ -29,6 +29,8 @@ def test_load_montage_in_mne():
     fig.savefig(f"{current_folder}/loaded_montage.png")
 
 
-
-test_save_mne_montage()
-test_load_montage_in_mne()
+data_path = f"{os.environ['box_root']}/Collab-Project/CompiledDataset/ns.pkl"
+dataset = siIO.loadObject(data_path)
+print(dataset)
+# test_save_mne_montage()
+# test_load_montage_in_mne()
