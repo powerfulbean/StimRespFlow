@@ -28,5 +28,7 @@ def test_load_montage_in_mne():
     fig = montage.plot(show = False)
     fig.savefig(f"{current_folder}/loaded_montage.png")
 
+
+
 test_save_mne_montage()
 test_load_montage_in_mne()

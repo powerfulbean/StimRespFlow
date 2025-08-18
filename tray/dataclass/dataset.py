@@ -12,6 +12,8 @@ import itertools
 from typing import List
 import numpy as np
 
+from .io import data_record_from_h5py_group, data_record_to_h5py_group
+
 #Note: please don't change the order, it matters for some functions using it
 META_INFO_FORCED_FIELD = ['dataset_name', 'subj_id', 'trial_id'] 
 
@@ -138,11 +140,21 @@ class DataRecord:
         record_key = "-".join(
             [self.meta_info[k] for k in META_INFO_FORCED_FIELD]
         )
-        
-
+        return dict(
+            key = record_key,
+            data = self.data,
+            stim_id = self.stim_id,
+            meta_info = self.meta_info,
+            srate = self.srate,
+        )
 
     @classmethod
-    def load(cls, state:dict):
+    def load(cls, new_state:dict):
+        obj = cls(**new_state)
+        return obj
+
+    @classmethod
+    def load_from_dict(cls, state:dict):
         new_state = load_dict_contains_nparray(state)
         obj = cls(**new_state)
         # for key in state:
