@@ -9,8 +9,9 @@ from typing import Union
  mne montage data class related
 """
 
-def mne_montage_to_h5py_group(pos_dict:dict, f:h5py.File):
+def mne_montage_to_h5py_group(montage:mne.channels.DigMontage, f:h5py.File):
     montage_grp = f.require_group('montage')
+    pos_dict = montage.get_positions()
     for k,v in pos_dict.items():
         # print(k)
         if k == 'ch_pos':
@@ -83,9 +84,9 @@ def data_record_to_h5py_group(
 def data_record_from_h5py_group(
     f:h5py.File
 ):
-    data = f[:]
+    data = f['data'][:]
     stim_id = f.attrs['stim_id']
-    srate = f.attrs['srate']
+    srate = int(f.attrs['srate'])
 
     meta_info_grp = f['meta_info']
     meta_info = {}

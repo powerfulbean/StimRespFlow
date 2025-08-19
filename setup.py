@@ -18,13 +18,13 @@ with open("tray/__init__.py") as file:
             version = m.group(1)
 
 setuptools.setup(
-  name="tray",
+  name="turpan",
   version=version,
   author="Powerfulbean",
   author_email="powerfulbean@gmail.com",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://github.com/powerfulbean/tray",
+  url="https://github.com/powerfulbean/turpan",
   packages=setuptools.find_packages(),
   classifiers=[
       "Programming Language :: Python :: 3",

@@ -7,12 +7,16 @@ Created on Thu Jan 16 12:44:20 2025
 import re
 import io
 import copy
+import h5py
+import json
 import itertools
 # import h5py
 from typing import List
 import numpy as np
 
-from .io import data_record_from_h5py_group, data_record_to_h5py_group
+from .io import (
+    data_record_from_h5py_group, data_record_to_h5py_group
+)
 
 #Note: please don't change the order, it matters for some functions using it
 META_INFO_FORCED_FIELD = ['dataset_name', 'subj_id', 'trial_id'] 
@@ -46,8 +50,11 @@ def _validate_stimuli_dict(stimuli_dict:dict):
 
 def _validate_meta_info(info:dict):
     assert all([k in info for k in META_INFO_FORCED_FIELD])
-    for v in info.values():
-        assert isinstance(v, ((str, int, float, np.ndarray)))
+    for k, v in info.items():
+        if isinstance(v, np.integer):
+            info[k] = int(v)
+    for k,v in info.items():
+        assert isinstance(v, ((str, int, float, np.ndarray))), f"{k},{type(v)}"
     return info
 
 def align_data(*arrs):
@@ -127,7 +134,7 @@ def load_dict_contains_nparray(state_dict):
 
 class DataRecord:
     
-    def __init__(self, data, stim_id, meta_info, srate):
+    def __init__(self, data, stim_id, meta_info:dict, srate:int):
         self.srate = srate
         self.data = data
         self.stim_id = stim_id
@@ -138,7 +145,7 @@ class DataRecord:
     
     def dump(self):
         record_key = "-".join(
-            [self.meta_info[k] for k in META_INFO_FORCED_FIELD]
+            [str(self.meta_info[k]) for k in META_INFO_FORCED_FIELD]
         )
         return dict(
             key = record_key,
@@ -175,7 +182,7 @@ class Dataset:
     # data and stim have the shape (nChannels, nSamples)
     # stim_id_cond: used when stimuli contains multiple conditions
     
-    def __init__(self, name, srate):
+    def __init__(self, name:str, srate:int):
         self.name = name
         self.srate = srate
         self.stim_feat_filter:list = []
@@ -344,27 +351,34 @@ class Dataset:
         state_dict = self.dump()
         state_dict['_records'] = [l.dump() for l in records]
         return self.__class__.load(state_dict)
+
+    def dump(self, file_path):
+        with h5py.File(file_path, "w") as f:
+            f.attrs["name"] = self.name
+            f.attrs["srate"] = self.srate
+            preprocess_config = json.dumps(self._preprocess_config)
+            f.attrs["preprocess_config_str"] = preprocess_config
+            for record in self._records:
+                data_record_to_h5py_group(
+                    f = f,
+                    **record.dump(),
+                )
     
-    def dump_old(self):
-        output = {}
-        output['_records'] = [l.dump() for l in self._records]
-        for k in self.__dict__:
-            if k != '_records':
-                output[k] = self.__dict__[k]
-        return output
-
     @classmethod
-    def load_old(cls, state):
-        output = cls()
-        output = cls(name = state['name'], srate = state['srate'])
-        for k in state:
-            if k == '_records':
-                output.__dict__['_records'] = [DataRecord.load(l) for l in state[k]]
-            else:
-                output.__dict__[k] = state[k]
-        return output
+    def load(cls, file_path):
+        new_dataset = None
+        with h5py.File(file_path, "r") as f:
+            new_dataset = cls(
+                name = str(f.attrs['name']),
+                srate = int(f.attrs['srate']),
+            )
+            for k, grp in f['records'].items():
+                record_dict = data_record_from_h5py_group(grp)
+                new_record = DataRecord(**record_dict)
+                new_dataset.append(new_record)
+        return new_dataset
 
-    def dump(self):
+    def dump_to_dict(self):
         output = {}
         output['_records'] = [l.dump() for l in self._records]
         for k,v in self.__dict__.items():
@@ -376,7 +390,7 @@ class Dataset:
         return output
 
     @classmethod
-    def load(cls, state):
+    def load_from_dict(cls, state):
         output = cls(name = state['name'], srate = state['srate'])
         for k,v in state.items():
             if k == '_records':
