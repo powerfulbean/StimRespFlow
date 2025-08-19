@@ -18,7 +18,7 @@ with open("tour/__init__.py") as file:
             version = m.group(1)
 
 setuptools.setup(
-  name="tour",
+  name="pytour",
   version=version,
   author="Powerfulbean",
   author_email="powerfulbean@gmail.com",
