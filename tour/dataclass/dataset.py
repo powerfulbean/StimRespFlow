@@ -15,7 +15,7 @@ from typing import List
 import numpy as np
 
 from .io import (
-    data_record_from_h5py_group, data_record_to_h5py_group
+    data_record_from_h5py_group, data_record_to_h5py_group, _validate_stimuli_dict
 )
 
 #Note: please don't change the order, it matters for some functions using it
@@ -34,19 +34,6 @@ def k_folds(n_trials, n_folds):
         idx_train = np.concatenate(splits[:split_idx] + splits[split_idx + 1 :])
         yield idx_train, idx_val
 
-def _validate_stimuli_dict(stimuli_dict:dict):
-    for k in stimuli_dict:
-        stim:dict = stimuli_dict[k]
-        if not isinstance(stim, dict):
-            raise ValueError(f'value for stim {k} should be a dict')
-        for feat_k, feat_v in stim.items():
-            if isinstance(feat_v, dict):
-                assert all([s in feat_v for s in ['x', 'timeinfo', 'tag']])
-            else:
-                pass
-                # pattern = r"_fs\d+$"
-                # assert re.search(pattern, feat_k)
-    return stimuli_dict   
 
 def _validate_meta_info(info:dict):
     assert all([k in info for k in META_INFO_FORCED_FIELD])

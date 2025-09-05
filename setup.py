@@ -8,7 +8,7 @@ Created on Sat Aug 31 00:52:16 2019
 import setuptools
 import re
 
-with open("./README.md", "r") as fh:
+with open("./README.md", "r", encoding='UTF-8') as fh:
   long_description = fh.read()
 
 with open("tour/__init__.py") as file:
