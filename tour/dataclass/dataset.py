@@ -429,12 +429,12 @@ class Dataset:
                     cnter += 1
                 last_subj_id = subj_id
                 record_dict = data_record_from_h5py_group(f['records'][key])
-                new_record = DataRecord(**record_dict)
-                new_dataset.append(new_record)
-                if cnter == n_subjs or key_idx == len(all_keys)-1:
+                if cnter > n_subjs or key_idx == len(all_keys)-1:
                     yield new_dataset
                     new_dataset = cls(
                         name = str(f.attrs['name']),
                         srate = int(f.attrs['srate']),
                     )
                     cnter = 0
+                new_record = DataRecord(**record_dict)
+                new_dataset.append(new_record)
