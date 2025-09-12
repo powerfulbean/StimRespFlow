@@ -119,6 +119,17 @@ def load_dict_contains_nparray(state_dict):
             new_state[k] = v
     return new_state
 
+def encode_record_key(meta_info:dict):
+    return "-".join(
+        [str(meta_info[k]) for k in META_INFO_FORCED_FIELD]
+    )
+
+def decode_record_key(record_key:str):
+    strs = record_key.split('-')
+    return {
+        k:v for k,v in zip(META_INFO_FORCED_FIELD, strs)
+    }
+
 class DataRecord:
     
     def __init__(self, data, stim_id, meta_info:dict, srate:int):
@@ -131,9 +142,7 @@ class DataRecord:
         return dump_dict_contains_nparray(self.__dict__)
     
     def dump(self):
-        record_key = "-".join(
-            [str(self.meta_info[k]) for k in META_INFO_FORCED_FIELD]
-        )
+        record_key = encode_record_key(self.meta_info)
         return dict(
             key = record_key,
             data = self.data,
@@ -339,6 +348,20 @@ class Dataset:
         state_dict['_records'] = [l.dump() for l in records]
         return self.__class__.load(state_dict)
 
+    def dump_record(self, file_path, record:DataRecord):
+        with h5py.File(file_path, "a") as f:
+            data_record_to_h5py_group(
+                f = f,
+                **record.dump(),
+            )
+
+    def dump_attr(self, file_path):
+        with h5py.File(file_path, "a") as f:
+            f.attrs["name"] = self.name
+            f.attrs["srate"] = self.srate
+            preprocess_config = json.dumps(self._preprocess_config)
+            f.attrs["preprocess_config_str"] = preprocess_config
+
     def dump(self, file_path):
         with h5py.File(file_path, "w") as f:
             f.attrs["name"] = self.name
@@ -388,4 +411,30 @@ class Dataset:
                 else:
                     output.__dict__[k] = state[k]
         return output
-            
+    
+    @classmethod
+    def iter_load(cls, file_path, n_subjs = 10):
+        with h5py.File(file_path, "r") as f:
+            all_keys = list(f['records'].keys())
+            all_keys = sorted(all_keys, key = lambda x: [decode_record_key(x)[k] for k in META_INFO_FORCED_FIELD])
+            cnter = 0
+            last_subj_id = None
+            new_dataset = cls(
+                name = str(f.attrs['name']),
+                srate = int(f.attrs['srate']),
+            )
+            for key_idx, key in enumerate(all_keys):
+                subj_id = decode_record_key(key)['subj_id']
+                if subj_id != last_subj_id:
+                    cnter += 1
+                last_subj_id = subj_id
+                record_dict = data_record_from_h5py_group(f['records'][key])
+                new_record = DataRecord(**record_dict)
+                new_dataset.append(new_record)
+                if cnter == n_subjs or key_idx == len(all_keys)-1:
+                    yield new_dataset
+                    new_dataset = cls(
+                        name = str(f.attrs['name']),
+                        srate = int(f.attrs['srate']),
+                    )
+                    cnter = 0
