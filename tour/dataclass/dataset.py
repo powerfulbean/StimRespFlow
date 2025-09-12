@@ -417,24 +417,31 @@ class Dataset:
         with h5py.File(file_path, "r") as f:
             all_keys = list(f['records'].keys())
             all_keys = sorted(all_keys, key = lambda x: [decode_record_key(x)[k] for k in META_INFO_FORCED_FIELD])
-            cnter = 0
-            last_subj_id = None
+            cnter = 1
             new_dataset = cls(
                 name = str(f.attrs['name']),
                 srate = int(f.attrs['srate']),
             )
             for key_idx, key in enumerate(all_keys):
-                subj_id = decode_record_key(key)['subj_id']
-                if subj_id != last_subj_id:
-                    cnter += 1
-                last_subj_id = subj_id
+
                 record_dict = data_record_from_h5py_group(f['records'][key])
-                if cnter > n_subjs or key_idx == len(all_keys)-1:
-                    yield new_dataset
-                    new_dataset = cls(
-                        name = str(f.attrs['name']),
-                        srate = int(f.attrs['srate']),
-                    )
-                    cnter = 0
                 new_record = DataRecord(**record_dict)
                 new_dataset.append(new_record)
+
+
+                if key_idx == len(all_keys)-1:
+                    yield new_dataset
+                else:
+                    current_subj_id = decode_record_key(key)['subj_id']
+                    next_subj_id = decode_record_key(all_keys[key_idx+1])['subj_id']
+
+                    if current_subj_id != next_subj_id:
+                        if cnter >= n_subjs:
+                            yield new_dataset
+                            new_dataset = cls(
+                                name = str(f.attrs['name']),
+                                srate = int(f.attrs['srate']),
+                            )
+                            cnter = 1
+                        else:
+                            cnter += 1
