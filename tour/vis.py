@@ -3,6 +3,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 
+def plot_biosemi128(r, title, chan_idx, folder = None, units = 'r', res = 1024, **kwargs):
+    r = np.array(r)
+    # print('TRFResult plot - r: ', r)
+    assert len(r) == 128
+    kwargs['sensors'] = True if 'sensors' not in kwargs else kwargs['sensors']
+    fig = plot_data(
+        r, title = title, chan_idx = chan_idx,  res = res, units = units, **kwargs
+    )
+    if 'ax' not in kwargs:
+        fig.suptitle(title)
+        if folder is not None:
+            new_title = title.replace(" ","_").replace("\n","_")
+            fig.savefig(f'{folder}/{new_title}.png', dpi = 300)
+            plt.close(fig)
 
 def plot_data(
     data,
