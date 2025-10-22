@@ -135,7 +135,7 @@ class Context:
     ):
         self.model = model
         self.optimizer = optimizer
-        self.state_current_epoch = 0
+        self.state_current_epoch = -1
         self.func_metrics = func_metrics
         self.checkpoint_folder = checkpoint_folder
         self.checkpoint_file = checkpoint_file
@@ -161,7 +161,8 @@ class Context:
         checkpoint['context'] = self.get_state()
         torch.save(checkpoint, self.checkpoint_path)
     
-    def load_checkpoint(self, checkpoint):
+    def load_checkpoint(self):
+        checkpoint = torch.load(self.checkpoint_path)
         self.load_state(checkpoint['context'])
         for module in self.dependents:
             module.load_state(checkpoint[module.__class__.__name__])
@@ -259,6 +260,7 @@ class SaveBest:
         file_name = "save_best.pt"
     ):
         self.ctx = ctx
+        ctx.add_dependent(self)
         self.state_cnt = 0
         self.state_best_cnt = -1
         self.state_best_metric = None
