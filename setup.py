@@ -36,5 +36,6 @@ setuptools.setup(
       "numpy",
       "scipy",
       "matplotlib",
+      "h5py"
   ],
 )

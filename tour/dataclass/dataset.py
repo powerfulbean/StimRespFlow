@@ -413,10 +413,28 @@ class Dataset:
         return output
     
     @classmethod
+    def load_subject(cls, file_path, subject_id):
+        with h5py.File(file_path, "r") as f:
+            all_keys = list(f['records'].keys())
+            all_keys = sorted(all_keys, key = lambda x: [decode_record_key(x)[k] for k in META_INFO_FORCED_FIELD])
+            cnter = 1
+            new_dataset = cls(
+                name = str(f.attrs['name']),
+                srate = int(f.attrs['srate']),
+            )
+            for key_idx, key in enumerate(all_keys):
+                if decode_record_key(key)['subj_id'] == subject_id:
+                    record_dict = data_record_from_h5py_group(f['records'][key])
+                    new_record = DataRecord(**record_dict)
+                    new_dataset.append(new_record)
+            return new_dataset
+        
+    @classmethod
     def iter_load(cls, file_path, n_subjs = 10):
         with h5py.File(file_path, "r") as f:
             all_keys = list(f['records'].keys())
             all_keys = sorted(all_keys, key = lambda x: [decode_record_key(x)[k] for k in META_INFO_FORCED_FIELD])
+            # print(all_keys)
             cnter = 1
             new_dataset = cls(
                 name = str(f.attrs['name']),
