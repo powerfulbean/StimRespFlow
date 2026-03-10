@@ -32,6 +32,7 @@ def plot_data(
     
     **kwargs
 ):
+
     data = np.array(data)
     ifAx = False
     if montage is None:
@@ -135,15 +136,21 @@ def plot_data(
                 times = timepoint
         
         if mode == 'joint':
-            print(default_ts_args)
+            default_topomap_args = dict(
+                scalings = 1,
+                mask = chanMask,
+                mask_params= maskParam,
+                average = average_window
+            )
+
+            if 'topomap_args' in kwargs:
+                default_topomap_args.update(kwargs['topomap_args'])
+                del kwargs['topomap_args']
+
+            print(default_ts_args, default_topomap_args)
             fig = mneW.plot_joint(
                 times = times,
-                topomap_args=dict(
-                    scalings = 1,
-                    mask = chanMask,
-                    mask_params= maskParam,
-                    average = average_window
-                ),
+                topomap_args=default_topomap_args,
                 ts_args = default_ts_args,
                 show = kwargs.get('show', True),
                 title = title
@@ -176,6 +183,14 @@ def plot_data(
             ax1 = fig.add_subplot(gs[:, 0])
             ax2 = fig.add_subplot(gs[1:3, 1])
         # print('contours')
+
+        if 'vlim' in kwargs:
+            if kwargs['vlim'] == 'sym':
+                t_d = data.squeeze()
+                t_max = abs(t_d).max()
+                kwargs['vlim'] = (-t_max, t_max)
+
+
         im,cm = mne.viz.plot_topomap(
             data.squeeze(),
             info,
