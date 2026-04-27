@@ -1,7 +1,9 @@
 import mne
+import scipy
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
+from statsmodels.stats.multitest import fdrcorrection 
 
 def plot_biosemi128(r, title, chan_idx, folder = None, units = 'r', res = 1024, **kwargs):
     r = np.array(r)
@@ -214,3 +216,70 @@ def plot_data(
         return fig
     else:
         return im
+
+def wilcoxon_fdr(r1,r2 = None, alternative = 'two-sided', ths = 0.05, fdr = True):
+    r1 = np.array(r1)
+    r2 = None if r2 is None else np.array(r2)
+    if r1.ndim == 2:
+        if r2 is not None:
+            assert r1.shape == r2.shape
+        imprv_stat = []
+        for i in range(r1.shape[1]):
+            if r2 is None:
+                r2_cur = None
+            else:
+                r2_cur = r2[:,i]
+            stat,p = scipy.stats.wilcoxon(r1[:,i], r2_cur, alternative = alternative)
+            imprv_stat.append([stat,p])
+        imprv_stat = np.array(imprv_stat)
+        if fdr:
+            rejected,pvalue_corrected = fdrcorrection(imprv_stat[:,1])
+        else:
+            pvalue_corrected = imprv_stat[:,1]
+        chanIdx = np.where(pvalue_corrected <= ths)
+        return imprv_stat,pvalue_corrected,chanIdx
+    elif r1.ndim == 1:
+        stat,p = scipy.stats.wilcoxon(r1, r2, alternative = alternative)
+        return stat, p, p <= ths
+
+def wilcoxon_fdr_test(
+        x1, name1, x2, name2 = None, 
+        alternative = 'two-sided', fdr = True,
+        func_plot = plot_biosemi128, folder = None,
+        verbose = False,
+        if_return_stat = False,
+        ths = 0.05,
+        **kwargs
+    ):
+    if np.isscalar(x2):
+        assert x2 == 0
+        assert name2 is None
+        x1 = np.array(x1)
+        x2 = None
+        name2 = 'zero'
+        diff = x1
+    else:
+        # print(other.data.keys())
+        x1 = np.array(x1)
+        x2 = np.array(x2)
+        diff = x1 - x2
+        
+    stat, p,chanIdx = wilcoxon_fdr(x1, x2, alternative, fdr = fdr, ths = ths) #pvalue_corrected,chanIdx
+    title = f'{name1} - {name2} ({alternative})'
+    if verbose:
+        print(name1, name2, p, chanIdx)
+    if x1.ndim == 2:
+        rToPlot = diff.mean(0)
+        func_plot(rToPlot, title, chanIdx, folder, **kwargs)
+    else:
+        rToPlot = diff.mean()
+        with open(f"{folder}/{title}.txt", 'w') as f:
+            f.write(f"if_sig: {chanIdx}, stat: {stat}, p: {p}, data: {diff}, data-mean: {diff.mean()}")
+    
+    # if folder:
+    #     siIO.saveObject((p,(x1,x2)), rf'{folder}/{title}.tuple')
+    
+    if if_return_stat:
+        return stat, p,chanIdx, diff
+    else:
+        return p,chanIdx, rToPlot
