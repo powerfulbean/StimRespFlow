@@ -2,6 +2,16 @@ from typing import Dict
 
 from ..backend import is_tensor, np, torch, Array
 
+def combine_stim_dict(*stimdicts):
+    data = {}
+    for stimdict in stimdicts:
+        for ID in stimdict:
+            if ID not in data:
+                data[ID] = {}
+            for feat in stimdict[ID]:
+                assert feat not in data[ID]
+                data[ID][feat] = stimdict[ID][feat]
+    return data
 
 def to_impulses(x:Array, timeinfo:Array, f:float, padding_s:float = 0):
     '''
