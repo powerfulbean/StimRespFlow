@@ -5,6 +5,18 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from statsmodels.stats.multitest import fdrcorrection 
 
+def plot_with_montage(montage, r, title, chan_idx, folder = None, units = 'r', **kwargs):
+    r = np.array(r)
+    # print('TRFResult plot - r: ', r)
+    kwargs['sensors'] = True if 'sensors' not in kwargs else kwargs['sensors']
+    fig = plot_data(
+        r, title = title, chan_idx = chan_idx,  res = 1024, units = units, montage = montage,**kwargs
+    )
+    if folder is not None:
+        new_title = title.replace(" ","_").replace("\n","_")
+        fig.savefig(f'{folder}/{new_title}.png', dpi = 300)
+        plt.close(fig)
+
 def plot_biosemi128(r, title, chan_idx, folder = None, units = 'r', res = 1024, **kwargs):
     r = np.array(r)
     # print('TRFResult plot - r: ', r)
@@ -51,6 +63,11 @@ def plot_data(
 
         for k,v in chnames_map.items():
             montage.ch_names[montage.ch_names.index(k)] = v
+        
+        sphere = 'eeglab'
+    else:
+        sphere = None
+
 
     chNames = montage.ch_names
     
@@ -200,7 +217,7 @@ def plot_data(
             mask = chanMask, 
             names = names,
             mask_params= maskParam2,
-            sphere = 'eeglab',
+            sphere = sphere,
             contours = 2,
             **kwargs
         )

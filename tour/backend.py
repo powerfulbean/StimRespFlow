@@ -30,5 +30,7 @@ def is_tensor(data: Array):
         return False
     elif isinstance(data, numbers.Number):
         return False
+    elif isinstance(data, list):
+        return False
     else:
-        raise ValueError(f"input is not an numeric variable")
+        raise ValueError(f"input is not an numeric variable or a list", data)
