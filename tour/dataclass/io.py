@@ -89,7 +89,11 @@ def data_record_to_h5py_group(
     meta_info_grp = root_grp.require_group('meta_info')
     for k,v in meta_info.items():
         if isinstance(v, np.ndarray):
-            meta_info_grp.create_dataset(k, data=v)
+            try:
+                meta_info_grp.create_dataset(k, data=v)
+            except:
+                print(k, v)
+                raise
         else:
             meta_info_grp.attrs[k] = v
     

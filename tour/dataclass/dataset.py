@@ -151,10 +151,10 @@ class DataRecord:
             srate = self.srate,
         )
 
-    @classmethod
-    def load(cls, new_state:dict):
-        obj = cls(**new_state)
-        return obj
+    # @classmethod
+    # def load(cls, new_state:dict):
+    #     obj = cls(**new_state)
+    #     return obj
 
     @classmethod
     def load_from_dict(cls, state:dict):
@@ -344,9 +344,9 @@ class Dataset:
     def subset_by_info(self,meta_info_filter):
         records = self._filter_records_by_info(
             self._records, meta_info_filter)
-        state_dict = self.dump()
-        state_dict['_records'] = [l.dump() for l in records]
-        return self.__class__.load(state_dict)
+        state_dict = self.dump_to_dict()
+        state_dict['_records'] = [l.dump_to_dict() for l in records]
+        return self.__class__.load_from_dict(state_dict)
 
     def dump_record(self, file_path, record:DataRecord):
         with h5py.File(file_path, "a") as f:
@@ -404,7 +404,7 @@ class Dataset:
         output = cls(name = state['name'], srate = state['srate'])
         for k,v in state.items():
             if k == '_records':
-                output.__dict__['_records'] = [DataRecord.load(l) for l in state[k]]
+                output.__dict__['_records'] = [DataRecord.load_from_dict(l) for l in state[k]]
             else:
                 if isinstance(v, dict):
                     output.__dict__[k] = load_dict_contains_nparray(v)
