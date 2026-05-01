@@ -46,7 +46,6 @@ def plot_data(
     
     **kwargs
 ):
-
     data = np.array(data)
     ifAx = False
     if montage is None:
@@ -135,7 +134,15 @@ def plot_data(
             "units": units, 
             "scalings": dict(eeg=1),
             "highlight": time_intvl,
+            "proj": False,
         }
+        if 'vlim' in kwargs:
+            ylim = dict(eeg = kwargs.get('vlim'))
+        else:
+            ylim = None
+        default_ts_args['ylim'] = ylim
+
+        vlim = kwargs.get('vlim', (None, None))
 
         if ts_args is not None:
             default_ts_args.update(ts_args)
@@ -159,20 +166,23 @@ def plot_data(
                 scalings = 1,
                 mask = chanMask,
                 mask_params= maskParam,
-                average = average_window
+                average = average_window,
+                vlim = vlim,
+                proj = False,
             )
 
             if 'topomap_args' in kwargs:
                 default_topomap_args.update(kwargs['topomap_args'])
                 del kwargs['topomap_args']
-
-            print(default_ts_args, default_topomap_args)
+              
+            # print(default_ts_args)
             fig = mneW.plot_joint(
                 times = times,
                 topomap_args=default_topomap_args,
                 ts_args = default_ts_args,
                 show = kwargs.get('show', True),
-                title = title
+                title = title,
+
             )
         else:
             fig = mneW.plot_topomap(
@@ -202,13 +212,11 @@ def plot_data(
             ax1 = fig.add_subplot(gs[:, 0])
             ax2 = fig.add_subplot(gs[1:3, 1])
         # print('contours')
-
         if 'vlim' in kwargs:
             if kwargs['vlim'] == 'sym':
                 t_d = data.squeeze()
                 t_max = abs(t_d).max()
                 kwargs['vlim'] = (-t_max, t_max)
-
 
         im,cm = mne.viz.plot_topomap(
             data.squeeze(),
