@@ -5,6 +5,11 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from statsmodels.stats.multitest import fdrcorrection 
 
+def build_plot_with_montage(montage):
+    def wrapper(r, title, chan_idx, folder = None, units = 'r', **kwargs):
+        return plot_with_montage(montage, r, title, chan_idx, folder, units, **kwargs)
+    return wrapper
+
 def plot_with_montage(montage, r, title, chan_idx, folder = None, units = 'r', **kwargs):
     r = np.array(r)
     # print('TRFResult plot - r: ', r)
@@ -266,6 +271,8 @@ def wilcoxon_fdr(r1,r2 = None, alternative = 'two-sided', ths = 0.05, fdr = True
     elif r1.ndim == 1:
         stat,p = scipy.stats.wilcoxon(r1, r2, alternative = alternative)
         return stat, p, p <= ths
+    else:
+        raise ValueError(f"the dimension of r should be 2 or 1 but got r1 {r1.ndim}")
 
 def wilcoxon_fdr_test(
         x1, name1, x2, name2 = None, 
@@ -290,7 +297,10 @@ def wilcoxon_fdr_test(
         diff = x1 - x2
         
     stat, p,chanIdx = wilcoxon_fdr(x1, x2, alternative, fdr = fdr, ths = ths) #pvalue_corrected,chanIdx
-    title = f'{name1} - {name2} ({alternative})'
+    if fdr:
+        title = f'{name1} - {name2} ({alternative} fdr)'
+    else:
+        title = f'{name1} - {name2} ({alternative})'
     if verbose:
         print(name1, name2, p, chanIdx)
     if x1.ndim == 2:
