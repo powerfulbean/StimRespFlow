@@ -202,6 +202,22 @@ class Dataset:
         new_dataset._records = [r_.copy() for r_ in self._records]
         return new_dataset
 
+    def crop_data_len_to_stim(self, stim_key, stim_dim):
+        assert 'fs' in stim_key
+        for record in self._records:
+            t_stim = self.stimuli_dict[record.stim_id][stim_key]
+            assert t_stim.shape[0] == stim_dim
+            t_len = t_stim.shape[1]
+            record.data = record.data[:, :t_len]
+
+    @property
+    def subj_ids(self):
+        return sorted(list(set([record.meta_info['subj_id'] for record in self.records])))
+    
+    @property
+    def stim_ids(self):
+        return sorted(list(set([record.stim_id for record in self.records])))
+
     @property    
     def stimuli_dict(self):
         return self._stimuli_dict
@@ -413,7 +429,7 @@ class Dataset:
         return output
     
     @classmethod
-    def load_subject(cls, file_path, subject_id):
+    def load_subjects(cls, file_path, subject_ids):
         with h5py.File(file_path, "r") as f:
             all_keys = list(f['records'].keys())
             all_keys = sorted(all_keys, key = lambda x: [decode_record_key(x)[k] for k in META_INFO_FORCED_FIELD])
@@ -423,7 +439,7 @@ class Dataset:
                 srate = int(f.attrs['srate']),
             )
             for key_idx, key in enumerate(all_keys):
-                if decode_record_key(key)['subj_id'] == subject_id:
+                if decode_record_key(key)['subj_id'] in subject_ids:
                     record_dict = data_record_from_h5py_group(f['records'][key])
                     new_record = DataRecord(**record_dict)
                     new_dataset.append(new_record)
