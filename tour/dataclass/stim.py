@@ -41,3 +41,21 @@ def dictTensor_to(x:Dict[str, Array], device):
         k:v.to(device) if is_tensor(v) else v for k,v in x.items()
     }
     return output
+
+def exclude_words(t_feat_dict:Dict, excluded_words):
+    new_x = []
+    new_timeinfo = []
+    new_word = []
+    for idx, w in enumerate(t_feat_dict['tag']):
+        if w not in excluded_words:
+            new_x.append(t_feat_dict['x'][:, idx])
+            new_timeinfo.append(t_feat_dict['timeinfo'][:, idx])
+            new_word.append(w)
+    new_x = np.stack(new_x, axis = -1)
+    new_timeinfo = np.stack(new_timeinfo, axis = -1)
+    t_new = {
+        'x':new_x,
+        'timeinfo': new_timeinfo,
+        'tag': new_word
+    }
+    return t_new

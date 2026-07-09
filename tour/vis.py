@@ -298,9 +298,9 @@ def wilcoxon_fdr_test(
         
     stat, p,chanIdx = wilcoxon_fdr(x1, x2, alternative, fdr = fdr, ths = ths) #pvalue_corrected,chanIdx
     if fdr:
-        title = f'{name1} - {name2} ({alternative} fdr)'
+        title = f'({name1})-({name2}) ({alternative} fdr)'
     else:
-        title = f'{name1} - {name2} ({alternative})'
+        title = f'({name1})-({name2}) ({alternative})'
     if verbose:
         print(name1, name2, p, chanIdx)
     if x1.ndim == 2:

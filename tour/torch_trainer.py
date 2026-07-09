@@ -313,12 +313,15 @@ class SaveBest:
             self.saved_checkpoint = checkpoint
         
         if self.tol is not None:
-            if self.state_cnt - self.state_best_cnt > self.tol:
+            if self.if_early_stop():
                 ifStop = True
                 msg = f'early_stop --- epoch: {self.state_best_cnt}, metric: {self.state_best_metric}'
                 self.ctx.logger.info(msg)
         self.state_cnt += 1
         return ifUpdate, ifStop
+    
+    def if_early_stop(self):
+        return (self.state_cnt - self.state_best_cnt) > self.tol
     
 
 def pearsonr(y, y_pred):
