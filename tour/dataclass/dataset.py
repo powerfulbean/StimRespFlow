@@ -391,7 +391,7 @@ class Dataset:
                 )
     
     @classmethod
-    def load(cls, file_path):
+    def load(cls, file_path, meta_info_filter = {}):
         new_dataset = None
         with h5py.File(file_path, "r") as f:
             new_dataset = cls(

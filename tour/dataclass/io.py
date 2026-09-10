@@ -111,8 +111,8 @@ def data_record_from_h5py_group(
     for k,v in meta_info_grp.attrs.items():
         meta_info[k] = v
     
-    for k,v in meta_info.items():
-        meta_info[k] = v
+    # for k,v in meta_info.items():
+    #     meta_info[k] = v
     
     return dict(
         data = data, stim_id = stim_id, meta_info = meta_info, srate = srate
