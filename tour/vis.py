@@ -36,6 +36,7 @@ def plot_biosemi128(r, title, chan_idx, folder = None, units = 'r', res = 1024, 
             new_title = title.replace(" ","_").replace("\n","_")
             fig.savefig(f'{folder}/{new_title}.png', dpi = 300)
             plt.close(fig)
+    return fig
 
 def plot_data(
     data,
@@ -189,12 +190,11 @@ def plot_data(
                 title = title,
 
             )
-        else:
+        elif mode == 'topo':
             fig = mneW.plot_topomap(
                 times = times,
                 time_unit='s',
                 scalings = 1,
-                title = title,
                 units = units,
                 cbar_fmt='%3.3f',
                 mask = chanMask,
@@ -203,6 +203,34 @@ def plot_data(
                 # names = None,
                 **kwargs
             )
+        else:
+            del kwargs['res']
+            fig = mneW.plot(
+                time_unit='s',
+                scalings = 1,
+                units = units,
+                show = False,
+                # names = None,
+                # **kwargs
+            )
+
+            ax = fig.axes[0]
+
+            # Keep only left and bottom spines
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            # Only ticks on left and bottom
+            ax.tick_params(axis='both', which='both',
+               bottom=False, top=False,
+               left=False, right=False)
+            ax.set_title("")
+            if len(fig.axes) > 1:
+                fig.axes[1].remove()
 
 
     elif data.ndim == 1:
